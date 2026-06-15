@@ -11,5 +11,4 @@ urlpatterns = [
     path('solicitacoes/', views.SolicitacaoListView.as_view(), name='solicitacao_list'),
     path('solicitacoes/<int:pk>/revisar/', views.SolicitacaoRevisarView.as_view(), name='solicitacao_revisar'),
     path('admin/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
-    path('importar-csv/', views.CsvImportView.as_view(), name='csv_import'),
 ]

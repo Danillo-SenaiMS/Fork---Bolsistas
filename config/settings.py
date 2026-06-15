@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'accounts',
     'cadastro',
     'editais',
+    'classificacao',
 ]
 
 MIDDLEWARE = [

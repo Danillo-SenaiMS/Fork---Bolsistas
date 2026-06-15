@@ -8,6 +8,7 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('cadastro/', include('cadastro.urls')),
     path('editais/', include('editais.urls')),
+    path('classificacao/', include('classificacao.urls')),
 
     path('media/<path:path>', media_protegida, name='protected_media'),
 ]
