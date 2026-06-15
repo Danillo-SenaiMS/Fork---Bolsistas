@@ -8,6 +8,8 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django import forms
 
+from base.mixins import ManagerRequiredMixin
+
 from .models import User, Perfil, Tenant, DocumentoExterno
 from editais.models import Edital, AplicacaoEdital
 from classificacao.models import Classificacao
@@ -142,9 +144,11 @@ class HomeView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class AprovarUsuarioView(LoginRequiredMixin, TemplateView):
+class AprovarUsuarioView(ManagerRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
-        user = get_object_or_404(User, pk=kwargs['pk'])
+        user = get_object_or_404(
+            User, pk=kwargs['pk'], perfil__tenant=getattr(request, 'tenant', None)
+        )
         user.is_active = True
         user.save()
         messages.success(request, f'Usuário {user.nome_completo} aprovado.')

@@ -32,7 +32,7 @@ class EditalListView(TenantRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        qs = Edital.objects.filter(tenant=self.request.tenant)
+        qs = Edital.objects.filter(tenant=self.request.tenant).select_related('criado_por')
         busca = self.request.GET.get('busca', '')
         status = self.request.GET.get('status', 'todos')
         if busca:

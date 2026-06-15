@@ -17,7 +17,7 @@ class NotificacaoListView(TenantRequiredMixin, ListView):
         return Notificacao.objects.filter(
             destinatario=self.request.user,
             tenant=self.request.tenant,
-        )
+        ).select_related('destinatario')
 
 
 class MarcarLidaView(TenantRequiredMixin, TemplateView):

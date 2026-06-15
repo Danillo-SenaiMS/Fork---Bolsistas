@@ -185,7 +185,7 @@ class CadastroListView(ManagerRequiredMixin, ListView):
     context_object_name = 'cadastros'
 
     def get_queryset(self):
-        return CadastroBolsista.objects.filter(tenant=self.request.tenant)
+        return CadastroBolsista.objects.filter(tenant=self.request.tenant).select_related('user')
 
 
 class SolicitacaoForm(forms.ModelForm):
@@ -276,10 +276,10 @@ class AdminDashboardView(ManagerRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tenant = self.request.tenant
-        context['cadastros'] = CadastroBolsista.objects.filter(tenant=tenant)
+        context['cadastros'] = CadastroBolsista.objects.filter(tenant=tenant).select_related('user')
         context['usuarios_pendentes'] = User.objects.filter(
             perfil__tenant=tenant, is_active=False
-        )
+        ).select_related('perfil')
         return context
 
 

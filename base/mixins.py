@@ -23,10 +23,6 @@ class ManagerRequiredMixin(RoleRequiredMixin):
     roles = ['ADMIN', 'MANAGER']
 
 
-class AdminOrManagerRequiredMixin(RoleRequiredMixin):
-    roles = ['ADMIN', 'MANAGER']
-
-
 class TenantRequiredMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
