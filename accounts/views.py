@@ -7,6 +7,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django import forms
 
 from .models import User, Perfil, Tenant, DocumentoExterno
+from editais.models import Edital, AplicacaoEdital
+from classificacao.models import Classificacao
+from cadastro.models import SolicitacaoEdicao
 
 TIPO_USUARIO_MAP = {
     'bolsista': 'COMMON',
@@ -89,8 +92,51 @@ class HomeView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         perfil = getattr(user, 'perfil', None)
         tipo = perfil.tipo if perfil else 'COMMON'
+        tenant = perfil.tenant if perfil else None
         context['tipo_usuario'] = tipo
         context['has_cadastro'] = hasattr(user, 'cadastro')
+
+        if tipo == 'ADMIN':
+            context['total_usuarios'] = User.objects.filter(
+                perfil__tenant=tenant, is_active=True
+            ).count()
+            context['total_pendentes'] = User.objects.filter(
+                perfil__tenant=tenant, is_active=False
+            ).count()
+            context['total_editais'] = Edital.objects.filter(tenant=tenant).count()
+            context['total_aplicacoes'] = AplicacaoEdital.objects.filter(tenant=tenant).count()
+            context['total_classificacoes'] = Classificacao.objects.filter(tenant=tenant).count()
+            context['total_pendentes_solicitacao'] = SolicitacaoEdicao.objects.filter(
+                tenant=tenant, status='pendente'
+            ).count()
+
+        elif tipo == 'MANAGER':
+            context['total_editais_abertos'] = Edital.objects.filter(
+                tenant=tenant, status='aberto'
+            ).count()
+            context['total_pendentes_avaliacao'] = AplicacaoEdital.objects.filter(
+                tenant=tenant, status__in=['pendente', 'em_analise']
+            ).count()
+            context['total_aplicacoes'] = AplicacaoEdital.objects.filter(tenant=tenant).count()
+            context['total_pendentes_solicitacao'] = SolicitacaoEdicao.objects.filter(
+                tenant=tenant, status='pendente'
+            ).count()
+
+        else:
+            context['total_editais_abertos'] = Edital.objects.filter(
+                tenant=tenant, status='aberto'
+            ).count()
+            if hasattr(user, 'cadastro'):
+                context['total_aplicacoes'] = AplicacaoEdital.objects.filter(
+                    bolsista=user.cadastro
+                ).count()
+                context['total_classificacoes'] = Classificacao.objects.filter(
+                    aplicacao__bolsista=user.cadastro
+                ).count()
+            else:
+                context['total_aplicacoes'] = 0
+                context['total_classificacoes'] = 0
+
         return context
 
 
