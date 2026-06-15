@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'cadastro',
     'editais',
     'classificacao',
+    'notifications',
 ]
 
 MIDDLEWARE = [
