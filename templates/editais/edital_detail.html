@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}{{ edital.nome }} - Bolsas SENAI - MS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary mb-0">
+            <i class="bi bi-journal-text me-2"></i>{{ edital.nome }}
+        </h2>
+        <div>
+            {% if pode_editar %}
+            <a href="{% url 'edital_update' edital.pk %}" class="btn btn-warning me-2">
+                <i class="bi bi-pencil-square me-1"></i>Editar
+            </a>
+            {% endif %}
+            <a href="{% url 'edital_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card p-4 mb-3">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>Descricao
+                </h5>
+                <p class="text-muted">{{ edital.descricao|linebreaks }}</p>
+            </div>
+
+            <div class="card p-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-list-check me-2 text-primary"></i>Requisitos
+                </h5>
+                <p class="text-muted">{{ edital.requisitos|linebreaks }}</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card p-4 mb-3">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-calendar3 me-2 text-primary"></i>Datas
+                </h5>
+                <div class="mb-2">
+                    <label class="form-label small text-muted mb-0">Abertura</label>
+                    <p class="fw-medium">{{ edital.data_abertura|date:'d/m/Y H:i' }}</p>
+                </div>
+                <div>
+                    <label class="form-label small text-muted mb-0">Fechamento</label>
+                    <p class="fw-medium">{{ edital.data_fechamento|date:'d/m/Y H:i' }}</p>
+                </div>
+            </div>
+
+            <div class="card p-4 mb-3">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-flag me-2 text-primary"></i>Status
+                </h5>
+                <span class="badge {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'fechado' %}bg-warning text-dark{% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
+                    {{ edital.get_status_display }}
+                </span>
+            </div>
+
+            {% if edital.status == 'aberto' and tem_cadastro and not ja_aplicou %}
+            <div class="card p-4 mb-3 text-center">
+                <form method="post" action="{% url 'aplicar_edital' edital.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-send-check me-2"></i>Candidatar-se
+                    </button>
+                </form>
+            </div>
+            {% elif ja_aplicou %}
+            <div class="card p-4 mb-3 text-center bg-success bg-opacity-10">
+                <i class="bi bi-check-circle text-success fs-3 mb-2"></i>
+                <p class="fw-medium text-success mb-0">Voce ja se candidatou a este edital</p>
+            </div>
+            {% elif not tem_cadastro %}
+            <div class="card p-4 mb-3 text-center bg-warning bg-opacity-10">
+                <i class="bi bi-exclamation-triangle text-warning fs-3 mb-2"></i>
+                <p class="fw-medium mb-2">Complete seu cadastro para se candidatar</p>
+                <a href="{% url 'cadastro_create' %}" class="btn btn-outline-warning btn-sm">Criar Cadastro</a>
+            </div>
+            {% endif %}
+
+            <div class="card p-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>Informacoes
+                </h5>
+                <div class="mb-2">
+                    <label class="form-label small text-muted mb-0">Criado por</label>
+                    <p class="fw-medium">{{ edital.criado_por.nome_completo }}</p>
+                </div>
+                <div>
+                    <label class="form-label small text-muted mb-0">Cadastrado em</label>
+                    <p class="fw-medium">{{ edital.created_at|date:'d/m/Y H:i' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

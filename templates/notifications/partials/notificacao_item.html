@@ -1,0 +1,10 @@
+<div class="list-group-item d-flex justify-content-between align-items-start p-3">
+    <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h6 class="fw-semibold mb-0">{{ n.titulo }}</h6>
+            <small class="text-muted ms-2">{{ n.created_at|date:'d/m/Y H:i' }}</small>
+        </div>
+        <p class="text-muted small mb-1">{{ n.mensagem|linebreaks }}</p>
+        <span class="badge bg-secondary">{{ n.get_tipo_display }}</span>
+    </div>
+</div>

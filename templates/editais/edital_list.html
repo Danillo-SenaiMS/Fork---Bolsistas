@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Editais - Bolsas SENAI - MS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary mb-0">
+            <i class="bi bi-journal-text me-2"></i>Editais
+        </h2>
+        {% if pode_criar %}
+        <a href="{% url 'edital_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Novo Edital
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="card p-3 mb-4">
+        <form hx-get="{% url 'edital_list' %}" hx-target="#edital-results" hx-swap="innerHTML" hx-trigger="keyup changed delay:300ms from:input[name=busca], change from:select[name=status]" hx-indicator="#spinner" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small">Buscar</label>
+                <input type="search" name="busca" class="form-control" placeholder="Digite para filtrar..." value="{{ busca }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Status</label>
+                <select name="status" class="form-select">
+                    <option value="todos" {% if status_atual == 'todos' %}selected{% endif %}>Todos</option>
+                    <option value="aberto" {% if status_atual == 'aberto' %}selected{% endif %}>Abertos</option>
+                    <option value="fechado" {% if status_atual == 'fechado' %}selected{% endif %}>Fechados</option>
+                    <option value="encerrado" {% if status_atual == 'encerrado' %}selected{% endif %}>Encerrados</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <span id="spinner" class="htmx-indicator text-muted small">
+                    <i class="bi bi-arrow-repeat spin"></i> Buscando...
+                </span>
+            </div>
+        </form>
+    </div>
+
+    <div id="edital-results">
+        {% include 'editais/partials/edital_cards.html' %}
+    </div>
+</div>
+{% endblock %}

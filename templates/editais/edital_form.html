@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Editar{% else %}Novo{% endif %} Edital - Bolsas SENAI - MS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h3 class="fw-bold text-primary mb-4">
+                    <i class="bi bi-journal-text me-2"></i>
+                    {% if object %}Editar Edital{% else %}Novo Edital{% endif %}
+                </h3>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.nome.label }}</label>
+                        {{ form.nome }}
+                        {% if form.nome.errors %}
+                        <div class="text-danger small mt-1">{{ form.nome.errors|join:', ' }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.descricao.label }}</label>
+                        {{ form.descricao }}
+                        {% if form.descricao.errors %}
+                        <div class="text-danger small mt-1">{{ form.descricao.errors|join:', ' }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.requisitos.label }}</label>
+                        {{ form.requisitos }}
+                        {% if form.requisitos.errors %}
+                        <div class="text-danger small mt-1">{{ form.requisitos.errors|join:', ' }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.data_abertura.label }}</label>
+                            {{ form.data_abertura }}
+                            {% if form.data_abertura.errors %}
+                            <div class="text-danger small mt-1">{{ form.data_abertura.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.data_fechamento.label }}</label>
+                            {{ form.data_fechamento }}
+                            {% if form.data_fechamento.errors %}
+                            <div class="text-danger small mt-1">{{ form.data_fechamento.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">{{ form.status.label }}</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                        <div class="text-danger small mt-1">{{ form.status.errors|join:', ' }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i>Salvar
+                        </button>
+                        <a href="{% if object %}{% url 'edital_detail' object.pk %}{% else %}{% url 'edital_list' %}{% endif %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
