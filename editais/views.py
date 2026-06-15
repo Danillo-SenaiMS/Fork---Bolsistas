@@ -2,6 +2,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, T
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 from django import forms
 
 from base.mixins import TenantRequiredMixin, ManagerRequiredMixin
@@ -168,4 +170,11 @@ class AlterarStatusAplicacaoView(ManagerRequiredMixin, TemplateView):
             aplicacao.status = novo_status
             aplicacao.save()
             messages.success(request, f'Status da candidatura alterado para {aplicacao.get_status_display()}.')
+        if request.headers.get('HX-Request'):
+            html = render_to_string(
+                'editais/partials/aplicacao_row.html',
+                {'a': aplicacao, 'eh_gestor': True},
+                request=request,
+            )
+            return HttpResponse(html)
         return redirect('aplicacao_list')

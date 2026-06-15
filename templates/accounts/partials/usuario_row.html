@@ -1,0 +1,9 @@
+<tr>
+    <td>{{ u.nome_completo }}</td>
+    <td>{{ u.email }}</td>
+    <td>{{ u.perfil.telefone|default:'-' }}</td>
+    <td class="text-muted small">{{ u.date_joined|date:'d/m/Y H:i' }}</td>
+    <td class="text-end">
+        <span class="badge bg-success">Aprovado</span>
+    </td>
+</tr>

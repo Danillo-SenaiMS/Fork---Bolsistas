@@ -47,6 +47,10 @@
         </div>
     </div>
 
+    <span id="spinner-admin" class="htmx-indicator text-primary">
+        <i class="bi bi-arrow-repeat spin me-1"></i>Atualizando...
+    </span>
+
     {% if usuarios_pendentes %}
     <div class="card p-4 mb-4">
         <h5 class="fw-semibold mb-3">
@@ -63,15 +67,17 @@
                         <th class="text-end">Acoes</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="usuarios-pendentes-tbody">
                     {% for u in usuarios_pendentes %}
                     <tr>
                         <td>{{ u.nome_completo }}</td>
                         <td>{{ u.email }}</td>
-                        <td>{{ u.telefone|default:'-' }}</td>
+                        <td>{{ u.perfil.telefone|default:'-' }}</td>
                         <td class="text-muted small">{{ u.date_joined|date:'d/m/Y H:i' }}</td>
                         <td class="text-end">
-                            <form method="post" action="{% url 'aprovar_usuario' u.pk %}" class="d-inline">
+                            <form method="post" action="{% url 'aprovar_usuario' u.pk %}" class="d-inline"
+                                  hx-post="{% url 'aprovar_usuario' u.pk %}" hx-target="closest tr" hx-swap="outerHTML"
+                                  hx-indicator="#spinner-admin">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-success btn-sm">
                                     <i class="bi bi-check-lg"></i> Aprovar

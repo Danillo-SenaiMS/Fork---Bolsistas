@@ -30,6 +30,10 @@
     </div>
     {% endif %}
 
+    <span id="spinner-aplicacao" class="htmx-indicator text-primary">
+        <i class="bi bi-arrow-repeat spin me-1"></i>Atualizando...
+    </span>
+
     {% if aplicacoes %}
     <div class="table-responsive">
         <table class="table table-hover align-middle">
@@ -69,7 +73,9 @@
                             </button>
                         </form>
                         {% elif eh_gestor %}
-                        <form method="post" action="{% url 'alterar_status_aplicacao' a.pk %}" class="d-inline">
+                        <form method="post" action="{% url 'alterar_status_aplicacao' a.pk %}" class="d-inline"
+                              hx-post="{% url 'alterar_status_aplicacao' a.pk %}" hx-target="closest tr" hx-swap="outerHTML"
+                              hx-indicator="#spinner-aplicacao">
                             {% csrf_token %}
                             <select name="status" class="form-select form-select-sm d-inline w-auto"
                                     onchange="this.form.submit()">
@@ -88,27 +94,7 @@
         </table>
     </div>
 
-    {% if is_paginated %}
-    <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status_atual }}">Anterior</a>
-            </li>
-            {% endif %}
-            {% for num in page_obj.paginator.page_range %}
-            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                <a class="page-link" href="?page={{ num }}&status={{ status_atual }}">{{ num }}</a>
-            </li>
-            {% endfor %}
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status_atual }}">Proximo</a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
+    {% include 'components/pagination.html' with pagination_param='status='|add:status_atual %}
 
     {% else %}
     <div class="card p-5 text-center">

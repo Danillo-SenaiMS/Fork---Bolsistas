@@ -3,6 +3,8 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils import timezone
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 from django import forms
 
 from base.mixins import TenantRequiredMixin, ManagerRequiredMixin
@@ -258,6 +260,13 @@ class SolicitacaoRevisarView(ManagerRequiredMixin, TemplateView):
         solicitacao.data_revisao = timezone.now()
         solicitacao.save()
 
+        if request.headers.get('HX-Request'):
+            html = render_to_string(
+                'cadastro/partials/solicitacao_row.html',
+                {'s': solicitacao},
+                request=request,
+            )
+            return HttpResponse(html)
         return redirect('solicitacao_list')
 
 

@@ -4,6 +4,8 @@ from django.urls import reverse_lazy
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 from django import forms
 
 from .models import User, Perfil, Tenant, DocumentoExterno
@@ -146,4 +148,11 @@ class AprovarUsuarioView(LoginRequiredMixin, TemplateView):
         user.is_active = True
         user.save()
         messages.success(request, f'Usuário {user.nome_completo} aprovado.')
+        if request.headers.get('HX-Request'):
+            html = render_to_string(
+                'accounts/partials/usuario_row.html',
+                {'u': user},
+                request=request,
+            )
+            return HttpResponse(html)
         return redirect('admin_dashboard')
