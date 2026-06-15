@@ -1,0 +1,10 @@
+django>=6.0
+python-decouple
+django-htmx
+Pillow
+celery
+redis
+django-celery-beat
+django-storages
+faker
+psycopg2-binary
