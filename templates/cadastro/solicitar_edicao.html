@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Solicitar Edição - Portal da Inovação{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Solicitar Edição de Dados</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Selecione o campo que deseja editar e informe o novo valor. Sua solicitação será analisada por um gerente.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="id_campo" class="form-label">Campo</label>
+                        <select name="campo" id="id_campo" class="form-select" required>
+                            <option value="">Selecione um campo...</option>
+                            {% for c in campos %}
+                            <option value="{{ c.nome }}">{{ c.label }} (atual: {{ c.valor }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_valor_novo" class="form-label">Novo valor</label>
+                        <textarea name="valor_novo" id="id_valor_novo" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Enviar Solicitação</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

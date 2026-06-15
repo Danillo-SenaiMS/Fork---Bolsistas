@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Solicitações de Edição - Portal da Inovação{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Solicitações de Edição Pendentes</h4>
+    </div>
+    <div class="card-body">
+        {% if solicitacoes %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Bolsista</th>
+                        <th>Campo</th>
+                        <th>Valor Original</th>
+                        <th>Valor Novo</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in solicitacoes %}
+                    <tr>
+                        <td>{{ s.bolsista.user.nome_completo }}</td>
+                        <td>{{ s.campo }}</td>
+                        <td>{{ s.valor_original|truncatechars:50 }}</td>
+                        <td>{{ s.valor_novo|truncatechars:50 }}</td>
+                        <td>{{ s.created_at|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <form method="post" action="{% url 'cadastro:aprovar_solicitacao' s.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm">Aprovar</button>
+                            </form>
+                            <form method="post" action="{% url 'cadastro:rejeitar_solicitacao' s.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Rejeitar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">Nenhuma solicitação pendente.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

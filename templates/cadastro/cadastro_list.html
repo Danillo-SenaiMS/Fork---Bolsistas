@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Cadastros - Portal da Inovação{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Cadastros de Bolsistas</h4>
+    </div>
+    <div class="card-body">
+        {% if cadastros %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Grau Acadêmico</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in cadastros %}
+                    <tr>
+                        <td>{{ c.user.nome_completo }}</td>
+                        <td>{{ c.user.email }}</td>
+                        <td>{{ c.get_grau_academico_display }}</td>
+                        <td>
+                            <a href="{% url 'cadastro:detalhe_admin' c.pk %}" class="btn btn-sm btn-primary">Ver</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">Nenhum cadastro encontrado.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

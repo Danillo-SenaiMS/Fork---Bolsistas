@@ -1,0 +1,10 @@
+<tr>
+    <td>{{ s.bolsista.user.nome_completo }}</td>
+    <td><code>{{ s.campo }}</code></td>
+    <td class="text-muted small">{{ s.valor_original|truncatechars:40 }}</td>
+    <td class="fw-medium">{{ s.valor_novo|truncatechars:40 }}</td>
+    <td class="text-muted small">{{ s.created_at|date:'d/m/Y' }}</td>
+    <td class="text-end">
+        <span class="badge bg-secondary">Revisada</span>
+    </td>
+</tr>
