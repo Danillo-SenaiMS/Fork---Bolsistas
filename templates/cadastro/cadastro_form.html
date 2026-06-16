@@ -4,209 +4,156 @@
 {% block content %}
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card p-4">
-                <h3 class="fw-bold text-primary mb-4">
-                    <i class="bi bi-person-lines-fill me-2"></i>
-                    {% if object %}Editar Cadastro{% else %}Novo Cadastro{% endif %}
-                </h3>
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="fw-bold mb-0">
+                        <i class="bi bi-person-lines-fill me-2"></i>
+                        {% if object %}Editar Cadastro{% else %}Novo Cadastro{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
 
-                <form method="post" enctype="multipart/form-data" novalidate>
-                    {% csrf_token %}
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
 
-                    <h5 class="fw-semibold mb-3">Dados Pessoais</h5>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">{{ form.data_nascimento.label }}</label>
-                            {{ form.data_nascimento }}
-                            {% if form.data_nascimento.errors %}
-                            <div class="text-danger small mt-1">{{ form.data_nascimento.errors|join:', ' }}</div>
-                            {% endif %}
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-person me-2 text-primary"></i>Dados Pessoais
+                        </h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Nome</label>
+                                <input type="text" class="form-control" value="{{ user.nome_completo }}" disabled>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Nascimento</label>
+                                <input type="text" class="form-control" value="{{ user.perfil.data_nascimento|date:'d/m/Y'|default:'-' }}" disabled>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Telefone</label>
+                                <input type="text" class="form-control" value="{{ user.perfil.telefone|default:'-' }}" disabled>
+                            </div>
                         </div>
-                        <div class="col-md-8">
-                            <label class="form-label">{{ form.telefone.label }}</label>
-                            {{ form.telefone }}
-                            {% if form.telefone.errors %}
-                            <div class="text-danger small mt-1">{{ form.telefone.errors|join:', ' }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">{{ form.endereco.label }}</label>
+
+                        <hr class="my-4">
+
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-house-door me-2 text-primary"></i>Endereco
+                        </h5>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">{{ form.endereco.label }}</label>
                             {{ form.endereco }}
                             {% if form.endereco.errors %}
                             <div class="text-danger small mt-1">{{ form.endereco.errors|join:', ' }}</div>
                             {% endif %}
                         </div>
-                    </div>
 
-                    <hr class="my-4">
+                        <hr class="my-4">
 
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-semibold mb-0">Grau Academico</h5>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="add-curso">
-                            <i class="bi bi-plus-lg"></i> Adicionar
-                        </button>
-                    </div>
-                    <div id="cursos-container">
-                        {{ curso_formset.management_form }}
-                        {% for curso_form in curso_formset %}
-                        <div class="row g-2 border rounded p-3 mb-2 align-items-end cursos-row">
-                            <div class="col-md-3">
-                                <label class="form-label small">{{ curso_form.grau.label }}</label>
-                                {{ curso_form.grau }}
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small">{{ curso_form.curso.label }}</label>
-                                {{ curso_form.curso }}
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small">{{ curso_form.instituicao.label }}</label>
-                                {{ curso_form.instituicao }}
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small">{{ curso_form.ano_conclusao.label }}</label>
-                                {{ curso_form.ano_conclusao }}
-                            </div>
-                            <div class="col-md-1 d-flex align-items-end pb-2">
-                                {% if curso_form.instance.pk %}{{ curso_form.DELETE }}{% endif %}
-                                <button type="button" class="btn btn-outline-danger btn-sm remove-row d-none">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                            {{ curso_form.id }}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-semibold mb-0">
+                                <i class="bi bi-bar-chart-line me-2 text-primary"></i>Classificacao
+                            </h5>
                         </div>
-                        {% endfor %}
-                    </div>
 
-                    <hr class="my-4">
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-semibold mb-0">Pos-Graduacoes</h5>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="add-pos">
-                            <i class="bi bi-plus-lg"></i> Adicionar
-                        </button>
-                    </div>
-                    <div id="pos-container">
-                        {{ pos_formset.management_form }}
-                        {% for pos_form in pos_formset %}
-                        <div class="border rounded p-3 mb-2 pos-row">
-                            <div class="mb-2">
-                                <label class="form-label small">{{ pos_form.tipo.label }}</label>
-                                {{ pos_form.tipo }}
-                            </div>
-                            <div class="row g-2 align-items-end">
-                                <div class="col-md-4">
-                                    <label class="form-label small">{{ pos_form.instituicao.label }}</label>
-                                    {{ pos_form.instituicao }}
-                                </div>
-                                <div class="col-md-4">
-                                <label class="form-label small">{{ pos_form.area.label }}</label>
-                                {{ pos_form.area }}
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small">{{ pos_form.ano_conclusao.label }}</label>
-                                    {{ pos_form.ano_conclusao }}
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end pb-2">
-                                    {% if pos_form.instance.pk %}{{ pos_form.DELETE }}{% endif %}
-                                    <button type="button" class="btn btn-outline-danger btn-sm remove-row d-none">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                        <div class="card bg-light border-0 p-3 mb-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">{{ form.participacao_projetos_anos.label }}</label>
+                                    {{ form.participacao_projetos_anos }}
+                                    <div class="form-text">10 pontos por ano, maximo 100 pontos.</div>
+                                    {% if form.participacao_projetos_anos.errors %}
+                                    <div class="text-danger small mt-1">{{ form.participacao_projetos_anos.errors|join:', ' }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
-                            {{ pos_form.id }}
                         </div>
-                        {% endfor %}
-                    </div>
 
-                    <hr class="my-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check border rounded p-3 bg-white">
+                                    {{ form.participacao_congressos }}
+                                    <label class="form-check-label fw-medium" for="{{ form.participacao_congressos.id_for_label }}">Participacao em congressos, feiras, eventos e palestras</label>
+                                    <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded p-3 bg-white">
+                                    {{ form.resumo_anais }}
+                                    <label class="form-check-label fw-medium" for="{{ form.resumo_anais.id_for_label }}">Resumo publicado em anais de eventos</label>
+                                    <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded p-3 bg-white">
+                                    {{ form.artigo_completo_anais }}
+                                    <label class="form-check-label fw-medium" for="{{ form.artigo_completo_anais.id_for_label }}">Artigo completo publicado em anais de eventos</label>
+                                    <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded p-3 bg-white">
+                                    {{ form.artigo_cientifico_nacional }}
+                                    <label class="form-check-label fw-medium" for="{{ form.artigo_cientifico_nacional.id_for_label }}">Artigo cientifico ou capitulo de livro nacional publicado</label>
+                                    <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded p-3 bg-white">
+                                    {{ form.artigo_cientifico_internacional }}
+                                    <label class="form-check-label fw-medium" for="{{ form.artigo_cientifico_internacional.id_for_label }}">Artigo cientifico ou capitulo de livro internacional publicado</label>
+                                    <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded p-3 bg-white">
+                                    {{ form.livro_patente }}
+                                    <label class="form-check-label fw-medium" for="{{ form.livro_patente.id_for_label }}">Livro publicado na area de interesse ou patente registrada</label>
+                                    <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded p-3 bg-white">
+                                    {{ form.participacao_minicurso }}
+                                    <label class="form-check-label fw-medium" for="{{ form.participacao_minicurso.id_for_label }}">Participacao em minicurso (ate 4 horas) na area de interesse</label>
+                                    <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded p-3 bg-white">
+                                    {{ form.treinamento }}
+                                    <label class="form-check-label fw-medium" for="{{ form.treinamento.id_for_label }}">Treinamento (acima de 4 horas) na area de interesse</label>
+                                    <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <h5 class="fw-semibold mb-3">
-                        <i class="bi bi-bar-chart-line me-2 text-primary"></i>Classificacao
-                    </h5>
+                        {% if object and object.pontuacao_previa %}
+                        <div class="alert alert-info mt-4 d-flex align-items-center gap-3">
+                            <i class="bi bi-star-fill fs-4"></i>
+                            <div>
+                                <strong>Pontuacao previa:</strong>
+                                <span class="fs-5 fw-bold ms-2">{{ object.pontuacao_previa }}</span> pontos
+                            </div>
+                        </div>
+                        {% endif %}
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.participacao_projetos_anos.label }}</label>
-                            {{ form.participacao_projetos_anos }}
-                            <div class="form-text">10 pontos por ano, maximo 100 pontos.</div>
-                        </div>
-                    </div>
+                        <hr class="my-4">
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.participacao_congressos }}
-                                <label class="form-check-label fw-medium" for="{{ form.participacao_congressos.id_for_label }}">{{ form.participacao_congressos.label }}</label>
-                                <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
-                            </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-lg me-1"></i>Salvar Cadastro
+                            </button>
+                            <a href="{% if object %}{% url 'cadastro_detail' %}{% else %}{% url 'home' %}{% endif %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Voltar
+                            </a>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.resumo_anais }}
-                                <label class="form-check-label fw-medium" for="{{ form.resumo_anais.id_for_label }}">{{ form.resumo_anais.label }}</label>
-                                <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.artigo_completo_anais }}
-                                <label class="form-check-label fw-medium" for="{{ form.artigo_completo_anais.id_for_label }}">{{ form.artigo_completo_anais.label }}</label>
-                                <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.artigo_cientifico_nacional }}
-                                <label class="form-check-label fw-medium" for="{{ form.artigo_cientifico_nacional.id_for_label }}">{{ form.artigo_cientifico_nacional.label }}</label>
-                                <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.artigo_cientifico_internacional }}
-                                <label class="form-check-label fw-medium" for="{{ form.artigo_cientifico_internacional.id_for_label }}">{{ form.artigo_cientifico_internacional.label }}</label>
-                                <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.livro_patente }}
-                                <label class="form-check-label fw-medium" for="{{ form.livro_patente.id_for_label }}">{{ form.livro_patente.label }}</label>
-                                <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.participacao_minicurso }}
-                                <label class="form-check-label fw-medium" for="{{ form.participacao_minicurso.id_for_label }}">{{ form.participacao_minicurso.label }}</label>
-                                <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.treinamento }}
-                                <label class="form-check-label fw-medium" for="{{ form.treinamento.id_for_label }}">{{ form.treinamento.label }}</label>
-                                <div class="alerta-documentos text-warning small fw-semibold mt-1" style="display:none;"><i class="bi bi-envelope-at me-1"></i>Envie os documentos comprobatorios para inovacao@ms.senai.br</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% if object.pontuacao_previa %}
-                    <div class="alert alert-info mt-3">
-                        <strong>Pontuacao previa:</strong> {{ object.pontuacao_previa }} pontos
-                    </div>
-                    {% endif %}
-
-                    <div class="d-flex gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-check-lg me-1"></i>Salvar
-                        </button>
-                        <a href="{% if object %}{% url 'cadastro_detail' %}{% else %}{% url 'home' %}{% endif %}" class="btn btn-outline-secondary">
-                            Cancelar
-                        </a>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -216,71 +163,6 @@
 {% block extra_js %}
 <script>
 (function() {
-    function setupFormset(containerId, addBtnId, prefix) {
-        var container = document.getElementById(containerId);
-        var addBtn = document.getElementById(addBtnId);
-        var totalForms = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
-
-        function updateRemoveButtons() {
-            var rows = container.querySelectorAll('.' + prefix.replace('_', '-') + '-row');
-            var count = rows.length;
-            rows.forEach(function(row, index) {
-                var btn = row.querySelector('.remove-row');
-                if (btn) {
-                    btn.style.display = count > 1 ? '' : 'none';
-                    btn.onclick = function() {
-                        var deleteInput = row.querySelector('input[name$="-DELETE"]');
-                        if (deleteInput) {
-                            deleteInput.checked = true;
-                            row.style.display = 'none';
-                        }
-                    };
-                }
-            });
-        }
-
-        addBtn.addEventListener('click', function() {
-            var emptyRow = container.querySelector('.' + prefix.replace('_', '-') + '-row');
-            var clone = emptyRow.cloneNode(true);
-
-            var inputs = clone.querySelectorAll('input, select, textarea');
-            inputs.forEach(function(input) {
-                var name = input.getAttribute('name');
-                if (name) {
-                    var newName = name.replace(prefix + '-0-', prefix + '-' + totalForms.value + '-');
-                    input.setAttribute('name', newName);
-                    input.setAttribute('id', 'id_' + newName);
-                    if (input.type !== 'hidden') {
-                        if (input.tagName === 'SELECT') {
-                            input.selectedIndex = 0;
-                        } else if (input.type === 'checkbox') {
-                            input.checked = false;
-                        } else {
-                            input.value = '';
-                        }
-                    }
-                }
-            });
-
-            clone.style.display = '';
-            if (clone.querySelector('input[name$="-DELETE"]')) {
-                clone.querySelector('input[name$="-DELETE"]').checked = false;
-            }
-            if (clone.querySelector('input[name$="-id"]')) {
-                clone.querySelector('input[name$="-id"]').value = '';
-            }
-
-            container.appendChild(clone);
-            totalForms.value = parseInt(totalForms.value) + 1;
-            updateRemoveButtons();
-        });
-
-        updateRemoveButtons();
-    }
-
-    setupFormset('cursos-container', 'add-curso', 'cursos');
-    setupFormset('pos-container', 'add-pos', 'pos');
-
     var checkboxes = document.querySelectorAll('.form-check-input[type="checkbox"]');
     checkboxes.forEach(function(cb) {
         var alerta = cb.closest('.form-check').querySelector('.alerta-documentos');

@@ -20,6 +20,10 @@ class RegistroForm(forms.ModelForm):
         max_length=20, required=False, label='Telefone',
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(67) 99999-9999'})
     )
+    data_nascimento = forms.DateField(
+        label='Data de nascimento',
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
     documentos = forms.FileField(
         required=False, label='RG / CPF',
         widget=forms.FileInput(attrs={'class': 'form-control'})
@@ -83,6 +87,7 @@ class RegistroView(FormView):
             user=user,
             tipo='COMMON',
             telefone=form.cleaned_data.get('telefone', ''),
+            data_nascimento=form.cleaned_data.get('data_nascimento'),
             tenant=tenant,
         )
         if form.cleaned_data.get('documentos'):

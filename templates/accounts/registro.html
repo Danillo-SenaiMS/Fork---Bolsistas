@@ -16,50 +16,62 @@
                     {% csrf_token %}
 
                     <div class="mb-3">
-                        <label class="form-label">{{ form.nome_completo.label }}</label>
+                        <label class="form-label fw-semibold">{{ form.nome_completo.label }}</label>
                         {{ form.nome_completo }}
                         {% if form.nome_completo.errors %}
                         <div class="text-danger small mt-1">{{ form.nome_completo.errors|join:', ' }}</div>
                         {% endif %}
                     </div>
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.email.label }}</label>
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.email.label }}</label>
                             {{ form.email }}
                             {% if form.email.errors %}
                             <div class="text-danger small mt-1">{{ form.email.errors|join:', ' }}</div>
                             {% endif %}
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.telefone.label }}</label>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.telefone.label }}</label>
                             {{ form.telefone }}
                             {% if form.telefone.errors %}
                             <div class="text-danger small mt-1">{{ form.telefone.errors|join:', ' }}</div>
                             {% endif %}
                         </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">{{ form.documentos.label }}</label>
-                        {{ form.documentos }}
-                        <small class="text-muted">Anexe copia do RG e/ou CPF (PDF ou imagem).</small>
-                        {% if form.documentos.errors %}
-                        <div class="text-danger small mt-1">{{ form.documentos.errors|join:', ' }}</div>
-                        {% endif %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.data_nascimento.label }}</label>
+                            {{ form.data_nascimento }}
+                            {% if form.data_nascimento.errors %}
+                            <div class="text-danger small mt-1">{{ form.data_nascimento.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.documentos.label }}</label>
+                            {{ form.documentos }}
+                            <small class="text-muted">Anexe copia do RG e/ou CPF (PDF ou imagem).</small>
+                            {% if form.documentos.errors %}
+                            <div class="text-danger small mt-1">{{ form.documentos.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">{{ form.password1.label }}</label>
-                            {{ form.password1 }}
+                            <label class="form-label fw-semibold">{{ form.password1.label }}</label>
+                            <div class="input-group">
+                                {{ form.password1 }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha('id_password1')"><i class="bi bi-eye"></i></button>
+                            </div>
                             {% if form.password1.errors %}
                             <div class="text-danger small mt-1">{{ form.password1.errors|join:', ' }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">{{ form.password2.label }}</label>
-                            {{ form.password2 }}
+                            <label class="form-label fw-semibold">{{ form.password2.label }}</label>
+                            <div class="input-group">
+                                {{ form.password2 }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha('id_password2')"><i class="bi bi-eye"></i></button>
+                            </div>
                             {% if form.password2.errors %}
                             <div class="text-danger small mt-1">{{ form.password2.errors|join:', ' }}</div>
                             {% endif %}
@@ -81,4 +93,13 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSenha(id) {
+    var el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+</script>
 {% endblock %}

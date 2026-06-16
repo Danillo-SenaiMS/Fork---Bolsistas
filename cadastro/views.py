@@ -2,8 +2,9 @@ from django.views.generic import CreateView, DetailView, UpdateView, ListView, T
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.template.loader import render_to_string
 from django import forms
 
@@ -18,34 +19,38 @@ class CursoSuperiorForm(forms.ModelForm):
     class Meta:
         model = CursoSuperior
         fields = ['instituicao', 'curso', 'grau', 'ano_conclusao']
+        widgets = {
+            'instituicao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da instituicao'}),
+            'curso': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do curso'}),
+            'grau': forms.Select(attrs={'class': 'form-select'}),
+            'ano_conclusao': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 2024'}),
+        }
 
 
 class PosGraduacaoForm(forms.ModelForm):
     class Meta:
         model = PosGraduacao
         fields = ['tipo', 'instituicao', 'area', 'ano_conclusao']
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'instituicao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da instituicao'}),
+            'area': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Area de concentracao'}),
+            'ano_conclusao': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 2024'}),
+        }
 
 
 class CadastroForm(forms.ModelForm):
-    telefone = forms.CharField(
-        label='Telefone',
-        max_length=20,
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
-
     class Meta:
         model = CadastroBolsista
         fields = [
-            'data_nascimento', 'endereco',
+            'endereco',
             'participacao_projetos_anos',
             'participacao_congressos', 'resumo_anais', 'artigo_completo_anais',
             'artigo_cientifico_nacional', 'artigo_cientifico_internacional',
             'livro_patente', 'participacao_minicurso', 'treinamento',
         ]
         widgets = {
-            'data_nascimento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'endereco': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'endereco': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Rua, numero, bairro, cidade - UF'}),
             'participacao_projetos_anos': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'participacao_congressos': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'resumo_anais': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -57,14 +62,6 @@ class CadastroForm(forms.ModelForm):
             'treinamento': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk:
-            try:
-                self.fields['telefone'].initial = self.instance.user.perfil.telefone
-            except (AttributeError, Perfil.DoesNotExist):
-                pass
-
 
 class CadastroCreateView(TenantRequiredMixin, FormView):
     template_name = 'cadastro/cadastro_form.html'
@@ -74,70 +71,24 @@ class CadastroCreateView(TenantRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['object'] = None
-        if 'curso_formset' not in kwargs:
-            context['curso_formset'] = self._make_curso_formset()
-        if 'pos_formset' not in kwargs:
-            context['pos_formset'] = self._make_pos_formset()
         return context
 
-    def _make_curso_formset(self, data=None):
-        return self._formset_factory(CursoSuperiorForm, 'cursos', data)
-
-    def _make_pos_formset(self, data=None):
-        return self._formset_factory(PosGraduacaoForm, 'pos', data)
-
-    def _formset_factory(self, form_class, prefix, data=None):
-        return forms.modelformset_factory(
-            CursoSuperior if 'curso' in prefix else PosGraduacao,
-            form=form_class,
-            extra=1,
-            can_delete=True,
-        )(data or None, prefix=prefix, queryset=CursoSuperior.objects.none() if 'curso' in prefix else PosGraduacao.objects.none())
-
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        curso_formset = self._make_curso_formset(request.POST)
-        pos_formset = self._make_pos_formset(request.POST)
-        if form.is_valid() and curso_formset.is_valid() and pos_formset.is_valid():
-            return self.form_valid(form, curso_formset, pos_formset)
-        return self.form_invalid(form, curso_formset, pos_formset)
-
-    def form_valid(self, form, curso_formset, pos_formset):
+    def form_valid(self, form):
         cadastro = form.save(commit=False)
         cadastro.user = self.request.user
         cadastro.tenant = self.request.tenant
+        try:
+            perfil = self.request.user.perfil
+            cadastro.data_nascimento = perfil.data_nascimento
+        except (AttributeError, Perfil.DoesNotExist):
+            pass
         cadastro.save()
-        telefone = form.cleaned_data.get('telefone')
-        if telefone is not None:
-            try:
-                perfil = self.request.user.perfil
-                perfil.telefone = telefone
-                perfil.save()
-            except Perfil.DoesNotExist:
-                pass
-        for cf in curso_formset:
-            if cf.cleaned_data and not cf.cleaned_data.get('DELETE'):
-                curso = cf.save(commit=False)
-                curso.bolsista = cadastro
-                curso.tenant = self.request.tenant
-                curso.save()
-        for pf in pos_formset:
-            if pf.cleaned_data and not pf.cleaned_data.get('DELETE'):
-                pos = pf.save(commit=False)
-                pos.bolsista = cadastro
-                pos.tenant = self.request.tenant
-                pos.save()
         criterios = CriterioClassificacao.objects.filter(tenant=self.request.tenant, ativo=True)
         _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
         cadastro.pontuacao_previa = pontuacao
         cadastro.save(update_fields=['pontuacao_previa'])
-        messages.success(self.request, 'Cadastro criado com sucesso!')
+        messages.success(self.request, 'Cadastro criado com sucesso! Agora adicione suas formacoes academicas.')
         return redirect(self.success_url)
-
-    def form_invalid(self, form, curso_formset, pos_formset):
-        return self.render_to_response(self.get_context_data(
-            form=form, curso_formset=curso_formset, pos_formset=pos_formset
-        ))
 
     def get(self, request, *args, **kwargs):
         if hasattr(request.user, 'cadastro'):
@@ -168,6 +119,16 @@ class CadastroDetailView(TenantRequiredMixin, DetailView):
                 return get_object_or_404(CadastroBolsista, pk=pk, tenant=self.request.tenant)
         return get_object_or_404(CadastroBolsista, user=self.request.user, tenant=self.request.tenant)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cadastro = context['cadastro']
+        perfil = getattr(self.request.user, 'perfil', None)
+        can_edit = cadastro.user == self.request.user or (perfil and perfil.tipo in ('ADMIN', 'MANAGER'))
+        context['can_edit'] = can_edit
+        context['cursos'] = cadastro.cursos_superiores.all()
+        context['pos_graduacoes'] = cadastro.pos_graduacoes.all()
+        return context
+
 
 class CadastroUpdateView(ManagerRequiredMixin, FormView):
     template_name = 'cadastro/cadastro_form.html'
@@ -186,57 +147,20 @@ class CadastroUpdateView(ManagerRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['object'] = self.get_object()
-        cadastro = self.get_object()
-        if 'curso_formset' not in kwargs:
-            context['curso_formset'] = forms.modelformset_factory(
-                CursoSuperior, form=CursoSuperiorForm, extra=1, can_delete=True
-            )(prefix='cursos', queryset=cadastro.cursos_superiores.all())
-        if 'pos_formset' not in kwargs:
-            context['pos_formset'] = forms.modelformset_factory(
-                PosGraduacao, form=PosGraduacaoForm, extra=1, can_delete=True
-            )(prefix='pos', queryset=cadastro.pos_graduacoes.all())
         return context
 
     def post(self, request, *args, **kwargs):
         cadastro = self.get_object()
         form = CadastroForm(request.POST, request.FILES, instance=cadastro)
-        curso_formset = forms.modelformset_factory(
-            CursoSuperior, form=CursoSuperiorForm, extra=1, can_delete=True
-        )(request.POST, prefix='cursos', queryset=cadastro.cursos_superiores.all())
-        pos_formset = forms.modelformset_factory(
-            PosGraduacao, form=PosGraduacaoForm, extra=1, can_delete=True
-        )(request.POST, prefix='pos', queryset=cadastro.pos_graduacoes.all())
-        if form.is_valid() and curso_formset.is_valid() and pos_formset.is_valid():
+        if form.is_valid():
             cadastro = form.save()
-            telefone = form.cleaned_data.get('telefone')
-            if telefone is not None:
-                try:
-                    perfil = cadastro.user.perfil
-                    perfil.telefone = telefone
-                    perfil.save()
-                except Perfil.DoesNotExist:
-                    pass
-            for cf in curso_formset:
-                if cf.cleaned_data and cf not in curso_formset.deleted_forms:
-                    curso = cf.save(commit=False)
-                    curso.bolsista = cadastro
-                    curso.tenant = self.request.tenant
-                    curso.save()
-            for pf in pos_formset:
-                if pf.cleaned_data and pf not in pos_formset.deleted_forms:
-                    pos = pf.save(commit=False)
-                    pos.bolsista = cadastro
-                    pos.tenant = self.request.tenant
-                    pos.save()
             criterios = CriterioClassificacao.objects.filter(tenant=self.request.tenant, ativo=True)
             _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
             cadastro.pontuacao_previa = pontuacao
             cadastro.save(update_fields=['pontuacao_previa'])
             messages.success(self.request, 'Cadastro atualizado com sucesso!')
             return redirect('cadastro_detail_pk', pk=cadastro.pk)
-        return self.render_to_response(self.get_context_data(
-            form=form, curso_formset=curso_formset, pos_formset=pos_formset
-        ))
+        return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):
         return reverse_lazy('cadastro_detail_pk', kwargs={'pk': self.kwargs['pk']})
@@ -379,7 +303,7 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
                 pos.save()
                 alteracoes += 1
 
-        campos_texto = ['data_nascimento', 'endereco']
+        campos_texto = ['endereco']
         for campo in campos_texto:
             valor_antigo = str(getattr(cadastro, campo, '') or '')
             valor_novo = str(form.cleaned_data.get(campo, '') or '')
@@ -389,21 +313,6 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
                     campo=campo,
                     valor_original=valor_antigo,
                     valor_novo=valor_novo,
-                    status='pendente',
-                    tenant=self.request.tenant,
-                )
-                alteracoes += 1
-
-        telefone = form.cleaned_data.get('telefone')
-        if telefone is not None:
-            perfil = getattr(cadastro.user, 'perfil', None)
-            valor_antigo = str(perfil.telefone if perfil else '')
-            if valor_antigo != telefone:
-                SolicitacaoEdicao.objects.create(
-                    bolsista=cadastro,
-                    campo='telefone',
-                    valor_original=valor_antigo,
-                    valor_novo=telefone,
                     status='pendente',
                     tenant=self.request.tenant,
                 )
@@ -506,3 +415,128 @@ class AdminDashboardView(ManagerRequiredMixin, TemplateView):
 
 class CsvImportView(ManagerRequiredMixin, TemplateView):
     template_name = 'classificacao/csv_import.html'
+
+
+def _check_cadastro_permission(request, pk):
+    cadastro = get_object_or_404(CadastroBolsista, pk=pk)
+    perfil = getattr(request.user, 'perfil', None)
+    if not perfil or (perfil.tipo not in ('ADMIN', 'MANAGER') and cadastro.user != request.user):
+        return None, None, HttpResponseForbidden()
+    return cadastro, perfil, None
+
+
+def _recalcular_pontuacao(cadastro, tenant):
+    criterios = CriterioClassificacao.objects.filter(tenant=tenant, ativo=True)
+    _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
+    cadastro.pontuacao_previa = pontuacao
+    cadastro.save(update_fields=['pontuacao_previa'])
+
+
+@login_required
+def curso_add(request, pk):
+    cadastro, perfil, error = _check_cadastro_permission(request, pk)
+    if error:
+        return error
+
+    if request.method == 'POST':
+        form = CursoSuperiorForm(request.POST)
+        if form.is_valid():
+            curso = form.save(commit=False)
+            curso.bolsista = cadastro
+            curso.tenant = request.tenant
+            curso.save()
+            _recalcular_pontuacao(cadastro, request.tenant)
+            messages.success(request, 'Curso adicionado com sucesso!')
+            return render(request, 'cadastro/partials/curso_section.html', {
+                'cursos': cadastro.cursos_superiores.all(),
+                'cadastro': cadastro,
+                'can_edit': True,
+            })
+    else:
+        if request.GET.get('cancel'):
+            return render(request, 'cadastro/partials/curso_section.html', {
+                'cursos': cadastro.cursos_superiores.all(),
+                'cadastro': cadastro,
+                'can_edit': True,
+            })
+        form = CursoSuperiorForm()
+
+    return render(request, 'cadastro/partials/curso_section.html', {
+        'cursos': cadastro.cursos_superiores.all(),
+        'cadastro': cadastro,
+        'curso_form': form,
+        'can_edit': True,
+    })
+
+
+@login_required
+def curso_remove(request, pk, curso_pk):
+    cadastro, perfil, error = _check_cadastro_permission(request, pk)
+    if error:
+        return error
+
+    curso = get_object_or_404(CursoSuperior, pk=curso_pk, bolsista=cadastro)
+    curso.delete()
+    _recalcular_pontuacao(cadastro, request.tenant)
+    messages.success(request, 'Curso removido com sucesso!')
+
+    return render(request, 'cadastro/partials/curso_section.html', {
+        'cursos': cadastro.cursos_superiores.all(),
+        'cadastro': cadastro,
+        'can_edit': True,
+    })
+
+
+@login_required
+def pos_add(request, pk):
+    cadastro, perfil, error = _check_cadastro_permission(request, pk)
+    if error:
+        return error
+
+    if request.method == 'POST':
+        form = PosGraduacaoForm(request.POST)
+        if form.is_valid():
+            pos = form.save(commit=False)
+            pos.bolsista = cadastro
+            pos.tenant = request.tenant
+            pos.save()
+            _recalcular_pontuacao(cadastro, request.tenant)
+            messages.success(request, 'Pos-graduacao adicionada com sucesso!')
+            return render(request, 'cadastro/partials/pos_section.html', {
+                'pos_graduacoes': cadastro.pos_graduacoes.all(),
+                'cadastro': cadastro,
+                'can_edit': True,
+            })
+    else:
+        if request.GET.get('cancel'):
+            return render(request, 'cadastro/partials/pos_section.html', {
+                'pos_graduacoes': cadastro.pos_graduacoes.all(),
+                'cadastro': cadastro,
+                'can_edit': True,
+            })
+        form = PosGraduacaoForm()
+
+    return render(request, 'cadastro/partials/pos_section.html', {
+        'pos_graduacoes': cadastro.pos_graduacoes.all(),
+        'cadastro': cadastro,
+        'pos_form': form,
+        'can_edit': True,
+    })
+
+
+@login_required
+def pos_remove(request, pk, pos_pk):
+    cadastro, perfil, error = _check_cadastro_permission(request, pk)
+    if error:
+        return error
+
+    pos = get_object_or_404(PosGraduacao, pk=pos_pk, bolsista=cadastro)
+    pos.delete()
+    _recalcular_pontuacao(cadastro, request.tenant)
+    messages.success(request, 'Pos-graduacao removida com sucesso!')
+
+    return render(request, 'cadastro/partials/pos_section.html', {
+        'pos_graduacoes': cadastro.pos_graduacoes.all(),
+        'cadastro': cadastro,
+        'can_edit': True,
+    })

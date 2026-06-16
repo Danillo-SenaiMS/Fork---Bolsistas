@@ -61,6 +61,7 @@ class Perfil(DataModel):
     tipo = models.CharField('Tipo', max_length=20, choices=TIPO_CHOICES, default='COMMON')
     telefone = models.CharField('Telefone', max_length=20, blank=True)
     unidade = models.CharField('Unidade', max_length=255, blank=True)
+    data_nascimento = models.DateField('Data de nascimento', null=True, blank=True)
     tenant = models.ForeignKey(Tenant, on_delete=models.SET_NULL, null=True, blank=True, related_name='perfis')
 
     objects = TenantManager()

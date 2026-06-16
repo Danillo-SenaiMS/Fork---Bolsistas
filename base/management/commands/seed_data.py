@@ -84,6 +84,7 @@ class Command(BaseCommand):
             tipo=tipo,
             telefone=fake.phone_number() if tipo != 'ADMIN' else '',
             unidade=fake.bairro() if tipo != 'ADMIN' else '',
+            data_nascimento=fake.date_of_birth(minimum_age=18, maximum_age=70),
             tenant=tenant,
         )
         return user
