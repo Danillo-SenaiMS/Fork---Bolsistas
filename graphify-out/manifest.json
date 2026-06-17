@@ -295,8 +295,8 @@
     "semantic_hash": ""
   },
   "edital_provisorio/admin.py": {
-    "mtime": 1781721942.56483,
-    "ast_hash": "82a1b9a3c5d6d7632092d02f33f6d0be",
+    "mtime": 1781723114.9076006,
+    "ast_hash": "5913e9c9b6e26a712ca4f6973b82f177",
     "semantic_hash": ""
   },
   "edital_provisorio/apps.py": {
@@ -305,8 +305,8 @@
     "semantic_hash": ""
   },
   "edital_provisorio/forms.py": {
-    "mtime": 1781722019.4024198,
-    "ast_hash": "505504a87150efbcf5bd83c47dd1b544",
+    "mtime": 1781724567.7898266,
+    "ast_hash": "d6b531725baf217f4e2010a2c21175ca",
     "semantic_hash": ""
   },
   "edital_provisorio/migrations/0001_initial.py": {
@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "edital_provisorio/models.py": {
-    "mtime": 1781721969.842869,
-    "ast_hash": "62af52c8f02d4f7e38cf1f710d7a7003",
+    "mtime": 1781724548.4492126,
+    "ast_hash": "b90e26ba99a900718371065afbeb5d0d",
     "semantic_hash": ""
   },
   "edital_provisorio/tests.py": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "edital_provisorio/views.py": {
-    "mtime": 1781721902.7229052,
-    "ast_hash": "9f9335a829216110303791dcf748a85f",
+    "mtime": 1781722933.7218611,
+    "ast_hash": "c40ddcf757af192db4a833719d18744c",
     "semantic_hash": ""
   },
   "manage.py": {
@@ -595,13 +595,13 @@
     "semantic_hash": ""
   },
   "templates/edital_provisorio/edital_detail.html": {
-    "mtime": 1781721998.0667827,
-    "ast_hash": "c09b648de17407f74b61b6ccb234e7a9",
+    "mtime": 1781724704.6742296,
+    "ast_hash": "5f9e8054177893d08e3d19973c2e197b",
     "semantic_hash": ""
   },
   "templates/edital_provisorio/edital_form.html": {
-    "mtime": 1781721930.935419,
-    "ast_hash": "a2ebc396ac428d4abc564e0bd3067785",
+    "mtime": 1781724642.0753489,
+    "ast_hash": "f03273efd13d00dd038d89270f831c8e",
     "semantic_hash": ""
   },
   "templates/edital_provisorio/edital_list.html": {
@@ -622,6 +622,16 @@
   "edital_provisorio/migrations/0002_editalprovisorio_detalhes_qualificacao_minima_and_more.py": {
     "mtime": 1781721975.9853878,
     "ast_hash": "07ff49b4c79c49f4d44b772c347a3761",
+    "semantic_hash": ""
+  },
+  "edital_provisorio/migrations/0003_editalprovisorio_valor_total_bolsa_distribuicaobolsa.py": {
+    "mtime": 1781723083.820202,
+    "ast_hash": "8e5141501ba010683debecc3db33ad1e",
+    "semantic_hash": ""
+  },
+  "edital_provisorio/migrations/0004_alter_editalprovisorio_endereco_atuacao_and_more.py": {
+    "mtime": 1781724674.2952645,
+    "ast_hash": "368ecb4e6bb356b80c8910be88afa523",
     "semantic_hash": ""
   }
 }

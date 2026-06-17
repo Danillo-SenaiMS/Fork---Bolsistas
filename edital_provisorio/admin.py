@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import EditalProvisorio, CronogramaEvento
+from .models import EditalProvisorio, CronogramaEvento, DistribuicaoBolsa
 
 
 class CronogramaEventoInline(admin.TabularInline):
@@ -8,28 +8,34 @@ class CronogramaEventoInline(admin.TabularInline):
     ordering = ['ordem']
 
 
+class DistribuicaoBolsaInline(admin.TabularInline):
+    model = DistribuicaoBolsa
+    extra = 1
+
+
 @admin.register(EditalProvisorio)
 class EditalProvisorioAdmin(admin.ModelAdmin):
     list_display = ['nome_instituto', 'modalidade_bolsa', 'numero_vagas', 'vigencia', 'status', 'total_eventos', 'created_at']
     list_filter = ['status', 'modalidade_bolsa']
     search_fields = ['nome_instituto', 'modalidade_bolsa']
-    inlines = [CronogramaEventoInline]
+    inlines = [CronogramaEventoInline, DistribuicaoBolsaInline]
     readonly_fields = ['criado_em', 'atualizado_em']
     fieldsets = (
         ('Instituto', {
             'fields': ('nome_instituto', 'email_solicitante', 'telefone', 'endereco'),
         }),
         ('Bolsas', {
-            'fields': ('numero_vagas', 'modalidade_bolsa', 'modalidade_atuacao',
+            'fields': ('modalidade_bolsa', 'modalidade_atuacao',
                        'plataforma_tecnologica', 'vigencia', 'endereco_atuacao'),
+        }),
+        ('Distribuição', {
+            'fields': ('numero_vagas', 'valor_total_bolsa', 'valor_bolsa',
+                       'valor_minimo', 'valor_maximo'),
         }),
         ('Requisitos', {
             'fields': ('qualificacao_minima', 'detalhes_qualificacao_minima',
-                       'experiencia_minima', 'conhecimento_desejavel',
+                       'conhecimento_desejavel',
                        'conteudo_prova_teorica', 'entrevista', 'criterios_desempate'),
-        }),
-        ('Valores', {
-            'fields': ('valor_bolsa', 'valor_minimo', 'valor_maximo'),
         }),
         ('Metadados', {
             'fields': ('status', 'criado_por', 'tenant'),

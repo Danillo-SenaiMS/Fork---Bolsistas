@@ -12,7 +12,9 @@ NIVEL_BOLSA_CONFIG = {
             ('Técnico', 'Técnico'),
             ('Graduação em Andamento', 'Graduação em Andamento'),
         ],
-        'experiencia': [],
+        'experiencia': [
+            ('Sem Experiência', 'Sem Experiência'),
+        ],
         'valor_minimo': 500.00,
         'valor_maximo': 2000.00,
     },
@@ -112,17 +114,17 @@ class EditalProvisorio(DataModel):
 
     numero_vagas                    = models.PositiveIntegerField('Número de Vagas')
     modalidade_bolsa                = models.CharField('Modalidade da Bolsa', max_length=50, choices=MODALIDADE_CHOICES)
+    valor_total_bolsa               = models.DecimalField('Valor Total da Bolsa (R$)', max_digits=12, decimal_places=2, default=0)
     valor_bolsa                     = models.DecimalField('Valor da Bolsa (R$)', max_digits=10, decimal_places=2, default=0)
     valor_minimo                    = models.DecimalField('Valor Mínimo (R$)', max_digits=10, decimal_places=2, default=0)
     valor_maximo                    = models.DecimalField('Valor Máximo (R$)', max_digits=10, decimal_places=2, default=0)
     modalidade_atuacao              = models.CharField('Modalidade de Atuação', max_length=50, choices=MODALIDADE_ATUACAO_CHOICES, default='presencial')
     plataforma_tecnologica          = models.CharField('Plataforma Tecnológica', max_length=255)
-    vigencia                        = models.CharField('Vigência', max_length=255)
-    endereco_atuacao                = models.TextField('Endereço de Atuação')
+    vigencia                        = models.PositiveIntegerField('Vigência (dias)', help_text='Mínimo: 15 dias. Máximo: 36 meses (1095 dias).', default=180)
+    endereco_atuacao                = models.TextField('Endereço de Atuação', blank=True, default='')
 
     qualificacao_minima             = models.CharField('Qualificação Mínima', max_length=255)
     detalhes_qualificacao_minima    = models.CharField('Qualificação Mínima em:', max_length=255, blank=True, default='')
-    experiencia_minima              = models.CharField('Experiência Mínima (Profissional/Acadêmica)', max_length=255, blank=True, default='')
     conhecimento_desejavel          = models.TextField('Conhecimento Desejável', blank=True, default='')
     conteudo_prova_teorica          = models.TextField('Conteúdo da Prova Teórica')
     entrevista                      = models.TextField('Entrevista')
@@ -146,6 +148,14 @@ class EditalProvisorio(DataModel):
     def total_eventos(self):
         return self.cronograma.count()
 
+    @property
+    def total_distribuido(self):
+        return sum(d.quantidade * d.valor_unitario for d in self.distribuicoes.all())
+
+    @property
+    def total_vagas_distribuidas(self):
+        return sum(d.quantidade for d in self.distribuicoes.all())
+
 
 class CronogramaEvento(DataModel):
     edital = models.ForeignKey(EditalProvisorio, on_delete=models.CASCADE, related_name='cronograma')
@@ -164,3 +174,24 @@ class CronogramaEvento(DataModel):
 
     def __str__(self):
         return f'{self.get_evento_display()} - {self.data_referencia}'
+
+
+class DistribuicaoBolsa(DataModel):
+    edital = models.ForeignKey(EditalProvisorio, on_delete=models.CASCADE, related_name='distribuicoes')
+    experiencia = models.CharField('Experiência', max_length=255)
+    quantidade = models.PositiveIntegerField('Quantidade de Bolsistas')
+    valor_unitario = models.DecimalField('Valor Unitário (R$)', max_digits=10, decimal_places=2)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='distribuicoes_provisorias')
+
+    objects = TenantManager()
+
+    class Meta:
+        verbose_name = 'Distribuição de Bolsa'
+        verbose_name_plural = 'Distribuições de Bolsa'
+
+    @property
+    def subtotal(self):
+        return self.quantidade * self.valor_unitario
+
+    def __str__(self):
+        return f'{self.quantidade}x {self.experiencia}'

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+{% load br_filters %}
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+    @page {
+        size: A4;
+        margin: 2cm 2.5cm;
+        @bottom-center {
+            content: "Pagina " counter(page) " de " counter(pages);
+            font-size: 8pt;
+            color: #777;
+        }
+    }
+    body {
+        font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+        color: #333;
+        line-height: 1.5;
+    }
+    .header {
+        text-align: center;
+        border-bottom: 3px solid #1a73e8;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+    .header h1 {
+        color: #1a73e8;
+        font-size: 18pt;
+        margin: 0 0 5px 0;
+        letter-spacing: -0.5px;
+    }
+    .header h2 {
+        color: #555;
+        font-size: 12pt;
+        margin: 0 0 5px 0;
+        font-weight: 400;
+    }
+    .header p {
+        color: #777;
+        font-size: 9pt;
+        margin: 0;
+    }
+    .section {
+        margin-bottom: 18px;
+        page-break-inside: avoid;
+    }
+    .section-title {
+        background-color: #1a73e8;
+        color: #fff;
+        padding: 6px 12px;
+        font-size: 11pt;
+        font-weight: 600;
+        margin: 0 0 10px 0;
+        border-radius: 3px;
+    }
+    .info-grid {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .info-grid td {
+        padding: 4px 8px;
+        vertical-align: top;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .info-grid .label {
+        color: #666;
+        font-size: 9pt;
+        width: 35%;
+        font-weight: 500;
+    }
+    .info-grid .value {
+        font-size: 10pt;
+        font-weight: 600;
+    }
+    table.distribuicao {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9pt;
+    }
+    table.distribuicao th {
+        background-color: #f0f4f8;
+        padding: 6px 10px;
+        text-align: left;
+        border: 1px solid #dee2e6;
+        font-weight: 600;
+        color: #333;
+    }
+    table.distribuicao td {
+        padding: 5px 10px;
+        border: 1px solid #dee2e6;
+    }
+    table.distribuicao td.text-end {
+        text-align: right;
+    }
+    table.distribuicao tfoot td {
+        background-color: #f0f4f8;
+        font-weight: 700;
+    }
+    .badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-size: 9pt;
+        font-weight: 600;
+        color: #fff;
+    }
+    .badge-success { background-color: #198754; }
+    .badge-warning { background-color: #ffc107; color: #333; }
+    .badge-secondary { background-color: #6c757d; }
+    .cronograma-item {
+        margin-bottom: 10px;
+        padding-left: 15px;
+        border-left: 3px solid #1a73e8;
+    }
+    .cronograma-item .evento-title {
+        font-weight: 600;
+        font-size: 10pt;
+        margin: 0;
+    }
+    .cronograma-item .evento-data {
+        color: #666;
+        font-size: 9pt;
+        margin: 0;
+    }
+    .cronograma-item .evento-obs {
+        color: #856404;
+        font-size: 8pt;
+        font-style: italic;
+    }
+    .valor-destaque {
+        font-size: 14pt;
+        color: #1a73e8;
+        font-weight: 700;
+    }
+    .footer-sep {
+        margin-top: 30px;
+        border-top: 1px solid #ccc;
+        padding-top: 10px;
+        text-align: center;
+        color: #999;
+        font-size: 8pt;
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>EDITAL PROVISORIO - BOLSAS SENAI - MS</h1>
+    <h2>{{ edital.get_nome_instituto_display }}</h2>
+    <p>Modalidade: {{ edital.get_modalidade_bolsa_display }} | Status:
+        <span class="badge {% if edital.status == 'publicado' %}badge-success{% elif edital.status == 'encerrado' %}badge-secondary{% else %}badge-warning{% endif %}">
+            {{ edital.get_status_display }}
+        </span>
+    </p>
+</div>
+
+<div class="section">
+    <div class="section-title">1. Dados do Instituto</div>
+    <table class="info-grid">
+        <tr>
+            <td class="label">Nome do Instituto</td>
+            <td class="value">{{ edital.get_nome_instituto_display }}</td>
+            <td class="label">Telefone</td>
+            <td class="value">{{ edital.telefone }}</td>
+        </tr>
+        <tr>
+            <td class="label">E-mail do Solicitante</td>
+            <td class="value">{{ edital.email_solicitante }}</td>
+            <td class="label"></td>
+            <td class="value"></td>
+        </tr>
+        <tr>
+            <td class="label">Endereco</td>
+            <td class="value" colspan="3">{{ edital.endereco }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="section">
+    <div class="section-title">2. Configuracao da Bolsa</div>
+    <table class="info-grid">
+        <tr>
+            <td class="label">Valor Total da Bolsa</td>
+            <td class="value valor-destaque">{{ edital.valor_total_bolsa|br_money }}</td>
+            <td class="label">Total de Vagas</td>
+            <td class="value">{{ edital.total_vagas_distribuidas }}</td>
+        </tr>
+        <tr>
+            <td class="label">Modalidade</td>
+            <td class="value">{{ edital.get_modalidade_bolsa_display }}</td>
+            <td class="label">Modalidade de Atuacao</td>
+            <td class="value">{{ edital.get_modalidade_atuacao_display }}</td>
+        </tr>
+        <tr>
+            <td class="label">Plataforma Tecnologica</td>
+            <td class="value">{{ edital.plataforma_tecnologica }}</td>
+            <td class="label">Vigencia</td>
+            <td class="value">{{ edital.vigencia }} dias</td>
+        </tr>
+        {% if edital.endereco_atuacao %}
+        <tr>
+            <td class="label">Endereco de Atuacao</td>
+            <td class="value" colspan="3">{{ edital.endereco_atuacao }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+{% if edital.distribuicoes.exists %}
+<div class="section">
+    <div class="section-title">3. Distribuicao de Bolsistas</div>
+    <table class="distribuicao">
+        <thead>
+            <tr>
+                <th>Experiencia</th>
+                <th style="text-align:center">Quantidade</th>
+                <th style="text-align:right">Valor Unitario (R$)</th>
+                <th style="text-align:right">Subtotal (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in edital.distribuicoes.all %}
+            <tr>
+                <td>{{ d.experiencia }}</td>
+                <td style="text-align:center">{{ d.quantidade }}</td>
+                <td style="text-align:right">{{ d.valor_unitario|br_money }}</td>
+                <td style="text-align:right">{{ d.subtotal|br_money }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="1" style="text-align:right"><strong>Total Vagas: {{ edital.total_vagas_distribuidas }}</strong></td>
+                <td></td>
+                <td style="text-align:right"><strong>Total Distribuido:</strong></td>
+                <td style="text-align:right"><strong>{{ edital.total_distribuido|br_money }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% endif %}
+
+<div class="section">
+    <div class="section-title">4. Requisitos para Bolsas</div>
+    <table class="info-grid">
+        <tr>
+            <td class="label">Qualificacao Minima</td>
+            <td class="value">{{ edital.qualificacao_minima }}</td>
+        </tr>
+        {% if edital.detalhes_qualificacao_minima %}
+        <tr>
+            <td class="label">Qualificacao Minima em</td>
+            <td class="value">{{ edital.detalhes_qualificacao_minima }}</td>
+        </tr>
+        {% endif %}
+        {% if edital.conhecimento_desejavel %}
+        <tr>
+            <td class="label">Conhecimento Desejavel</td>
+            <td class="value">{{ edital.conhecimento_desejavel }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<div class="section">
+    <div class="section-title">5. Detalhes Adicionais</div>
+    <table class="info-grid">
+        <tr>
+            <td class="label">Conteudo da Prova Teorica</td>
+            <td class="value">{{ edital.conteudo_prova_teorica }}</td>
+        </tr>
+        <tr>
+            <td class="label">Entrevista</td>
+            <td class="value">{{ edital.entrevista }}</td>
+        </tr>
+        <tr>
+            <td class="label">Criterios de Desempate</td>
+            <td class="value">{{ edital.criterios_desempate }}</td>
+        </tr>
+    </table>
+</div>
+
+{% if cronograma %}
+<div class="section">
+    <div class="section-title">6. Cronograma</div>
+    {% for evento in cronograma %}
+    <div class="cronograma-item">
+        <p class="evento-title">{{ evento.get_evento_display }}</p>
+        <p class="evento-data">{{ evento.data_referencia }}</p>
+        {% if evento.observacao %}
+        <p class="evento-obs">Obs.: {{ evento.observacao }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="footer-sep">
+    Documento gerado em {% now "d/m/Y H:i" %} | Bolsas SENAI - MS
+</div>
+
+</body>
+</html>
