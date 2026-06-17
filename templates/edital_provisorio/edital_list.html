@@ -7,7 +7,7 @@
         <h2 class="fw-bold text-primary mb-0">
             <i class="bi bi-journal-plus me-2"></i>Editais Provisórios
         </h2>
-        {% if user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
+        {% if user.is_superuser or user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
         <a href="{% url 'edital_provisorio:create' %}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>Novo Edital
         </a>
@@ -64,7 +64,7 @@
                                 <a href="{% url 'edital_provisorio:detail' edital.pk %}" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                {% if user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
+                                {% if user.is_superuser or user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
                                 <a href="{% url 'edital_provisorio:update' edital.pk %}" class="btn btn-sm btn-outline-warning" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>

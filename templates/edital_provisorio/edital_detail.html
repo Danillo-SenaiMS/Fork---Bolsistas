@@ -8,7 +8,7 @@
             <i class="bi bi-journal-plus me-2"></i>Edital Provisório
         </h2>
         <div>
-            {% if user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
+            {% if user.is_superuser or user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
             <a href="{% url 'edital_provisorio:update' edital.pk %}" class="btn btn-warning me-2">
                 <i class="bi bi-pencil-square me-1"></i>Editar
             </a>

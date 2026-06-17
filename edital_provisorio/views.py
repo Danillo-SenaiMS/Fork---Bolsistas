@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from base.mixins import TenantRequiredMixin, ManagerRequiredMixin
 from .models import EditalProvisorio
 from .forms import EditalProvisorioForm, CronogramaEventoFormSet
+from accounts.models import Tenant
 
 
 class ContextMixin:
@@ -22,7 +23,10 @@ class EditalProvisorioListView(TenantRequiredMixin, ContextMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        qs = EditalProvisorio.objects.filter(tenant=self.request.tenant).select_related('criado_por')
+        if self.request.user.is_superuser:
+            qs = EditalProvisorio.objects.all().select_related('criado_por')
+        else:
+            qs = EditalProvisorio.objects.filter(tenant=self.request.tenant).select_related('criado_por')
         busca = self.request.GET.get('busca', '')
         status = self.request.GET.get('status', '')
         if busca:
@@ -60,7 +64,7 @@ class EditalProvisorioCreateView(ManagerRequiredMixin, ContextMixin, CreateView)
         if cronograma_formset.is_valid():
             self.object = form.save(commit=False)
             self.object.criado_por = self.request.user
-            self.object.tenant = self.request.tenant
+            self.object.tenant = self.request.tenant or Tenant.objects.filter(ativo=True).first()
             self.object.save()
             cronograma_formset.instance = self.object
             cronograma_formset.save()
@@ -75,6 +79,8 @@ class EditalProvisorioUpdateView(ManagerRequiredMixin, ContextMixin, UpdateView)
     form_class = EditalProvisorioForm
 
     def get_queryset(self):
+        if self.request.user.is_superuser:
+            return EditalProvisorio.objects.all()
         return EditalProvisorio.objects.filter(tenant=self.request.tenant)
 
     def get_success_url(self):
@@ -110,6 +116,8 @@ class EditalProvisorioDetailView(TenantRequiredMixin, ContextMixin, DetailView):
     context_object_name = 'edital'
 
     def get_queryset(self):
+        if self.request.user.is_superuser:
+            return EditalProvisorio.objects.all().select_related('criado_por')
         return EditalProvisorio.objects.filter(tenant=self.request.tenant).select_related('criado_por')
 
     def get_context_data(self, **kwargs):
@@ -124,6 +132,8 @@ class EditalProvisorioDeleteView(ManagerRequiredMixin, ContextMixin, DeleteView)
     success_url = reverse_lazy('edital_provisorio:list')
 
     def get_queryset(self):
+        if self.request.user.is_superuser:
+            return EditalProvisorio.objects.all()
         return EditalProvisorio.objects.filter(tenant=self.request.tenant)
 
     def form_valid(self, form):

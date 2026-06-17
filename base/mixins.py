@@ -29,6 +29,8 @@ class TenantRequiredMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
+        if request.user.is_superuser:
+            return super().dispatch(request, *args, **kwargs)
         tenant = getattr(request, 'tenant', None)
         if not tenant:
             return redirect(reverse_lazy('landing'))

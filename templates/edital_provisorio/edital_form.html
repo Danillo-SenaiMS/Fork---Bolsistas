@@ -143,7 +143,7 @@
                             </div>
                         </div>
 
-                        {% if user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
+                        {% if user.is_superuser or user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
                         <hr class="my-4">
 
                         <div class="row g-3 mb-4">
