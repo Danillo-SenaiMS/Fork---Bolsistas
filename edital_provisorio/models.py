@@ -70,9 +70,10 @@ NIVEL_BOLSA_CONFIG = {
 
 class EditalProvisorio(DataModel):
     STATUS_CHOICES = [
-        ('rascunho', 'Rascunho'),
-        ('publicado', 'Publicado'),
+        ('aberto', 'Aberto'),
         ('encerrado', 'Encerrado'),
+        ('em_analise', 'Em Análise'),
+        ('cancelado', 'Cancelado'),
     ]
 
     MODALIDADE_CHOICES = [
@@ -107,6 +108,9 @@ class EditalProvisorio(DataModel):
         ('outorga',                 'Outorga das bolsas'),
     ]
 
+    nome_edital                     = models.CharField('Nome do Edital', max_length=255, default='')
+    area_estudo                     = models.CharField('Área de Estudo', max_length=255, default='')
+    detalhes_edital                 = models.TextField('Detalhes do Edital', blank=True, default='')
     nome_instituto                  = models.CharField('Nome do Instituto', max_length=255, choices=INSTITUTOS_CHOICES, help_text='Selecione o Instituto')
     email_solicitante               = models.EmailField('E-mail do Solicitante', help_text='Insira o seu e-mail')
     telefone                        = models.CharField('Telefone', max_length=20)
@@ -130,7 +134,7 @@ class EditalProvisorio(DataModel):
     entrevista                      = models.TextField('Entrevista')
     criterios_desempate             = models.TextField('Critérios de Desempate')
 
-    status                          = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='rascunho')
+    status                          = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='em_analise')
     criado_por                      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='editais_provisorios_criados')
     tenant                          = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='editais_provisorios')
 

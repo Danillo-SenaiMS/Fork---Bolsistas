@@ -30,6 +30,30 @@
 
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-primary text-white py-2">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Dados do Edital</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-0">Nome do Edital</label>
+                            <p class="fw-medium fs-6">{{ edital.nome_edital }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-0">Área de Estudo</label>
+                            <p class="fw-medium">{{ edital.area_estudo }}</p>
+                        </div>
+                        {% if edital.detalhes_edital %}
+                        <div class="col-12">
+                            <label class="form-label small text-muted mb-0">Detalhes do Edital</label>
+                            <p class="fw-medium">{{ edital.detalhes_edital|linebreaksbr }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white py-2">
                     <h5 class="mb-0"><i class="bi bi-building me-2"></i>Dados do Instituto</h5>
                 </div>
                 <div class="card-body">
@@ -186,7 +210,7 @@
                 </div>
                 <div class="card-body text-center">
                     <p class="mb-1">
-                        <span class="badge fs-6 {% if edital.status == 'publicado' %}bg-success{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
+                        <span class="badge fs-6 {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'cancelado' %}bg-danger{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
                             {{ edital.get_status_display }}
                         </span>
                     </p>

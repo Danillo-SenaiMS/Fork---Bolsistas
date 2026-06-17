@@ -15,12 +15,15 @@ class DistribuicaoBolsaInline(admin.TabularInline):
 
 @admin.register(EditalProvisorio)
 class EditalProvisorioAdmin(admin.ModelAdmin):
-    list_display = ['nome_instituto', 'modalidade_bolsa', 'numero_vagas', 'vigencia', 'status', 'total_eventos', 'created_at']
+    list_display = ['nome_edital', 'nome_instituto', 'modalidade_bolsa', 'numero_vagas', 'vigencia', 'status', 'total_eventos', 'created_at']
     list_filter = ['status', 'modalidade_bolsa']
-    search_fields = ['nome_instituto', 'modalidade_bolsa']
+    search_fields = ['nome_edital', 'nome_instituto', 'modalidade_bolsa']
     inlines = [CronogramaEventoInline, DistribuicaoBolsaInline]
     readonly_fields = ['criado_em', 'atualizado_em']
     fieldsets = (
+        ('Edital', {
+            'fields': ('nome_edital', 'area_estudo', 'detalhes_edital'),
+        }),
         ('Instituto', {
             'fields': ('nome_instituto', 'email_solicitante', 'telefone', 'endereco'),
         }),

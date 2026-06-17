@@ -29,17 +29,20 @@ class DistribuicaoBolsaForm(forms.ModelForm):
         choices = config.get('experiencia', [])
         if choices:
             self.fields['experiencia'].choices = [('', '--- Selecione ---')] + choices
-            self.fields['experiencia'].required = True
         else:
             self.fields['experiencia'].choices = [('', 'N/A')]
-            self.fields['experiencia'].required = False
+        self.fields['experiencia'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
         if not cleaned_data or cleaned_data.get('DELETE'):
             return cleaned_data
         experiencia = cleaned_data.get('experiencia')
-        valor_unitario = cleaned_data.get('valor_unitario')
+        quantidade = cleaned_data.get('quantidade') or 0
+        valor_unitario = cleaned_data.get('valor_unitario') or 0
+
+        if not experiencia and (quantidade or valor_unitario):
+            raise forms.ValidationError('Selecione a experiência quando quantidade ou valor unitário estiver preenchido.')
 
         modalidade = self.data.get('modalidade_bolsa')
         if not modalidade:
@@ -103,6 +106,7 @@ class EditalProvisorioForm(forms.ModelForm):
     class Meta:
         model = EditalProvisorio
         fields = [
+            'nome_edital', 'area_estudo', 'detalhes_edital',
             'nome_instituto', 'email_solicitante', 'telefone', 'endereco',
             'numero_vagas', 'valor_total_bolsa',
             'modalidade_bolsa', 'modalidade_atuacao',
@@ -114,6 +118,9 @@ class EditalProvisorioForm(forms.ModelForm):
             'status',
         ]
         widgets = {
+            'nome_edital': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Edital de Inovação Tecnológica 2026'}),
+            'area_estudo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Ciência da Computação, Biotecnologia'}),
+            'detalhes_edital': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Detalhes adicionais sobre o edital (opcional)'}),
             'nome_instituto': forms.Select(attrs={'class': 'form-select'}),
             'email_solicitante': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'solicitante@instituto.br'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(67) 99999-9999'}),
@@ -216,6 +223,24 @@ class CronogramaEventoForm(forms.ModelForm):
             }),
             'ordem': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'min': 0}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['evento'].required = False
+        self.fields['data_referencia'].required = False
+        self.fields['ordem'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data or cleaned_data.get('DELETE'):
+            return cleaned_data
+        evento = cleaned_data.get('evento')
+        data = cleaned_data.get('data_referencia')
+        if not evento and data:
+            raise forms.ValidationError('Selecione o evento quando a data de referência estiver preenchida.')
+        if evento and not data:
+            raise forms.ValidationError('Informe a data de referência para o evento selecionado.')
+        return cleaned_data
 
 
 CronogramaEventoFormSet = inlineformset_factory(

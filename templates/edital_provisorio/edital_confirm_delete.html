@@ -11,22 +11,18 @@
                     <h4 class="fw-bold mb-2">Confirmar Exclusão</h4>
                     <p class="text-muted mb-4">
                         Tem certeza que deseja excluir o edital provisório
-                        <strong>{{ edital.nome_instituto }}</strong>?
+                        <strong>{{ edital.get_nome_instituto_display }}</strong>?
                     </p>
 
                     <div class="bg-light rounded p-3 mb-4 text-start">
                         <div class="mb-2">
-                            <small class="text-muted">Modalidade:</small>
-                            <p class="fw-medium mb-0">{{ edital.get_modalidade_bolsa_display }}</p>
-                        </div>
-                        <div class="mb-2">
-                            <small class="text-muted">Vigência:</small>
-                            <p class="fw-medium mb-0">{{ edital.vigencia }}</p>
+                            <small class="text-muted">Edital:</small>
+                            <p class="fw-medium mb-0">{{ edital.nome_edital|default:'-' }}</p>
                         </div>
                         <div>
                             <small class="text-muted">Status:</small>
                             <p class="fw-medium mb-0">
-                                <span class="badge {% if edital.status == 'publicado' %}bg-success{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
+                                <span class="badge {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'cancelado' %}bg-danger{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
                                     {{ edital.get_status_display }}
                                 </span>
                             </p>
