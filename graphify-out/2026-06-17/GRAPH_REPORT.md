@@ -1,12 +1,12 @@
 # Graph Report - Bolsas Senai  (2026-06-17)
 
 ## Corpus Check
-- 83 files · ~25,060 words
+- 82 files · ~23,997 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 745 nodes · 1163 edges · 186 communities (73 shown, 113 thin omitted)
-- Extraction: 51% EXTRACTED · 35% INFERRED · 0% AMBIGUOUS · INFERRED: 407 edges (avg confidence: 0.5)
+- 740 nodes · 1149 edges · 183 communities (71 shown, 112 thin omitted)
+- Extraction: 50% EXTRACTED · 35% INFERRED · 0% AMBIGUOUS · INFERRED: 407 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
@@ -171,25 +171,20 @@
 - [[_COMMUNITY_Community 154|Community 154]]
 - [[_COMMUNITY_Community 156|Community 156]]
 - [[_COMMUNITY_Community 159|Community 159]]
-- [[_COMMUNITY_Community 183|Community 183]]
-- [[_COMMUNITY_Community 184|Community 184]]
-- [[_COMMUNITY_Community 185|Community 185]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `ManagerRequiredMixin` - 53 edges
 2. `TenantRequiredMixin` - 50 edges
-3. `User` - 49 edges
-4. `Tenant` - 41 edges
+3. `User` - 48 edges
+4. `Tenant` - 40 edges
 5. `Perfil` - 31 edges
-6. `TenantManager` - 27 edges
+6. `TenantManager` - 26 edges
 7. `CadastroBolsista` - 25 edges
 8. `CursoSuperior` - 25 edges
 9. `PosGraduacao` - 25 edges
 10. `SolicitacaoEdicao` - 25 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Meta` --uses--> `TenantManager`  [INFERRED]
-  accounts/models.py → base/managers.py
 - `User` --uses--> `TenantManager`  [INFERRED]
   accounts/models.py → base/managers.py
 - `Classificacao` --uses--> `User`  [INFERRED]
@@ -198,27 +193,29 @@
   classificacao/models.py → accounts/models.py
 - `CriterioClassificacao` --uses--> `User`  [INFERRED]
   classificacao/models.py → accounts/models.py
+- `Meta` --uses--> `User`  [INFERRED]
+  classificacao/models.py → accounts/models.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (186 total, 113 thin omitted)
+## Communities (183 total, 112 thin omitted)
 
 ### Community 0 - "User Management"
 Cohesion: 0.08
 Nodes (34): AbstractUser, User, CadastroBolsistaAdmin, CursoSuperiorAdmin, PosGraduacaoAdmin, SolicitacaoEdicaoAdmin, CadastroBolsista, CursoSuperior (+26 more)
 
 ### Community 1 - "Access Control Mixins"
-Cohesion: 0.10
-Nodes (19): CreateView, AplicacaoEditalAdmin, EditalAdmin, AplicacaoEdital, Edital, Meta, AlterarStatusAplicacaoView, AplicacaoListView (+11 more)
+Cohesion: 0.13
+Nodes (17): CreateView, DetailView, AplicacaoEditalAdmin, EditalAdmin, AplicacaoEdital, Edital, Meta, AlterarStatusAplicacaoView (+9 more)
 
 ### Community 2 - "User Model & Manager"
-Cohesion: 0.12
-Nodes (13): AdminRequiredMixin, ManagerRequiredMixin, RoleRequiredMixin, DeleteView, DetailView, EditalProvisorioForm, ContextMixin, EditalProvisorioCreateView (+5 more)
+Cohesion: 0.11
+Nodes (15): DeleteView, CronogramaEventoInline, EditalProvisorioAdmin, CronogramaEventoForm, EditalProvisorioForm, Meta, CronogramaEvento, EditalProvisorio (+7 more)
 
 ### Community 3 - "Classification System"
-Cohesion: 0.12
-Nodes (20): TenantRequiredMixin, ClassificacaoAdmin, ClassificacaoCriterioAdmin, CriterioClassificacaoAdmin, Classificacao, ClassificacaoCriterio, CriterioClassificacao, Meta (+12 more)
+Cohesion: 0.07
+Nodes (30): AdminRequiredMixin, ManagerRequiredMixin, RoleRequiredMixin, TenantRequiredMixin, ClassificacaoAdmin, ClassificacaoCriterioAdmin, CriterioClassificacaoAdmin, Classificacao (+22 more)
 
 ### Community 4 - "App Configuration"
 Cohesion: 0.06
@@ -229,8 +226,8 @@ Cohesion: 0.07
 Nodes (32): Aplicacao List Template, Classificacao Detail Template, Classificacao List Template, Criterio List Template, Edital Cards Partial, Edital Detail Template, Edital Form Template, Edital List Template (+24 more)
 
 ### Community 6 - "Admin Interface"
-Cohesion: 0.16
-Nodes (17): DocumentoExternoAdmin, PerfilAdmin, TenantAdmin, UserAdmin, DocumentoExterno, Meta, Perfil, Tenant (+9 more)
+Cohesion: 0.07
+Nodes (29): DocumentoExternoAdmin, PerfilAdmin, TenantAdmin, UserAdmin, DocumentoExterno, Meta, Perfil, Tenant (+21 more)
 
 ### Community 7 - "Form Fields & Actions"
 Cohesion: 0.08
@@ -380,27 +377,19 @@ Nodes (3): Atividades, Entregável, SPRINT 10 — SEED DE DADOS
 Cohesion: 0.67
 Nodes (3): Atividades, Entregável, SPRINT 11 — HARDENING E FINALIZAÇÃO
 
-### Community 183 - "Community 183"
-Cohesion: 0.10
-Nodes (15): UserManager, TenantManager, DataModel, Meta, get_current_tenant(), TenantMiddleware, set_current_tenant(), BaseUserManager (+7 more)
-
-### Community 184 - "Community 184"
-Cohesion: 0.14
-Nodes (7): NotificacaoAdmin, Meta, Notificacao, MarcarLidaView, MarcarTodasLidasView, NotificacaoListView, View
-
 ## Knowledge Gaps
-- **103 isolated node(s):** `$schema`, `plugin`, `Migration`, `Migration`, `Meta` (+98 more)
+- **102 isolated node(s):** `$schema`, `plugin`, `Migration`, `Migration`, `Meta` (+97 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **113 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **112 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `User Management` to `Access Control Mixins`, `Classification System`, `Admin Interface`, `Data Seeding`, `Community 183`, `Community 184`?**
+- **Why does `User` connect `User Management` to `Access Control Mixins`, `User Model & Manager`, `Classification System`, `Admin Interface`, `Data Seeding`?**
   _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **Why does `ManagerRequiredMixin` connect `User Model & Manager` to `User Management`, `Access Control Mixins`, `Classification System`, `Admin Interface`?**
+- **Why does `ManagerRequiredMixin` connect `Classification System` to `User Management`, `Access Control Mixins`, `User Model & Manager`, `Admin Interface`?**
   _High betweenness centrality (0.022) - this node is a cross-community bridge._
-- **Why does `TenantRequiredMixin` connect `Classification System` to `User Management`, `Access Control Mixins`, `User Model & Manager`, `Admin Interface`, `Community 184`?**
+- **Why does `TenantRequiredMixin` connect `Classification System` to `User Management`, `Access Control Mixins`, `User Model & Manager`, `Admin Interface`?**
   _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Are the 50 inferred relationships involving `ManagerRequiredMixin` (e.g. with `AprovarUsuarioView` and `CustomLoginView`) actually correct?**
   _`ManagerRequiredMixin` has 50 INFERRED edges - model-reasoned connections that need verification._

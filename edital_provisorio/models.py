@@ -4,6 +4,68 @@ from base.managers import TenantManager
 from accounts.models import User, Tenant
 
 
+NIVEL_BOLSA_CONFIG = {
+    'nivel_1': {
+        'qualificacao': [
+            ('Ensino Médio', 'Ensino Médio'),
+            ('Profissionalizante', 'Profissionalizante'),
+            ('Técnico', 'Técnico'),
+            ('Graduação em Andamento', 'Graduação em Andamento'),
+        ],
+        'experiencia': [],
+        'valor_minimo': 500.00,
+        'valor_maximo': 2000.00,
+    },
+    'nivel_2': {
+        'qualificacao': [
+            ('Graduação Completa', 'Graduação Completa'),
+            ('Tecnólogo', 'Tecnólogo'),
+            ('Curso Técnico Completo', 'Curso Técnico Completo'),
+        ],
+        'experiencia': [
+            ('Sem Experiência', 'Sem Experiência'),
+            ('1 Ano de Experiência', '1 Ano de Experiência'),
+            ('2 Anos ou mais', '2 Anos ou mais'),
+        ],
+        'experiencia_valores': {
+            'Sem Experiência': (2500.00, 4000.00),
+            '1 Ano de Experiência': (4500.00, 6500.00),
+            '2 Anos ou mais': (7000.00, 10000.00),
+        },
+    },
+    'nivel_3': {
+        'qualificacao': [
+            ('Mestrado Concluído', 'Mestrado Concluído'),
+        ],
+        'experiencia': [
+            ('Sem Experiência', 'Sem Experiência'),
+            ('1 Ano de Experiência', '1 Ano de Experiência'),
+            ('2 Anos ou mais', '2 Anos ou mais'),
+        ],
+        'experiencia_valores': {
+            'Sem Experiência': (4500.00, 6000.00),
+            '1 Ano de Experiência': (6500.00, 8500.00),
+            '2 Anos ou mais': (9000.00, 12000.00),
+        },
+    },
+    'nivel_4': {
+        'qualificacao': [
+            ('Doutorado Concluído', 'Doutorado Concluído'),
+        ],
+        'experiencia': [
+            ('Sem Experiência', 'Sem Experiência'),
+            ('1 Ano de Experiência', '1 Ano de Experiência'),
+            ('2 Anos ou mais', '2 Anos ou mais'),
+        ],
+        'experiencia_valores': {
+            'Sem Experiência': (6500.00, 8000.00),
+            '1 Ano de Experiência': (8500.00, 10500.00),
+            '2 Anos ou mais': (11000.00, 14000.00),
+        },
+    },
+}
+
+
 class EditalProvisorio(DataModel):
     STATUS_CHOICES = [
         ('rascunho', 'Rascunho'),
@@ -12,48 +74,63 @@ class EditalProvisorio(DataModel):
     ]
 
     MODALIDADE_CHOICES = [
-        ('bolsa_mestrado', 'Bolsa de Mestrado'),
-        ('bolsa_doutorado', 'Bolsa de Doutorado'),
-        ('bolsa_pos_doutorado', 'Bolsa de Pós-Doutorado'),
-        ('bolsa_ic', 'Bolsa de Iniciação Científica'),
-        ('bolsa_extensao', 'Bolsa de Extensão'),
-        ('bolsa_desenvolvimento', 'Bolsa de Desenvolvimento Tecnológico'),
-        ('bolsa_aperfeicoamento', 'Bolsa de Aperfeiçoamento'),
+        ('nivel_1', 'Nível 1'),
+        ('nivel_2', 'Nível 2'),
+        ('nivel_3', 'Nível 3'),
+        ('nivel_4', 'Nível 4'),
+    ]
+
+    MODALIDADE_ATUACAO_CHOICES = [
+        ('presencial', 'Presencial'),
+        ('remota', 'Remota'),
+    ]
+
+    INSTITUTOS_CHOICES = [
+        ('isi_biomassa',            'ISI Biomassa'),
+        ('ist_alimentos',           'IST Alimentos e Bebidas'),
+        ('ist_construcao',          'Faculdade da Construção'),
+        ('fatec_cg',                'FATEC - Campo Grande'),
+        ('departamento_regional',   'DR'),
     ]
 
     EVENTO_CHOICES = [
-        ('inicio_submissao', 'Início da submissão das candidaturas'),
-        ('limite_submissao', 'Data limite para submissão das candidaturas'),
-        ('resultado_aptas', 'Resultado das candidaturas aptas (análise documental/curricular)'),
-        ('prova_teorica', 'Prova teórica'),
-        ('resultado_prova', 'Resultado da prova teórica'),
-        ('envio_documentacao', 'Envio da Documentação Comprobatória'),
-        ('entrevista', 'Entrevista'),
-        ('resultado_final', 'Divulgação do Resultado Final'),
-        ('outorga', 'Outorga das bolsas'),
+        ('inicio_submissao',        'Início da submissão das candidaturas'),
+        ('limite_submissao',        'Data limite para submissão das candidaturas'),
+        ('resultado_aptas',         'Resultado das candidaturas aptas (análise documental/curricular)'),
+        ('prova_teorica',           'Prova teórica'),
+        ('resultado_prova',         'Resultado da prova teórica'),
+        ('envio_documentacao',      'Envio da Documentação Comprobatória'),
+        ('entrevista',              'Entrevista'),
+        ('resultado_final',         'Divulgação do Resultado Final'),
+        ('outorga',                 'Outorga das bolsas'),
     ]
 
-    nome_instituto = models.CharField('Nome do Instituto', max_length=255)
-    email_solicitante = models.EmailField('E-mail do Solicitante')
-    telefone = models.CharField('Telefone', max_length=20)
-    endereco = models.TextField('Endereço')
+    nome_instituto                  = models.CharField('Nome do Instituto', max_length=255, choices=INSTITUTOS_CHOICES, help_text='Selecione o Instituto')
+    email_solicitante               = models.EmailField('E-mail do Solicitante', help_text='Insira o seu e-mail')
+    telefone                        = models.CharField('Telefone', max_length=20)
+    endereco                        = models.TextField('Endereço')
 
-    numero_vagas = models.PositiveIntegerField('Número de Vagas')
-    modalidade_bolsa = models.CharField('Modalidade da Bolsa', max_length=50, choices=MODALIDADE_CHOICES)
-    plataforma_tecnologica = models.CharField('Plataforma Tecnológica', max_length=255)
-    vigencia = models.CharField('Vigência', max_length=255)
-    endereco_atuacao = models.TextField('Endereço de Atuação')
+    numero_vagas                    = models.PositiveIntegerField('Número de Vagas')
+    modalidade_bolsa                = models.CharField('Modalidade da Bolsa', max_length=50, choices=MODALIDADE_CHOICES)
+    valor_bolsa                     = models.DecimalField('Valor da Bolsa (R$)', max_digits=10, decimal_places=2, default=0)
+    valor_minimo                    = models.DecimalField('Valor Mínimo (R$)', max_digits=10, decimal_places=2, default=0)
+    valor_maximo                    = models.DecimalField('Valor Máximo (R$)', max_digits=10, decimal_places=2, default=0)
+    modalidade_atuacao              = models.CharField('Modalidade de Atuação', max_length=50, choices=MODALIDADE_ATUACAO_CHOICES, default='presencial')
+    plataforma_tecnologica          = models.CharField('Plataforma Tecnológica', max_length=255)
+    vigencia                        = models.CharField('Vigência', max_length=255)
+    endereco_atuacao                = models.TextField('Endereço de Atuação')
 
-    qualificacao_minima = models.TextField('Qualificação Mínima')
-    experiencia_minima = models.TextField('Experiência Mínima (Profissional/Acadêmica)')
-    conhecimento_desejavel = models.TextField('Conhecimento Desejável', blank=True, default='')
-    conteudo_prova_teorica = models.TextField('Conteúdo da Prova Teórica')
-    entrevista = models.TextField('Entrevista')
-    criterios_desempate = models.TextField('Critérios de Desempate')
+    qualificacao_minima             = models.CharField('Qualificação Mínima', max_length=255)
+    detalhes_qualificacao_minima    = models.CharField('Qualificação Mínima em:', max_length=255, blank=True, default='')
+    experiencia_minima              = models.CharField('Experiência Mínima (Profissional/Acadêmica)', max_length=255, blank=True, default='')
+    conhecimento_desejavel          = models.TextField('Conhecimento Desejável', blank=True, default='')
+    conteudo_prova_teorica          = models.TextField('Conteúdo da Prova Teórica')
+    entrevista                      = models.TextField('Entrevista')
+    criterios_desempate             = models.TextField('Critérios de Desempate')
 
-    status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='rascunho')
-    criado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name='editais_provisorios_criados')
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='editais_provisorios')
+    status                          = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='rascunho')
+    criado_por                      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='editais_provisorios_criados')
+    tenant                          = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='editais_provisorios')
 
     objects = TenantManager()
 

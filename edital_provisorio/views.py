@@ -1,10 +1,12 @@
+import json
+
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.shortcuts import redirect
 
 from base.mixins import TenantRequiredMixin, ManagerRequiredMixin
-from .models import EditalProvisorio
+from .models import EditalProvisorio, NIVEL_BOLSA_CONFIG
 from .forms import EditalProvisorioForm, CronogramaEventoFormSet
 from accounts.models import Tenant
 
@@ -13,6 +15,7 @@ class ContextMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['status_choices'] = EditalProvisorio.STATUS_CHOICES
+        context['nivel_config_json'] = json.dumps(NIVEL_BOLSA_CONFIG)
         return context
 
 

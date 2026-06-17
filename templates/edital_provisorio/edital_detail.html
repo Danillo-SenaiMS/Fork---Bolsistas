@@ -61,17 +61,25 @@
                         <label class="form-label small text-muted mb-0">Modalidade</label>
                         <p class="fw-medium">{{ edital.get_modalidade_bolsa_display }}</p>
                     </div>
+                    <div class="col-sm-3">
+                        <label class="form-label small text-muted mb-0">Atuação</label>
+                        <p class="fw-medium">{{ edital.get_modalidade_atuacao_display }}</p>
+                    </div>
                     <div class="col-sm-6">
                         <label class="form-label small text-muted mb-0">Plataforma Tecnológica</label>
                         <p class="fw-medium">{{ edital.plataforma_tecnologica }}</p>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <label class="form-label small text-muted mb-0">Vigência</label>
                         <p class="fw-medium">{{ edital.vigencia }}</p>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <label class="form-label small text-muted mb-0">Endereço de Atuação</label>
                         <p class="fw-medium">{{ edital.endereco_atuacao|linebreaksbr }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Valor da Bolsa</label>
+                        <p class="fw-medium">R$ {{ edital.valor_bolsa }}</p>
                     </div>
                 </div>
             </div>
@@ -81,13 +89,23 @@
                     <i class="bi bi-list-check me-2 text-primary"></i>Requisitos para Bolsas
                 </h5>
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label small text-muted mb-0">Qualificação Mínima</label>
-                        <p class="fw-medium">{{ edital.qualificacao_minima|linebreaksbr }}</p>
+                        <p class="fw-medium">{{ edital.qualificacao_minima }}</p>
                     </div>
-                    <div class="col-md-6">
+                    {% if edital.detalhes_qualificacao_minima %}
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-0">Qualificação Mínima em</label>
+                        <p class="fw-medium">{{ edital.detalhes_qualificacao_minima }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-3">
                         <label class="form-label small text-muted mb-0">Experiência Mínima</label>
-                        <p class="fw-medium">{{ edital.experiencia_minima|linebreaksbr }}</p>
+                        <p class="fw-medium">{{ edital.experiencia_minima }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-0">Faixa de Valor</label>
+                        <p class="fw-medium">R$ {{ edital.valor_minimo }} - R$ {{ edital.valor_maximo }}</p>
                     </div>
                     {% if edital.conhecimento_desejavel %}
                     <div class="col-md-12">

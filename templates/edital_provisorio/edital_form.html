@@ -70,6 +70,13 @@
                                 <div class="text-danger small mt-1">{{ form.modalidade_bolsa.errors|join:', ' }}</div>
                                 {% endif %}
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">{{ form.modalidade_atuacao.label }}</label>
+                                {{ form.modalidade_atuacao }}
+                                {% if form.modalidade_atuacao.errors %}
+                                <div class="text-danger small mt-1">{{ form.modalidade_atuacao.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.plataforma_tecnologica.label }}</label>
                                 {{ form.plataforma_tecnologica }}
@@ -99,19 +106,57 @@
                             <i class="bi bi-list-check me-2 text-primary"></i>Requisitos para Bolsas
                         </h5>
                         <div class="row g-3 mb-4">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">{{ form.qualificacao_minima.label }}</label>
                                 {{ form.qualificacao_minima }}
                                 {% if form.qualificacao_minima.errors %}
                                 <div class="text-danger small mt-1">{{ form.qualificacao_minima.errors|join:', ' }}</div>
                                 {% endif %}
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.detalhes_qualificacao_minima.label }}</label>
+                                {{ form.detalhes_qualificacao_minima }}
+                                {% if form.detalhes_qualificacao_minima.errors %}
+                                <div class="text-danger small mt-1">{{ form.detalhes_qualificacao_minima.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">{{ form.experiencia_minima.label }}</label>
                                 {{ form.experiencia_minima }}
                                 {% if form.experiencia_minima.errors %}
                                 <div class="text-danger small mt-1">{{ form.experiencia_minima.errors|join:', ' }}</div>
                                 {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.valor_minimo.label }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    {{ form.valor_minimo }}
+                                </div>
+                                {% if form.valor_minimo.errors %}
+                                <div class="text-danger small mt-1">{{ form.valor_minimo.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.valor_maximo.label }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    {{ form.valor_maximo }}
+                                </div>
+                                {% if form.valor_maximo.errors %}
+                                <div class="text-danger small mt-1">{{ form.valor_maximo.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.valor_bolsa.label }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    {{ form.valor_bolsa }}
+                                </div>
+                                {% if form.valor_bolsa.errors %}
+                                <div class="text-danger small mt-1">{{ form.valor_bolsa.errors|join:', ' }}</div>
+                                {% endif %}
+                                <div class="form-text">Informe o valor dentro da faixa exibida acima.</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.conhecimento_desejavel.label }}</label>
@@ -239,8 +284,89 @@
 {% endblock %}
 
 {% block extra_js %}
+<script id="nivel-config-data" type="application/json">{{ nivel_config_json }}</script>
 <script>
 (function() {
+    var NIVEL_CONFIG = JSON.parse(document.getElementById('nivel-config-data').textContent);
+
+    var modalidadeSelect = document.getElementById('id_modalidade_bolsa');
+    var qualificacaoSelect = document.getElementById('id_qualificacao_minima');
+    var experienciaSelect = document.getElementById('id_experiencia_minima');
+    var valorMinimoInput = document.getElementById('id_valor_minimo');
+    var valorMaximoInput = document.getElementById('id_valor_maximo');
+    var detalhesGroup = document.getElementById('id_detalhes_qualificacao_minima').closest('.col-md-4');
+
+    function updateFields() {
+        var nivel = modalidadeSelect.value;
+        var config = NIVEL_CONFIG[nivel];
+
+        qualificacaoSelect.innerHTML = '';
+        experienciaSelect.innerHTML = '';
+
+        if (!config) {
+            qualificacaoSelect.innerHTML = '<option value="">--- Selecione um nível primeiro ---</option>';
+            experienciaSelect.innerHTML = '<option value="">--- Selecione um nível primeiro ---</option>';
+            valorMinimoInput.value = '';
+            valorMaximoInput.value = '';
+            return;
+        }
+
+        config.qualificacao.forEach(function(q) {
+            var opt = document.createElement('option');
+            opt.value = q[0];
+            opt.textContent = q[1];
+            qualificacaoSelect.appendChild(opt);
+        });
+
+        if (config.experiencia && config.experiencia.length > 0) {
+            experienciaSelect.innerHTML = '<option value="">--- Selecione ---</option>';
+            config.experiencia.forEach(function(e) {
+                var opt = document.createElement('option');
+                opt.value = e[0];
+                opt.textContent = e[1];
+                experienciaSelect.appendChild(opt);
+            });
+            experienciaSelect.disabled = false;
+            experienciaSelect.style.opacity = '1';
+        } else {
+            experienciaSelect.innerHTML = '<option value="">N/A - Sem experiência exigida</option>';
+            experienciaSelect.disabled = true;
+            experienciaSelect.style.opacity = '0.6';
+        }
+
+        updateValorRange();
+    }
+
+    function updateValorRange() {
+        var nivel = modalidadeSelect.value;
+        var config = NIVEL_CONFIG[nivel];
+        var experiencia = experienciaSelect.value;
+
+        if (!config) return;
+
+        var minVal, maxVal;
+
+        if (config.experiencia_valores && config.experiencia_valores[experiencia]) {
+            minVal = config.experiencia_valores[experiencia][0];
+            maxVal = config.experiencia_valores[experiencia][1];
+        } else if (config.valor_minimo !== undefined) {
+            minVal = config.valor_minimo;
+            maxVal = config.valor_maximo;
+        } else {
+            return;
+        }
+
+        valorMinimoInput.value = minVal.toFixed(2);
+        valorMaximoInput.value = maxVal.toFixed(2);
+    }
+
+    modalidadeSelect.addEventListener('change', updateFields);
+    experienciaSelect.addEventListener('change', updateValorRange);
+
+    if (modalidadeSelect.value) {
+        updateFields();
+    }
+
     var container = document.getElementById('cronograma-rows');
     var addBtn = document.getElementById('add-cronograma-row');
     var totalForms = document.getElementById('id_cronograma-TOTAL_FORMS');
