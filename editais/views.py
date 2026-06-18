@@ -315,8 +315,14 @@ class EditalResumoView(TenantRequiredMixin, TemplateView):
         if result["error"]:
             html = f'<div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{result["error"]}</div>'
         else:
+            import re
+            resumo = result['summary']
+            resumo = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', resumo)
+            resumo = re.sub(r'\*(.*?)\*', r'<em>\1</em>', resumo)
+            resumo = resumo.replace('\n\n', '</p><p>')
+            resumo = '<p>' + resumo + '</p>'
             html = render_to_string('editais/partials/edital_resumo.html', {
-                'resumo': result['summary'],
+                'resumo': resumo,
                 'edital': edital,
             }, request=request)
 

@@ -5,7 +5,7 @@ from django.db import transaction
 from faker import Faker
 
 from accounts.models import User, Perfil, Tenant
-from cadastro.models import CadastroBolsista, CursoSuperior, PosGraduacao
+from cadastro.models import CadastroBolsista, FormacaoAcademica
 from editais.models import EditalProvisorio, AplicacaoEdital
 from classificacao.models import CriterioClassificacao, Classificacao, ClassificacaoCriterio
 
@@ -22,8 +22,7 @@ class Command(BaseCommand):
         CriterioClassificacao.objects.all().delete()
         AplicacaoEdital.objects.all().delete()
         EditalProvisorio.objects.all().delete()
-        CursoSuperior.objects.all().delete()
-        PosGraduacao.objects.all().delete()
+        FormacaoAcademica.objects.all().delete()
         CadastroBolsista.objects.all().delete()
         Perfil.objects.all().delete()
         User.objects.exclude(is_superuser=True).delete()
@@ -92,26 +91,33 @@ class Command(BaseCommand):
     def _criar_cadastro(self, user, tenant):
         cad = CadastroBolsista.objects.create(
             user=user,
-            endereco=fake.address(),
+            rua=fake.street_name(),
+            numero=str(fake.building_number()),
+            bairro=fake.bairro(),
+            cidade=fake.city(),
+            estado=fake.random_element(['MS', 'SP', 'RJ', 'PR', 'RS']),
+            telefone=fake.phone_number(),
             data_nascimento=fake.date_of_birth(minimum_age=18, maximum_age=70),
             tenant=tenant,
         )
         if fake.boolean(chance_of_getting_true=60):
-            CursoSuperior.objects.create(
+            FormacaoAcademica.objects.create(
                 bolsista=cad,
+                tipo='graduacao',
+                status=fake.random_element(['em_andamento', 'concluida']),
                 instituicao=fake.company(),
                 curso=fake.random_element([
                     'Engenharia de Producao', 'Administracao', 'Ciencia da Computacao',
                     'Direito', 'Contabilidade', 'Psicologia',
                 ]),
-                grau=fake.random_element(['tecnologo', 'bacharelado', 'licenciatura']),
                 ano_conclusao=fake.random_int(min=2000, max=2025),
                 tenant=tenant,
             )
         if fake.boolean(chance_of_getting_true=40):
-            PosGraduacao.objects.create(
+            FormacaoAcademica.objects.create(
                 bolsista=cad,
-                tipo=fake.random_element(['pos_graduacao', 'mba', 'especializacao', 'mestrado']),
+                tipo=fake.random_element(['especializacao', 'mba', 'mestrado']),
+                status=fake.random_element(['em_andamento', 'concluida']),
                 instituicao=fake.company(),
                 area=fake.random_element([
                     'Gestao de Projetos', 'Data Science', 'Educacao',

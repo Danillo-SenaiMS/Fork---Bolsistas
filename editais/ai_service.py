@@ -1,12 +1,15 @@
-import json
 import logging
-from django.conf import settings
+from decouple import config
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional
 
 logger = logging.getLogger(__name__)
+
+GROQ_API_KEY = config('GROQ_API_KEY', default='')
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 
 class SummarizeState(TypedDict):
@@ -92,14 +95,19 @@ Formato obrigatorio:
 **Vigencia:** prazo da bolsa"""
 
 
-def summarize_edital(edital) -> dict:
-    ctx = _build_edital_context(edital)
-
-    llm = ChatOpenAI(
-        model="gpt-4.1-mini",
+def _get_llm():
+    return ChatOpenAI(
+        model=GROQ_MODEL,
         temperature=0.3,
         max_tokens=600,
+        openai_api_key=GROQ_API_KEY,
+        openai_api_base=GROQ_BASE_URL,
     )
+
+
+def summarize_edital(edital) -> dict:
+    ctx = _build_edital_context(edital)
+    llm = _get_llm()
 
     messages = [
         SystemMessage(content=SYSTEM_PROMPT),
@@ -118,11 +126,7 @@ def build_summarize_graph():
     workflow = StateGraph(SummarizeState)
 
     def summarize_node(state: SummarizeState) -> SummarizeState:
-        llm = ChatOpenAI(
-            model="gpt-4.1-mini",
-            temperature=0.3,
-            max_tokens=600,
-        )
+        llm = _get_llm()
         messages = [
             SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(content=f"Resuma o seguinte edital de forma precisa e objetiva:\n\n{state['edital_data']}"),

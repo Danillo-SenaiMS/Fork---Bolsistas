@@ -16,25 +16,13 @@ from classificacao.models import Classificacao
 from cadastro.models import SolicitacaoEdicao
 
 class RegistroForm(forms.ModelForm):
-    telefone = forms.CharField(
-        max_length=20, required=False, label='Telefone',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(67) 99999-9999'})
-    )
-    data_nascimento = forms.DateField(
-        label='Data de nascimento',
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-    )
-    documentos = forms.FileField(
-        required=False, label='RG / CPF',
-        widget=forms.FileInput(attrs={'class': 'form-control'})
-    )
     password1 = forms.CharField(
         label='Senha',
-        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Crie uma senha'})
     )
     password2 = forms.CharField(
-        label='Confirmar senha',
-        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+        label='Palavra-Passe',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirme a senha'})
     )
 
     class Meta:
@@ -86,17 +74,8 @@ class RegistroView(FormView):
         Perfil.objects.create(
             user=user,
             tipo='COMMON',
-            telefone=form.cleaned_data.get('telefone', ''),
-            data_nascimento=form.cleaned_data.get('data_nascimento'),
             tenant=tenant,
         )
-        if form.cleaned_data.get('documentos'):
-            DocumentoExterno.objects.create(
-                user=user,
-                arquivo=form.cleaned_data['documentos'],
-                tipo='OUTRO',
-                tenant=tenant,
-            )
         messages.success(self.request, 'Conta criada com sucesso! Faça login.')
         return super().form_valid(form)
 

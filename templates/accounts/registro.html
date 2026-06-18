@@ -4,78 +4,61 @@
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card p-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm p-4">
                 <div class="text-center mb-4">
                     <i class="bi bi-person-plus-fill text-primary fs-1"></i>
-                    <h3 class="fw-bold mt-2">Criar Conta</h3>
-                    <p class="text-muted">Preencha seus dados para se cadastrar</p>
+                    <h3 class="fw-bold mt-2">Novo Cadastro</h3>
+                    <p class="text-muted">Crie sua conta para acessar os editais</p>
                 </div>
 
-                <form method="post" enctype="multipart/form-data" novalidate>
+                <form method="post" novalidate>
                     {% csrf_token %}
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">{{ form.nome_completo.label }}</label>
-                        {{ form.nome_completo }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                            {{ form.nome_completo }}
+                        </div>
                         {% if form.nome_completo.errors %}
                         <div class="text-danger small mt-1">{{ form.nome_completo.errors|join:', ' }}</div>
                         {% endif %}
                     </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">{{ form.email.label }}</label>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.email.label }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text">@</span>
                             {{ form.email }}
-                            {% if form.email.errors %}
-                            <div class="text-danger small mt-1">{{ form.email.errors|join:', ' }}</div>
-                            {% endif %}
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">{{ form.telefone.label }}</label>
-                            {{ form.telefone }}
-                            {% if form.telefone.errors %}
-                            <div class="text-danger small mt-1">{{ form.telefone.errors|join:', ' }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">{{ form.data_nascimento.label }}</label>
-                            {{ form.data_nascimento }}
-                            {% if form.data_nascimento.errors %}
-                            <div class="text-danger small mt-1">{{ form.data_nascimento.errors|join:', ' }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">{{ form.documentos.label }}</label>
-                            {{ form.documentos }}
-                            <small class="text-muted">Anexe copia do RG e/ou CPF (PDF ou imagem).</small>
-                            {% if form.documentos.errors %}
-                            <div class="text-danger small mt-1">{{ form.documentos.errors|join:', ' }}</div>
-                            {% endif %}
-                        </div>
+                        {% if form.email.errors %}
+                        <div class="text-danger small mt-1">{{ form.email.errors|join:', ' }}</div>
+                        {% endif %}
                     </div>
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">{{ form.password1.label }}</label>
-                            <div class="input-group">
-                                {{ form.password1 }}
-                                <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha('id_password1')"><i class="bi bi-eye"></i></button>
-                            </div>
-                            {% if form.password1.errors %}
-                            <div class="text-danger small mt-1">{{ form.password1.errors|join:', ' }}</div>
-                            {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.password1.label }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            {{ form.password1 }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha('id_password1')"><i class="bi bi-eye"></i></button>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">{{ form.password2.label }}</label>
-                            <div class="input-group">
-                                {{ form.password2 }}
-                                <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha('id_password2')"><i class="bi bi-eye"></i></button>
-                            </div>
-                            {% if form.password2.errors %}
-                            <div class="text-danger small mt-1">{{ form.password2.errors|join:', ' }}</div>
-                            {% endif %}
+                        {% if form.password1.errors %}
+                        <div class="text-danger small mt-1">{{ form.password1.errors|join:', ' }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.password2.label }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            {{ form.password2 }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha('id_password2')"><i class="bi bi-eye"></i></button>
                         </div>
+                        {% if form.password2.errors %}
+                        <div class="text-danger small mt-1">{{ form.password2.errors|join:', ' }}</div>
+                        {% endif %}
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 py-2 mt-2">

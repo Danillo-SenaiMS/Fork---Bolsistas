@@ -46,20 +46,52 @@
         <div class="col-lg-8">
             <div class="card p-4">
                 <h5 class="fw-semibold mb-3">
-                    <i class="bi bi-info-circle me-2 text-primary"></i>Dados Pessoais
+                    <i class="bi bi-person me-2 text-primary"></i>Dados Pessoais
                 </h5>
                 <div class="row g-3">
                     <div class="col-sm-6">
+                        <label class="form-label small text-muted mb-0">Nome</label>
+                        <p class="fw-medium">{{ cadastro.user.nome_completo }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label small text-muted mb-0">E-mail</label>
+                        <p class="fw-medium">{{ cadastro.user.email }}</p>
+                    </div>
+                    <div class="col-sm-6">
                         <label class="form-label small text-muted mb-0">Telefone</label>
-                        <p class="fw-medium">{{ cadastro.user.perfil.telefone|default:'Nao informado' }}</p>
+                        <p class="fw-medium">{{ cadastro.telefone|default:'Nao informado' }}</p>
                     </div>
                     <div class="col-sm-6">
                         <label class="form-label small text-muted mb-0">Data de Nascimento</label>
                         <p class="fw-medium">{{ cadastro.data_nascimento|date:'d/m/Y' }}</p>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label small text-muted mb-0">Endereco</label>
-                        <p class="fw-medium">{{ cadastro.endereco }}</p>
+                </div>
+            </div>
+
+            <div class="card p-4 mt-3">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-geo-alt me-2 text-primary"></i>Endereco
+                </h5>
+                <div class="row g-3">
+                    <div class="col-sm-8">
+                        <label class="form-label small text-muted mb-0">Rua</label>
+                        <p class="fw-medium">{{ cadastro.rua|default:'-' }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Numero</label>
+                        <p class="fw-medium">{{ cadastro.numero|default:'-' }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Bairro</label>
+                        <p class="fw-medium">{{ cadastro.bairro|default:'-' }}</p>
+                    </div>
+                    <div class="col-sm-5">
+                        <label class="form-label small text-muted mb-0">Cidade</label>
+                        <p class="fw-medium">{{ cadastro.cidade|default:'-' }}</p>
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="form-label small text-muted mb-0">Estado</label>
+                        <p class="fw-medium">{{ cadastro.get_estado_display|default:'-' }}</p>
                     </div>
                     {% if cadastro.curriculo %}
                     <div class="col-12">
@@ -78,17 +110,8 @@
                 <h5 class="fw-semibold mb-3">
                     <i class="bi bi-mortarboard me-2 text-primary"></i>Formacao Academica
                 </h5>
-                <div id="cursos-section">
-                    {% include 'cadastro/partials/curso_section.html' %}
-                </div>
-            </div>
-
-            <div class="card p-4 mt-3">
-                <h5 class="fw-semibold mb-3">
-                    <i class="bi bi-award me-2 text-primary"></i>Pos-Graduacoes
-                </h5>
-                <div id="pos-section">
-                    {% include 'cadastro/partials/pos_section.html' %}
+                <div id="formacao-section">
+                    {% include 'cadastro/partials/formacao_section.html' %}
                 </div>
             </div>
 

@@ -1,26 +1,19 @@
 from django.contrib import admin
-from .models import CadastroBolsista, CursoSuperior, PosGraduacao, SolicitacaoEdicao
+from .models import CadastroBolsista, FormacaoAcademica, SolicitacaoEdicao
 
 
 @admin.register(CadastroBolsista)
 class CadastroBolsistaAdmin(admin.ModelAdmin):
-    list_display = ['user', 'data_nascimento', 'endereco', 'pontuacao_previa', 'tenant', 'created_at']
-    list_filter = ['tenant']
-    search_fields = ['user__email', 'user__nome_completo', 'endereco']
+    list_display = ['user', 'telefone', 'cidade', 'estado', 'pontuacao_previa', 'tenant', 'created_at']
+    list_filter = ['tenant', 'estado']
+    search_fields = ['user__email', 'user__nome_completo', 'cidade', 'rua']
 
 
-@admin.register(CursoSuperior)
-class CursoSuperiorAdmin(admin.ModelAdmin):
-    list_display = ['bolsista', 'grau', 'curso', 'instituicao', 'ano_conclusao']
-    list_filter = ['grau']
-    search_fields = ['bolsista__user__nome_completo', 'curso', 'instituicao']
-
-
-@admin.register(PosGraduacao)
-class PosGraduacaoAdmin(admin.ModelAdmin):
-    list_display = ['bolsista', 'tipo', 'area', 'instituicao', 'ano_conclusao']
-    list_filter = ['tipo']
-    search_fields = ['bolsista__user__nome_completo', 'area', 'instituicao']
+@admin.register(FormacaoAcademica)
+class FormacaoAcademicaAdmin(admin.ModelAdmin):
+    list_display = ['bolsista', 'tipo', 'status', 'instituicao', 'curso', 'ano_conclusao']
+    list_filter = ['tipo', 'status']
+    search_fields = ['bolsista__user__nome_completo', 'instituicao', 'curso']
 
 
 @admin.register(SolicitacaoEdicao)

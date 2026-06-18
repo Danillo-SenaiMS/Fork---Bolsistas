@@ -1,11 +1,15 @@
-<div id="edital-resumo" class="card shadow-sm mb-4">
-    <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-robot me-2"></i>Resumo IA</h5>
-        <small class="text-white-50">gerado por IA</small>
-    </div>
-    <div class="card-body bg-info bg-opacity-10">
-        <div class="resumo-content" style="white-space:pre-line;line-height:1.6">
-            {{ resumo }}
+<div id="edital-resumo">
+    <div class="card shadow-sm border-info">
+        <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-robot"></i> Resumo IA
+            </h5>
+            <span class="badge bg-white text-info">Groq</span>
+        </div>
+        <div class="card-body px-4 py-3">
+            <div class="resumo-content" style="font-size:0.95rem;color:#333">
+                {{ resumo|safe }}
+            </div>
         </div>
     </div>
 </div>

@@ -6,10 +6,10 @@ def calcular_pontuacao_previa(bolsista, criterios):
     pontos_por_criterio = {}
     pontuacao_total = Decimal('0')
 
-    has_graduacao = bolsista.cursos_superiores.exists()
-    has_mestrado = bolsista.pos_graduacoes.filter(tipo='mestrado').exists()
-    has_doutorado = bolsista.pos_graduacoes.filter(tipo='doutorado').exists()
-    has_pos_doutorado = bolsista.pos_graduacoes.filter(tipo='pos_doutorado').exists()
+    has_graduacao = bolsista.formacoes.filter(tipo='graduacao').exists()
+    has_mestrado = bolsista.formacoes.filter(tipo='mestrado').exists()
+    has_doutorado = bolsista.formacoes.filter(tipo='doutorado').exists()
+    has_pos_doutorado = bolsista.formacoes.filter(tipo='pos_doutorado').exists()
 
     for criterio in criterios:
         nota = Decimal('0')
