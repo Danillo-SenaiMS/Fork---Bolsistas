@@ -9,3 +9,7 @@ def get_current_tenant():
 
 def set_current_tenant(tenant):
     _active.tenant = tenant
+
+
+def clear_current_tenant():
+    _active.tenant = None

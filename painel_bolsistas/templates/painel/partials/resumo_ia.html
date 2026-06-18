@@ -1,0 +1,21 @@
+{% if erro %}
+<div class="text-danger small">
+    <i class="bi bi-exclamation-triangle me-1"></i>{{ erro }}
+    <button class="btn btn-link btn-sm text-danger p-0 ms-1"
+            hx-get="{% url 'painel_resumo_ia' bolsista.pk %}"
+            hx-target="closest div"
+            hx-swap="innerHTML">Tentar novamente</button>
+</div>
+{% elif resumo %}
+<div class="text-muted small fst-italic">
+    <i class="bi bi-robot me-1 text-primary"></i>{{ resumo }}
+</div>
+{% else %}
+<div class="text-muted small">
+    <i class="bi bi-exclamation-circle me-1"></i>Nao foi possivel gerar o resumo.
+    <button class="btn btn-link btn-sm p-0 ms-1"
+            hx-get="{% url 'painel_resumo_ia' bolsista.pk %}"
+            hx-target="closest div"
+            hx-swap="innerHTML">Tentar novamente</button>
+</div>
+{% endif %}

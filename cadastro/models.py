@@ -64,6 +64,13 @@ class CadastroBolsista(DataModel):
     def __str__(self):
         return f'Cadastro de {self.user.nome_completo}'
 
+    @property
+    def ultima_formacao(self):
+        formacoes = list(self.formacoes.all())
+        if not formacoes:
+            return None
+        return max(formacoes, key=lambda f: f.ano_conclusao or 0)
+
 
 class FormacaoAcademica(DataModel):
     TIPO_CHOICES = [

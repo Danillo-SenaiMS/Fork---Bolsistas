@@ -10,6 +10,7 @@ urlpatterns = [
     path('editais/', include('editais.urls')),
     path('classificacao/', include('classificacao.urls')),
     path('notificacoes/', include('notifications.urls')),
+    path('painel/', include('painel_bolsistas.urls')),
 
     path('media/<path:path>', media_protegida, name='protected_media'),
 ]

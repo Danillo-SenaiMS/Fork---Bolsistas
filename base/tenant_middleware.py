@@ -1,4 +1,4 @@
-from .tenant import set_current_tenant
+from .tenant import set_current_tenant, clear_current_tenant
 
 
 class TenantMiddleware:
@@ -6,6 +6,7 @@ class TenantMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        clear_current_tenant()
         tenant = None
         if request.user.is_authenticated:
             perfil = getattr(request.user, 'perfil', None)

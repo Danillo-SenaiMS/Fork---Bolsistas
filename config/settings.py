@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'editais',
     'classificacao',
     'notifications',
+    'painel_bolsistas',
 ]
 
 MIDDLEWARE = [
