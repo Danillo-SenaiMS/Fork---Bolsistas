@@ -5,40 +5,89 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-primary mb-0">
-            <i class="bi bi-journal-text me-2"></i>Editais
+            <i class="bi bi-journal-plus me-2"></i>Editais
         </h2>
-        {% if pode_criar %}
+        {% if user.is_superuser or user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
         <a href="{% url 'edital_create' %}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>Novo Edital
         </a>
         {% endif %}
     </div>
 
-    <div class="card p-3 mb-4">
-        <form hx-get="{% url 'edital_list' %}" hx-target="#edital-results" hx-swap="innerHTML" hx-trigger="keyup changed delay:300ms from:input[name=busca], change from:select[name=status]" hx-indicator="#spinner" class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small">Buscar</label>
-                <input type="search" name="busca" class="form-control" placeholder="Digite para filtrar..." value="{{ busca }}">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small">Status</label>
-                <select name="status" class="form-select">
-                    <option value="todos" {% if status_atual == 'todos' %}selected{% endif %}>Todos</option>
-                    <option value="aberto" {% if status_atual == 'aberto' %}selected{% endif %}>Abertos</option>
-                    <option value="fechado" {% if status_atual == 'fechado' %}selected{% endif %}>Fechados</option>
-                    <option value="encerrado" {% if status_atual == 'encerrado' %}selected{% endif %}>Encerrados</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <span id="spinner" class="htmx-indicator text-muted small">
-                    <i class="bi bi-arrow-repeat spin"></i> Buscando...
-                </span>
-            </div>
-        </form>
-    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="busca" class="form-control" placeholder="Buscar por instituto..." value="{{ busca }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">Todos os status</option>
+                        {% for key, label in status_choices %}
+                        <option value="{{ key }}" {% if status_atual == key %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-outline-primary w-100">Filtrar</button>
+                </div>
+            </form>
 
-    <div id="edital-results">
-        {% include 'editais/partials/edital_cards.html' %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Edital</th>
+                            <th>Instituto</th>
+                            <th>Vagas</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for edital in editais %}
+                        <tr>
+                            <td class="fw-medium">{{ edital.nome_edital|default:'-' }}</td>
+                            <td class="fw-medium">{{ edital.get_nome_instituto_display }}</td>
+                            <td>{{ edital.numero_vagas }}</td>
+                            <td>
+                                <span class="badge {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'cancelado' %}bg-danger{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
+                                    {{ edital.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'edital_detail' edital.pk %}" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.is_superuser or user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
+                                <a href="{% url 'edital_update' edital.pk %}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'edital_delete' edital.pk %}" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                Nenhum edital encontrado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            {% include 'components/pagination.html' %}
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

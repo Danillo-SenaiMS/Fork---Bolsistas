@@ -1,78 +1,156 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
-from django.shortcuts import get_object_or_404, redirect
+import json
+import logging
+
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from django import forms
 
 from base.mixins import TenantRequiredMixin, ManagerRequiredMixin
-from .models import Edital, AplicacaoEdital
-from cadastro.models import CadastroBolsista
+from .models import EditalProvisorio, AplicacaoEdital, NIVEL_BOLSA_CONFIG
+from .forms import EditalProvisorioForm, CronogramaEventoFormSet, DistribuicaoBolsaFormSet
+from accounts.models import Tenant
+
+logger = logging.getLogger(__name__)
 
 
-class EditalForm(forms.ModelForm):
-    class Meta:
-        model = Edital
-        fields = ['nome', 'descricao', 'requisitos', 'data_abertura', 'data_fechamento', 'status']
-        widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'requisitos': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'data_abertura': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
-            'data_fechamento': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
-        }
+class ContextMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = EditalProvisorio.STATUS_CHOICES
+        context['nivel_config_json'] = json.dumps(NIVEL_BOLSA_CONFIG)
+        return context
 
 
-class EditalListView(TenantRequiredMixin, ListView):
-    model = Edital
+class EditalProvisorioListView(TenantRequiredMixin, ContextMixin, ListView):
+    model = EditalProvisorio
     template_name = 'editais/edital_list.html'
     context_object_name = 'editais'
     paginate_by = 10
 
     def get_queryset(self):
-        qs = Edital.objects.filter(tenant=self.request.tenant).select_related('criado_por')
+        if self.request.user.is_superuser:
+            qs = EditalProvisorio.objects.all().select_related('criado_por')
+        else:
+            qs = EditalProvisorio.objects.filter(tenant=self.request.tenant).select_related('criado_por')
         busca = self.request.GET.get('busca', '')
-        status = self.request.GET.get('status', 'todos')
+        status = self.request.GET.get('status', '')
         if busca:
-            qs = qs.filter(nome__icontains=busca)
-        if status and status != 'todos':
+            qs = qs.filter(nome_instituto__icontains=busca)
+        if status:
             qs = qs.filter(status=status)
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        perfil = getattr(self.request.user, 'perfil', None)
-        context['pode_criar'] = perfil and perfil.tipo in ('ADMIN', 'MANAGER')
         context['busca'] = self.request.GET.get('busca', '')
-        context['status_atual'] = self.request.GET.get('status', 'todos')
+        context['status_atual'] = self.request.GET.get('status', '')
         return context
 
 
-class EditalCreateView(ManagerRequiredMixin, CreateView):
-    model = Edital
+class EditalProvisorioCreateView(ManagerRequiredMixin, ContextMixin, CreateView):
+    model = EditalProvisorio
     template_name = 'editais/edital_form.html'
-    form_class = EditalForm
+    form_class = EditalProvisorioForm
     success_url = reverse_lazy('edital_list')
-
-    def form_valid(self, form):
-        form.instance.criado_por = self.request.user
-        form.instance.tenant = self.request.tenant
-        messages.success(self.request, 'Edital criado com sucesso!')
-        return super().form_valid(form)
-
-
-class EditalDetailView(TenantRequiredMixin, DetailView):
-    model = Edital
-    template_name = 'editais/edital_detail.html'
-    context_object_name = 'edital'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['cronograma_formset'] = CronogramaEventoFormSet(
+                self.request.POST, prefix='cronograma'
+            )
+            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
+                self.request.POST, prefix='distribuicao'
+            )
+        else:
+            context['cronograma_formset'] = CronogramaEventoFormSet(prefix='cronograma')
+            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(prefix='distribuicao')
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data(form=form)
+        cronograma_formset = context['cronograma_formset']
+        distribuicao_formset = context['distribuicao_formset']
+        if cronograma_formset.is_valid() and distribuicao_formset.is_valid():
+            self.object = form.save(commit=False)
+            self.object.criado_por = self.request.user
+            self.object.tenant = self.request.tenant or Tenant.objects.filter(ativo=True).first()
+            self.object.save()
+            cronograma_formset.instance = self.object
+            cronograma_formset.save()
+            distribuicao_formset.instance = self.object
+            distribuicao_formset.save()
+            messages.success(self.request, 'Edital criado com sucesso!')
+            return redirect(self.get_success_url())
+        logger.error('Formset errors - cronograma: %s, distribuicao: %s',
+                     cronograma_formset.errors, distribuicao_formset.errors)
+        return self.render_to_response(context)
+
+
+class EditalProvisorioUpdateView(ManagerRequiredMixin, ContextMixin, UpdateView):
+    model = EditalProvisorio
+    template_name = 'editais/edital_form.html'
+    form_class = EditalProvisorioForm
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return EditalProvisorio.objects.all()
+        return EditalProvisorio.objects.filter(tenant=self.request.tenant)
+
+    success_url = reverse_lazy('edital_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['cronograma_formset'] = CronogramaEventoFormSet(
+                self.request.POST, instance=self.object, prefix='cronograma'
+            )
+            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
+                self.request.POST, instance=self.object, prefix='distribuicao'
+            )
+        else:
+            context['cronograma_formset'] = CronogramaEventoFormSet(
+                instance=self.object, prefix='cronograma'
+            )
+            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
+                instance=self.object, prefix='distribuicao'
+            )
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data(form=form)
+        cronograma_formset = context['cronograma_formset']
+        distribuicao_formset = context['distribuicao_formset']
+        if cronograma_formset.is_valid() and distribuicao_formset.is_valid():
+            self.object = form.save()
+            cronograma_formset.instance = self.object
+            cronograma_formset.save()
+            distribuicao_formset.instance = self.object
+            distribuicao_formset.save()
+            messages.success(self.request, 'Edital atualizado com sucesso!')
+            return redirect(self.get_success_url())
+        logger.error('Formset errors - cronograma: %s, distribuicao: %s',
+                     cronograma_formset.errors, distribuicao_formset.errors)
+        return self.render_to_response(context)
+
+
+class EditalProvisorioDetailView(TenantRequiredMixin, ContextMixin, DetailView):
+    model = EditalProvisorio
+    template_name = 'editais/edital_detail.html'
+    context_object_name = 'edital'
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return EditalProvisorio.objects.all().select_related('criado_por')
+        return EditalProvisorio.objects.filter(tenant=self.request.tenant).select_related('criado_por')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cronograma'] = self.object.cronograma.all()
         user = self.request.user
-        perfil = getattr(user, 'perfil', None)
-        context['pode_editar'] = perfil and perfil.tipo in ('ADMIN', 'MANAGER')
         context['tem_cadastro'] = hasattr(user, 'cadastro')
         if hasattr(user, 'cadastro'):
             context['ja_aplicou'] = AplicacaoEdital.objects.filter(
@@ -82,24 +160,44 @@ class EditalDetailView(TenantRequiredMixin, DetailView):
             context['ja_aplicou'] = False
         return context
 
-    def get_queryset(self):
-        return Edital.objects.filter(tenant=self.request.tenant)
 
-
-class EditalUpdateView(ManagerRequiredMixin, UpdateView):
-    model = Edital
-    template_name = 'editais/edital_form.html'
-    form_class = EditalForm
+class EditalProvisorioDeleteView(ManagerRequiredMixin, ContextMixin, DeleteView):
+    model = EditalProvisorio
+    template_name = 'editais/edital_confirm_delete.html'
+    success_url = reverse_lazy('edital_list')
 
     def get_queryset(self):
-        return Edital.objects.filter(tenant=self.request.tenant)
-
-    def get_success_url(self):
-        return reverse_lazy('edital_detail', kwargs={'pk': self.object.pk})
+        if self.request.user.is_superuser:
+            return EditalProvisorio.objects.all()
+        return EditalProvisorio.objects.filter(tenant=self.request.tenant)
 
     def form_valid(self, form):
-        messages.success(self.request, 'Edital atualizado com sucesso!')
+        messages.success(self.request, 'Edital removido com sucesso!')
         return super().form_valid(form)
+
+
+def edital_pdf_view(request, pk):
+    if request.user.is_superuser:
+        edital = EditalProvisorio.objects.select_related('criado_por').prefetch_related('distribuicoes', 'cronograma').get(pk=pk)
+    else:
+        edital = EditalProvisorio.objects.filter(tenant=request.tenant).select_related('criado_por').prefetch_related('distribuicoes', 'cronograma').get(pk=pk)
+    cronograma = edital.cronograma.all()
+    html_string = render(request, 'editais/edital_pdf.html', {
+        'edital': edital,
+        'cronograma': cronograma,
+    }).content.decode('utf-8')
+
+    from xhtml2pdf import pisa
+    import io
+
+    result = io.BytesIO()
+    pdf = pisa.pisaDocument(io.BytesIO(html_string.encode('utf-8')), result)
+    if pdf.err:
+        return HttpResponse('Erro ao gerar PDF', status=500)
+    response = HttpResponse(result.getvalue(), content_type='application/pdf')
+    filename = f'edital_{edital.get_nome_instituto_display().replace(" ", "_")}_{edital.pk}.pdf'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 class AplicarEditalView(TenantRequiredMixin, TemplateView):
@@ -108,7 +206,7 @@ class AplicarEditalView(TenantRequiredMixin, TemplateView):
         from cadastro.utils import calcular_pontuacao_previa
         from classificacao.models import CriterioClassificacao, Classificacao, ClassificacaoCriterio
 
-        edital = get_object_or_404(Edital, pk=kwargs['pk'], tenant=request.tenant)
+        edital = get_object_or_404(EditalProvisorio, pk=kwargs['pk'], tenant=request.tenant)
         if not hasattr(request.user, 'cadastro'):
             messages.warning(request, 'Complete seu cadastro antes de se candidatar.')
             return redirect('cadastro_create')

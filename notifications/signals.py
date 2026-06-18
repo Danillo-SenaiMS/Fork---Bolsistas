@@ -23,7 +23,7 @@ def notificar_cadastro(sender, instance, created, **kwargs):
 def notificar_classificacao(sender, instance, **kwargs):
     if instance.pontuacao_total > 0:
         bolsista = instance.aplicacao.bolsista.user
-        edital = instance.aplicacao.edital.nome
+        edital = instance.aplicacao.edital.nome_edital
         Notificacao.objects.create(
             destinatario=bolsista,
             titulo='Classificação publicada',

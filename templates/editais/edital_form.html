@@ -4,76 +4,871 @@
 {% block content %}
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card p-4">
-                <h3 class="fw-bold text-primary mb-4">
-                    <i class="bi bi-journal-text me-2"></i>
-                    {% if object %}Editar Edital{% else %}Novo Edital{% endif %}
-                </h3>
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="fw-bold mb-0">
+                        <i class="bi bi-journal-plus me-2"></i>
+                        {% if object %}Editar Edital{% else %}Novo Edital{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
 
-                <form method="post" novalidate>
-                    {% csrf_token %}
-
-                    <div class="mb-3">
-                        <label class="form-label">{{ form.nome.label }}</label>
-                        {{ form.nome }}
-                        {% if form.nome.errors %}
-                        <div class="text-danger small mt-1">{{ form.nome.errors|join:', ' }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">{{ form.descricao.label }}</label>
-                        {{ form.descricao }}
-                        {% if form.descricao.errors %}
-                        <div class="text-danger small mt-1">{{ form.descricao.errors|join:', ' }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">{{ form.requisitos.label }}</label>
-                        {{ form.requisitos }}
-                        {% if form.requisitos.errors %}
-                        <div class="text-danger small mt-1">{{ form.requisitos.errors|join:', ' }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.data_abertura.label }}</label>
-                            {{ form.data_abertura }}
-                            {% if form.data_abertura.errors %}
-                            <div class="text-danger small mt-1">{{ form.data_abertura.errors|join:', ' }}</div>
-                            {% endif %}
+                        {% if form.errors or distribuicao_formset.total_error_count or cronograma_formset.total_error_count %}
+                        <div class="alert alert-danger py-2 small">
+                            <p class="mb-1 fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>Corrija os erros abaixo antes de salvar:</p>
+                            <ul class="mb-0 ps-3">
+                                {% for field in form %}
+                                {% for error in field.errors %}
+                                <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                                {% for form in distribuicao_formset %}
+                                {% for error in form.non_field_errors %}
+                                <li>Distribuição: {{ error }}</li>
+                                {% endfor %}
+                                {% endfor %}
+                                {% for error in distribuicao_formset.non_form_errors %}
+                                <li>Distribuição: {{ error }}</li>
+                                {% endfor %}
+                                {% for form in cronograma_formset %}
+                                {% for error in form.non_field_errors %}
+                                <li>Cronograma: {{ error }}</li>
+                                {% endfor %}
+                                {% endfor %}
+                                {% for error in cronograma_formset.non_form_errors %}
+                                <li>Cronograma: {{ error }}</li>
+                                {% endfor %}
+                            </ul>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.data_fechamento.label }}</label>
-                            {{ form.data_fechamento }}
-                            {% if form.data_fechamento.errors %}
-                            <div class="text-danger small mt-1">{{ form.data_fechamento.errors|join:', ' }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">{{ form.status.label }}</label>
-                        {{ form.status }}
-                        {% if form.status.errors %}
-                        <div class="text-danger small mt-1">{{ form.status.errors|join:', ' }}</div>
                         {% endif %}
-                    </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-check-lg me-1"></i>Salvar
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-file-earmark-text me-2 text-primary"></i>Dados do Edital
+                        </h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.nome_edital.label }}</label>
+                                {{ form.nome_edital }}
+                                {% if form.nome_edital.errors %}
+                                <div class="text-danger small mt-1">{{ form.nome_edital.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.area_estudo.label }}</label>
+                                {{ form.area_estudo }}
+                                {% if form.area_estudo.errors %}
+                                <div class="text-danger small mt-1">{{ form.area_estudo.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ form.detalhes_edital.label }}</label>
+                                {{ form.detalhes_edital }}
+                                <div class="form-text">Campo opcional.</div>
+                                {% if form.detalhes_edital.errors %}
+                                <div class="text-danger small mt-1">{{ form.detalhes_edital.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-building me-2 text-primary"></i>Dados do Instituto
+                        </h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.nome_instituto.label }}</label>
+                                {{ form.nome_instituto }}
+                                {% if form.nome_instituto.errors %}
+                                <div class="text-danger small mt-1">{{ form.nome_instituto.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">{{ form.email_solicitante.label }}</label>
+                                {{ form.email_solicitante }}
+                                {% if form.email_solicitante.errors %}
+                                <div class="text-danger small mt-1">{{ form.email_solicitante.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">{{ form.telefone.label }}</label>
+                                {{ form.telefone }}
+                                {% if form.telefone.errors %}
+                                <div class="text-danger small mt-1">{{ form.telefone.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ form.endereco.label }}</label>
+                                {{ form.endereco }}
+                                {% if form.endereco.errors %}
+                                <div class="text-danger small mt-1">{{ form.endereco.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-cash-stack me-2 text-primary"></i>Configuração da Bolsa
+                        </h5>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.valor_total_bolsa.label }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    {{ form.valor_total_bolsa }}
+                                </div>
+                                <div class="form-text">Orçamento total disponível para a bolsa.</div>
+                                {% if form.valor_total_bolsa.errors %}
+                                <div class="text-danger small mt-1">{{ form.valor_total_bolsa.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.modalidade_bolsa.label }}</label>
+                                {{ form.modalidade_bolsa }}
+                                {% if form.modalidade_bolsa.errors %}
+                                <div class="text-danger small mt-1">{{ form.modalidade_bolsa.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.modalidade_atuacao.label }}</label>
+                                {{ form.modalidade_atuacao }}
+                                {% if form.modalidade_atuacao.errors %}
+                                <div class="text-danger small mt-1">{{ form.modalidade_atuacao.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6" id="endereco-atuacao-group">
+                                <label class="form-label fw-semibold">{{ form.endereco_atuacao.label }}</label>
+                                {{ form.endereco_atuacao }}
+                                <div class="form-text">Obrigatório para modalidade remota.</div>
+                                {% if form.endereco_atuacao.errors %}
+                                <div class="text-danger small mt-1">{{ form.endereco_atuacao.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.plataforma_tecnologica.label }}</label>
+                                {{ form.plataforma_tecnologica }}
+                                {% if form.plataforma_tecnologica.errors %}
+                                <div class="text-danger small mt-1">{{ form.plataforma_tecnologica.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.vigencia.label }}</label>
+                                {{ form.vigencia }}
+                                <div class="form-text">Mínimo: 15 dias. Máximo: 36 meses (1095 dias).</div>
+                                {% if form.vigencia.errors %}
+                                <div class="text-danger small mt-1">{{ form.vigencia.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.numero_vagas.label }}</label>
+                                {{ form.numero_vagas }}
+                                <div class="form-text">Auto-calculado pela distribuição abaixo.</div>
+                                {% if form.numero_vagas.errors %}
+                                <div class="text-danger small mt-1">{{ form.numero_vagas.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <h5 class="fw-semibold mb-0 me-2">
+                                    <i class="bi bi-diagram-3 me-2 text-primary"></i>Distribuição de Bolsistas
+                                </h5>
+                                <button class="btn btn-sm btn-warning" type="button" id="toggle-distribuicao" data-bs-toggle="collapse" data-bs-target="#distribuicao-collapse" aria-expanded="false">
+                                    <i class="bi bi-chevron-down" id="distribuicao-chevron"></i> Expandir
+                                </button>
+                            </div>
+                            <p class="text-muted small mb-2">Distribua as vagas entre os níveis de experiência. O total não pode exceder o valor total da bolsa.</p>
+                            {% if distribuicao_formset.non_form_errors %}
+                            <div class="alert alert-danger py-2 small">
+                                {% for error in distribuicao_formset.non_form_errors %}
+                                <p class="mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="collapse" id="distribuicao-collapse">
+                                {{ distribuicao_formset.management_form }}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="distribuicao-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width:35%">Experiência</th>
+                                                <th style="width:20%">Quantidade</th>
+                                                <th style="width:25%">Valor Unitário (R$)</th>
+                                                <th style="width:15%">Subtotal</th>
+                                                <th style="width:5%"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="distribuicao-rows">
+                                            {% for form in distribuicao_formset %}
+                                             <tr class="distribuicao-row">
+                                                {% if form.non_field_errors %}
+                                                <td colspan="5">
+                                                    <div class="text-danger small mb-1">
+                                                        {% for error in form.non_field_errors %}
+                                                        <p class="mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</p>
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr class="distribuicao-row">
+                                                {% endif %}
+                                                <td>
+                                                    {{ form.id }}
+                                                    {{ form.experiencia }}
+                                                    {% if form.experiencia.errors %}
+                                                    <div class="text-danger small">{{ form.experiencia.errors|join:', ' }}</div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {{ form.quantidade }}
+                                                    {% if form.quantidade.errors %}
+                                                    <div class="text-danger small">{{ form.quantidade.errors|join:', ' }}</div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text">R$</span>
+                                                        {{ form.valor_unitario }}
+                                                        <button class="btn btn-outline-success btn-sm distrib-use-saldo d-none" type="button" title="Usar valor total da bolsa">
+                                                            <i class="bi bi-arrow-up-circle"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div class="distrib-range-info text-muted mt-1" style="font-size:0.7em"></div>
+                                                        <span class="distrib-quantity-hint small text-info mt-1 d-none" style="font-size:0.7em">
+                                                            <i class="bi bi-info-circle"></i> 1 bolsista
+                                                        </span>
+                                                    </div>
+                                                    {% if form.valor_unitario.errors %}
+                                                    <div class="text-danger small">{{ form.valor_unitario.errors|join:', ' }}</div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="distrib-subtotal fw-medium">R$ 0,00</span>
+                                                </td>
+                                                <td class="text-center align-middle">
+                                                    <button type="button" class="btn btn-outline-danger btn-sm remove-distrib-row" title="Remover">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-secondary fw-bold">
+                                                <td colspan="3" class="text-end">Total Distribuído:</td>
+                                                <td id="distribuicao-total">R$ 0,00</td>
+                                                <td></td>
+                                            </tr>
+                                            <tr class="table-info">
+                                                <td colspan="3" class="text-end">Saldo Restante:</td>
+                                                <td id="distribuicao-saldo">R$ 0,00</td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="add-distribuicao-row">
+                                    <i class="bi bi-plus-lg me-1"></i>Adicionar Linha
+                                </button>
+                                <div id="sugestoes-distribuicao" class="mt-2 d-none">
+                                    <div class="card card-body bg-info bg-opacity-10 border-info py-2 px-3">
+                                        <small class="fw-semibold text-primary">
+                                            <i class="bi bi-lightbulb me-1"></i>Sugestão de Alocação
+                                            <span class="text-muted fw-normal">(com base no orçamento)</span>
+                                        </small>
+                                        <div id="sugestoes-content" class="mt-1 small"></div>
+                                    </div>
+                                </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-list-check me-2 text-primary"></i>Qualificação e Experiência
+                        </h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.qualificacao_minima.label }}</label>
+                                {{ form.qualificacao_minima }}
+                                {% if form.qualificacao_minima.errors %}
+                                <div class="text-danger small mt-1">{{ form.qualificacao_minima.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-file-text me-2 text-primary"></i>Detalhes Adicionais
+                        </h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.conhecimento_desejavel.label }}</label>
+                                {{ form.conhecimento_desejavel }}
+                                {% if form.conhecimento_desejavel.errors %}
+                                <div class="text-danger small mt-1">{{ form.conhecimento_desejavel.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.conteudo_prova_teorica.label }}</label>
+                                {{ form.conteudo_prova_teorica }}
+                                {% if form.conteudo_prova_teorica.errors %}
+                                <div class="text-danger small mt-1">{{ form.conteudo_prova_teorica.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.entrevista.label }}</label>
+                                {{ form.entrevista }}
+                                {% if form.entrevista.errors %}
+                                <div class="text-danger small mt-1">{{ form.entrevista.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.criterios_desempate.label }}</label>
+                                {{ form.criterios_desempate }}
+                                {% if form.criterios_desempate.errors %}
+                                <div class="text-danger small mt-1">{{ form.criterios_desempate.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-calendar-event me-2 text-primary"></i>Cronograma
+                        </h5>
+                        <p class="text-muted small mb-3">Adicione os eventos do cronograma com suas respectivas datas de referência.</p>
+
+                        {{ cronograma_formset.management_form }}
+
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered" id="cronograma-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:35%">Evento</th>
+                                        <th style="width:35%">Data de Referência</th>
+                                        <th style="width:20%">Observação</th>
+                                        <th style="width:5%">Ordem</th>
+                                        <th style="width:5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cronograma-rows">
+                                    {% for form in cronograma_formset %}
+                                    <tr class="cronograma-row">
+                                        <td>
+                                            {{ form.evento }}
+                                            {% if form.evento.errors %}
+                                            <div class="text-danger small">{{ form.evento.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.data_referencia }}
+                                            {% if form.data_referencia.errors %}
+                                            <div class="text-danger small">{{ form.data_referencia.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.observacao }}
+                                            {% if form.observacao.errors %}
+                                            <div class="text-danger small">{{ form.observacao.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.ordem }}
+                                            {% if form.ordem.errors %}
+                                            <div class="text-danger small">{{ form.ordem.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            {{ form.id }}
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Remover">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary btn-sm mb-4" id="add-cronograma-row">
+                            <i class="bi bi-plus-lg me-1"></i>Adicionar Evento
                         </button>
-                        <a href="{% if object %}{% url 'edital_detail' object.pk %}{% else %}{% url 'edital_list' %}{% endif %}" class="btn btn-outline-secondary">
-                            Cancelar
-                        </a>
-                    </div>
-                </form>
+
+                        <hr class="my-4">
+
+                        {% if user.is_superuser or user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.status.label }}</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="text-danger small mt-1">{{ form.status.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <hr class="my-4">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-lg me-1"></i>{% if object %}Atualizar{% else %}Salvar{% endif %}
+                            </button>
+                            <a href="{% url 'edital_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script id="nivel-config-data" type="application/json">{{ nivel_config_json|safe }}</script>
+<script>
+(function() {
+    try {
+    var el = document.getElementById('nivel-config-data');
+    var NIVEL_CONFIG = el ? JSON.parse(el.textContent) : {};
+
+    var modalidadeSelect = document.getElementById('id_modalidade_bolsa');
+    var qualificacaoSelect = document.getElementById('id_qualificacao_minima');
+    var valorMinimoInput = document.getElementById('id_valor_minimo');
+    var valorMaximoInput = document.getElementById('id_valor_maximo');
+
+    function updateFields() {
+        if (!modalidadeSelect || !qualificacaoSelect) return;
+        var nivel = modalidadeSelect.value;
+        var config = NIVEL_CONFIG[nivel];
+
+        qualificacaoSelect.innerHTML = '';
+
+        if (!config) {
+            qualificacaoSelect.innerHTML = '<option value="">--- Selecione um nível primeiro ---</option>';
+            if (valorMinimoInput) valorMinimoInput.value = '';
+            if (valorMaximoInput) valorMaximoInput.value = '';
+            return;
+        }
+
+        config.qualificacao.forEach(function(q) {
+            var opt = document.createElement('option');
+            opt.value = q[0];
+            opt.textContent = q[1];
+            qualificacaoSelect.appendChild(opt);
+        });
+
+        if (valorMinimoInput && valorMaximoInput && config.valor_minimo !== undefined) {
+            valorMinimoInput.value = config.valor_minimo.toFixed(2);
+            valorMaximoInput.value = config.valor_maximo.toFixed(2);
+        }
+    }
+
+    function syncDistribExperiencia() {
+        var nivel = modalidadeSelect ? modalidadeSelect.value : '';
+        var config = NIVEL_CONFIG[nivel] || {};
+        var opts = config.experiencia || [];
+        document.querySelectorAll('.distrib-experiencia').forEach(function(sel) {
+            var cur = sel.value;
+            sel.innerHTML = '<option value="">--- Selecione ---</option>';
+            opts.forEach(function(e) {
+                var opt = document.createElement('option');
+                opt.value = e[0];
+                opt.textContent = e[1];
+                sel.appendChild(opt);
+            });
+            if (cur) sel.value = cur;
+        });
+        document.querySelectorAll('#distribuicao-rows .distribuicao-row').forEach(function(row) {
+            showRangeInfo(row);
+        });
+    }
+
+    function onModalidadeChange() {
+        updateFields();
+        syncDistribExperiencia();
+        calcDistribuicao();
+    }
+    modalidadeSelect && modalidadeSelect.addEventListener('change', onModalidadeChange);
+    if (modalidadeSelect && modalidadeSelect.value) {
+        onModalidadeChange();
+    }
+
+    function toggleEndereco() {
+        var atuacao = document.getElementById('id_modalidade_atuacao');
+        var group = document.getElementById('endereco-atuacao-group');
+        if (!atuacao || !group) return;
+        if (atuacao.value === 'presencial') {
+            group.style.display = 'none';
+        } else {
+            group.style.display = 'block';
+        }
+    }
+    var atuacaoSel = document.getElementById('id_modalidade_atuacao');
+    atuacaoSel && atuacaoSel.addEventListener('change', toggleEndereco);
+    toggleEndereco();
+
+    } catch(e) { /* silencioso */ }
+
+    try {
+
+    function fmtMoney(val) {
+        var s = val.toFixed(2);
+        var parts = s.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return 'R$ ' + parts[0] + ',' + parts[1];
+    }
+
+    function showRangeInfo(row) {
+        var nivel = modalidadeSelect ? modalidadeSelect.value : '';
+        var config = NIVEL_CONFIG[nivel];
+        var expSel = row.querySelector('.distrib-experiencia');
+        var rangeEl = row.querySelector('.distrib-range-info');
+        if (!config || !expSel || !rangeEl) return;
+        var exp = expSel.value;
+        if (exp && config.experiencia_valores && config.experiencia_valores[exp]) {
+            var v = config.experiencia_valores[exp];
+            rangeEl.textContent = 'Mín: ' + fmtMoney(v[0]) + ' | Máx: ' + fmtMoney(v[1]);
+        } else if (config.valor_minimo !== undefined) {
+            rangeEl.textContent = 'Mín: ' + fmtMoney(config.valor_minimo) + ' | Máx: ' + fmtMoney(config.valor_maximo);
+        } else {
+            rangeEl.textContent = '';
+        }
+    }
+
+    function autoFillValor(row) {
+        var nivel = modalidadeSelect ? modalidadeSelect.value : '';
+        var config = NIVEL_CONFIG[nivel];
+        var expSel = row.querySelector('.distrib-experiencia');
+        var valInput = row.querySelector('.distrib-valor');
+        if (!config || !expSel || !valInput) return;
+        var exp = expSel.value;
+        if (config.experiencia_valores && config.experiencia_valores[exp]) {
+            valInput.value = config.experiencia_valores[exp][0].toFixed(2);
+        } else if (config.valor_minimo !== undefined) {
+            valInput.value = config.valor_minimo.toFixed(2);
+        } else {
+            valInput.value = '';
+        }
+        showRangeInfo(row);
+    }
+
+    function clampValor(input, row) {
+        var nivel = modalidadeSelect ? modalidadeSelect.value : '';
+        var config = NIVEL_CONFIG[nivel];
+        var expSel = row.querySelector('.distrib-experiencia');
+        if (!config || !expSel) return;
+        var exp = expSel.value;
+        var minVal, maxVal;
+        if (config.experiencia_valores && config.experiencia_valores[exp]) {
+            minVal = config.experiencia_valores[exp][0];
+            maxVal = config.experiencia_valores[exp][1];
+        } else if (config.valor_minimo !== undefined) {
+            minVal = config.valor_minimo;
+            maxVal = config.valor_maximo;
+        } else {
+            return;
+        }
+        var val = parseFloat(input.value) || 0;
+        if (val > 0 && val < minVal) input.value = minVal.toFixed(2);
+        if (val > maxVal) input.value = maxVal.toFixed(2);
+    }
+
+    function updateSugestoes() {
+        var nivel = modalidadeSelect ? modalidadeSelect.value : '';
+        var config = NIVEL_CONFIG[nivel];
+        var totalBudget = parseFloat(document.getElementById('id_valor_total_bolsa').value) || 0;
+        var container = document.getElementById('sugestoes-distribuicao');
+        var content = document.getElementById('sugestoes-content');
+
+        if (!container || !content || !config || !config.experiencia || totalBudget <= 0) {
+            if (container) container.classList.add('d-none');
+            return;
+        }
+
+        var html = '';
+        config.experiencia.forEach(function(e) {
+            var label = e[1];
+            var valores = config.experiencia_valores && config.experiencia_valores[e[0]];
+            if (valores) {
+                var maxMin = Math.floor(totalBudget / valores[0]);
+                var range = fmtMoney(valores[0]) + ' - ' + fmtMoney(valores[1]);
+                if (maxMin > 0) {
+                    html += '<div class="mb-1">\u2022 <strong>' + label + '</strong>: até ' + maxMin + ' bolsista(s) (' + range + ' cada)</div>';
+                }
+            } else if (config.valor_minimo !== undefined) {
+                var maxMin = Math.floor(totalBudget / config.valor_minimo);
+                var range = fmtMoney(config.valor_minimo) + ' - ' + fmtMoney(config.valor_maximo);
+                if (maxMin > 0) {
+                    html += '<div class="mb-1">\u2022 <strong>' + label + '</strong>: até ' + maxMin + ' bolsista(s) (' + range + ' cada)</div>';
+                }
+            }
+        });
+
+        if (html) {
+            content.innerHTML = html;
+            container.classList.remove('d-none');
+        } else {
+            container.classList.add('d-none');
+        }
+    }
+
+    function updateRowSaldoBtn(row) {
+        var qtdInput = row.querySelector('.distrib-quantidade');
+        var saldoBtn = row.querySelector('.distrib-use-saldo');
+        var hintEl = row.querySelector('.distrib-quantity-hint');
+        if (!qtdInput || !saldoBtn || !hintEl) return;
+        var qtd = parseFloat(qtdInput.value) || 0;
+        var totalBudget = parseFloat(document.getElementById('id_valor_total_bolsa').value) || 0;
+        if (qtd === 1 && totalBudget > 0) {
+            hintEl.classList.remove('d-none');
+            var rows = document.querySelectorAll('#distribuicao-rows .distribuicao-row');
+            var otherTotal = 0;
+            rows.forEach(function(r) {
+                if (r.style.display === 'none' || r === row) return;
+                var oq = parseFloat(r.querySelector('.distrib-quantidade').value) || 0;
+                var ov = parseFloat(r.querySelector('.distrib-valor').value) || 0;
+                otherTotal += oq * ov;
+            });
+            var saldo = totalBudget - otherTotal;
+            if (saldo > 0) {
+                saldoBtn.classList.remove('d-none');
+            } else {
+                saldoBtn.classList.add('d-none');
+            }
+        } else {
+            saldoBtn.classList.add('d-none');
+            hintEl.classList.add('d-none');
+        }
+    }
+
+    function calcDistribuicao() {
+        var rows = document.querySelectorAll('#distribuicao-rows .distribuicao-row');
+        var total = 0;
+        var totalVagas = 0;
+
+        rows.forEach(function(row) {
+            if (row.style.display === 'none') return;
+            var qtd = parseFloat(row.querySelector('.distrib-quantidade').value) || 0;
+            var valor = parseFloat(row.querySelector('.distrib-valor').value) || 0;
+            var sub = qtd * valor;
+            total += sub;
+            totalVagas += qtd;
+            var subEl = row.querySelector('.distrib-subtotal');
+            if (subEl) subEl.textContent = fmtMoney(sub);
+            updateRowSaldoBtn(row);
+        });
+
+        var totalEl = document.getElementById('distribuicao-total');
+        var saldoEl = document.getElementById('distribuicao-saldo');
+        var vagasInput = document.getElementById('id_numero_vagas');
+
+        if (totalEl) totalEl.textContent = fmtMoney(total);
+        if (vagasInput) vagasInput.value = totalVagas;
+
+        var totalBudget = parseFloat(document.getElementById('id_valor_total_bolsa').value) || 0;
+        var saldo = totalBudget - total;
+        if (saldoEl) {
+            saldoEl.textContent = fmtMoney(saldo);
+            saldoEl.style.color = saldo < 0 ? 'red' : 'inherit';
+        }
+
+        updateSugestoes();
+    }
+
+    function addDistribuicaoRow() {
+        var container = document.getElementById('distribuicao-rows');
+        var rows = container.querySelectorAll('.distribuicao-row');
+        var lastRow = rows[rows.length - 1];
+        if (!lastRow) return;
+        var clone = lastRow.cloneNode(true);
+        var totalForms = document.getElementById('id_distribuicao-TOTAL_FORMS');
+
+        var inputs = clone.querySelectorAll('input, select');
+        inputs.forEach(function(input) {
+            var name = input.getAttribute('name');
+            if (name && name.indexOf('distribuicao-') === 0) {
+                var newName = name.replace(/distribuicao-\d+-/, 'distribuicao-' + totalForms.value + '-');
+                input.setAttribute('name', newName);
+                input.setAttribute('id', 'id_' + newName);
+                if (input.tagName === 'SELECT') {
+                    input.selectedIndex = 0;
+                } else {
+                    input.value = '';
+                }
+            }
+        });
+
+        var idInput = clone.querySelector('input[name$="-id"]');
+        if (idInput) idInput.value = '';
+
+        var deleteInput = clone.querySelector('input[name$="-DELETE"]');
+        if (deleteInput) deleteInput.checked = false;
+
+        clone.style.display = '';
+        container.appendChild(clone);
+        totalForms.value = parseInt(totalForms.value) + 1;
+        bindDistribuicaoEvents(clone);
+        calcDistribuicao();
+        syncDistribExperiencia();
+    }
+
+    function bindDistribuicaoEvents(row) {
+        row.querySelectorAll('.distrib-quantidade, .distrib-valor').forEach(function(el) {
+            el.addEventListener('input', calcDistribuicao);
+        });
+        var valInput = row.querySelector('.distrib-valor');
+        if (valInput) {
+            valInput.addEventListener('blur', function() {
+                clampValor(valInput, row);
+                calcDistribuicao();
+            });
+        }
+        var expSel = row.querySelector('.distrib-experiencia');
+        if (expSel) {
+            expSel.addEventListener('change', function() {
+                autoFillValor(row);
+                calcDistribuicao();
+            });
+        }
+        var rmBtn = row.querySelector('.remove-distrib-row');
+        if (rmBtn) {
+            rmBtn.addEventListener('click', function() {
+                var deleteInput = row.querySelector('input[name$="-DELETE"]');
+                if (deleteInput) {
+                    deleteInput.checked = true;
+                    row.style.display = 'none';
+                } else {
+                    row.remove();
+                    var totalForms = document.getElementById('id_distribuicao-TOTAL_FORMS');
+                    totalForms.value = parseInt(totalForms.value) - 1;
+                }
+                calcDistribuicao();
+            });
+        }
+        var saldoBtn = row.querySelector('.distrib-use-saldo');
+        if (saldoBtn) {
+            saldoBtn.addEventListener('click', function() {
+                var totalBudget = parseFloat(document.getElementById('id_valor_total_bolsa').value) || 0;
+                if (totalBudget > 0) {
+                    var valInput = row.querySelector('.distrib-valor');
+                    if (valInput) {
+                        valInput.value = totalBudget.toFixed(2);
+                        clampValor(valInput, row);
+                        calcDistribuicao();
+                    }
+                }
+            });
+        }
+    }
+
+    document.querySelectorAll('#distribuicao-rows .distribuicao-row').forEach(function(row) {
+        bindDistribuicaoEvents(row);
+    });
+
+    document.getElementById('add-distribuicao-row').addEventListener('click', addDistribuicaoRow);
+    document.getElementById('id_valor_total_bolsa').addEventListener('input', calcDistribuicao);
+
+    var toggleBtn = document.getElementById('toggle-distribuicao');
+    var collapseEl = document.getElementById('distribuicao-collapse');
+    if (toggleBtn && collapseEl) {
+        toggleBtn.addEventListener('click', function() {
+            var isOpen = collapseEl.classList.contains('show');
+            var chevron = document.getElementById('distribuicao-chevron');
+            if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+            if (!isOpen) calcDistribuicao();
+        });
+    }
+
+    syncDistribExperiencia();
+    calcDistribuicao();
+
+    var container = document.getElementById('cronograma-rows');
+    var addBtn = document.getElementById('add-cronograma-row');
+    var totalForms = document.getElementById('id_cronograma-TOTAL_FORMS');
+
+    function updateRemoveButtons() {
+        container.querySelectorAll('.cronograma-row').forEach(function(row) {
+            var btn = row.querySelector('.remove-row');
+            if (btn) {
+                btn.onclick = function() {
+                    var deleteInput = row.querySelector('input[name$="-DELETE"]');
+                    if (deleteInput) {
+                        deleteInput.checked = true;
+                        row.style.display = 'none';
+                    } else {
+                        row.remove();
+                        totalForms.value = parseInt(totalForms.value) - 1;
+                    }
+                    reindexRows();
+                };
+            }
+        });
+    }
+
+    function reindexRows() {
+        var rows = container.querySelectorAll('.cronograma-row');
+        rows.forEach(function(row, index) {
+            if (row.style.display === 'none') return;
+            var inputs = row.querySelectorAll('input, select, textarea');
+            inputs.forEach(function(input) {
+                var name = input.getAttribute('name');
+                if (name && name.indexOf('cronograma-') === 0) {
+                    var newName = name.replace(/cronograma-\d+-/, 'cronograma-' + index + '-');
+                    input.setAttribute('name', newName);
+                    input.setAttribute('id', 'id_' + newName);
+                }
+            });
+        });
+    }
+
+    addBtn.addEventListener('click', function() {
+        var lastRow = container.querySelector('.cronograma-row:last-child');
+        if (!lastRow) return;
+        var clone = lastRow.cloneNode(true);
+
+        var inputs = clone.querySelectorAll('input, select, textarea');
+        inputs.forEach(function(input) {
+            var name = input.getAttribute('name');
+            if (name) {
+                var newName = name.replace(/cronograma-\d+-/, 'cronograma-' + totalForms.value + '-');
+                input.setAttribute('name', newName);
+                input.setAttribute('id', 'id_' + newName);
+                if (input.type !== 'hidden') {
+                    if (input.tagName === 'SELECT') {
+                        input.selectedIndex = 0;
+                    } else if (input.type === 'checkbox') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                }
+            }
+        });
+
+        var idInput = clone.querySelector('input[name$="-id"]');
+        if (idInput) idInput.value = '';
+
+        var deleteInput = clone.querySelector('input[name$="-DELETE"]');
+        if (deleteInput) deleteInput.checked = false;
+
+        clone.style.display = '';
+        container.appendChild(clone);
+        totalForms.value = parseInt(totalForms.value) + 1;
+        updateRemoveButtons();
+    });
+
+    updateRemoveButtons();
+} catch(e) { /* silencioso */ }
+})();
+</script>
 {% endblock %}

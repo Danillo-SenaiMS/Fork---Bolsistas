@@ -6,7 +6,7 @@ from faker import Faker
 
 from accounts.models import User, Perfil, Tenant
 from cadastro.models import CadastroBolsista, CursoSuperior, PosGraduacao
-from editais.models import Edital, AplicacaoEdital
+from editais.models import EditalProvisorio, AplicacaoEdital
 from classificacao.models import CriterioClassificacao, Classificacao, ClassificacaoCriterio
 
 fake = Faker('pt_BR')
@@ -21,7 +21,7 @@ class Command(BaseCommand):
         Classificacao.objects.all().delete()
         CriterioClassificacao.objects.all().delete()
         AplicacaoEdital.objects.all().delete()
-        Edital.objects.all().delete()
+        EditalProvisorio.objects.all().delete()
         CursoSuperior.objects.all().delete()
         PosGraduacao.objects.all().delete()
         CadastroBolsista.objects.all().delete()
@@ -164,24 +164,71 @@ class Command(BaseCommand):
 
     def _criar_editais(self, tenant, admin):
         dados = [
-            ('Bolsa de Iniciacao Cientifica', 'Programa de iniciacao cientifica para estudantes de graduacao.', 'Estar matriculado em curso superior.'),
-            ('Bolsa de Mestrado', 'Auxilio para alunos de mestrado em engenharia.', 'Ter sido aprovado em programa de mestrado.'),
-            ('Bolsa de Doutorado', 'Auxilio para alunos de doutorado.', 'Ter sido aprovado em programa de doutorado.'),
+            {
+                'nome_edital': 'Bolsa de Iniciacao Cientifica',
+                'area_estudo': 'Engenharia',
+                'detalhes_edital': 'Programa de iniciacao cientifica para estudantes de graduacao.',
+                'nome_instituto': 'ist_alimentos',
+                'email_solicitante': f'admin@{tenant.dominio}.com.br',
+                'telefone': '(67) 99999-0001',
+                'endereco': 'Rua da Ciencia, 100 - Campo Grande/MS',
+                'numero_vagas': 5,
+                'modalidade_bolsa': 'nivel_1',
+                'valor_total_bolsa': 6000.00,
+                'valor_bolsa': 1200.00,
+                'plataforma_tecnologica': 'Python, Django, Banco de Dados',
+                'vigencia': 180,
+                'qualificacao_minima': 'Graduação em Andamento',
+                'conteudo_prova_teorica': 'Conhecimentos basicos em programacao.',
+                'entrevista': 'Entrevista tecnica e comportamental.',
+                'criterios_desempate': 'Maior nota na prova teorica.',
+            },
+            {
+                'nome_edital': 'Bolsa de Mestrado',
+                'area_estudo': 'Engenharia de Software',
+                'detalhes_edital': 'Auxilio para alunos de mestrado em engenharia.',
+                'nome_instituto': 'ist_construcao',
+                'email_solicitante': f'admin@{tenant.dominio}.com.br',
+                'telefone': '(67) 99999-0002',
+                'endereco': 'Rua da Tecnologia, 200 - Campo Grande/MS',
+                'numero_vagas': 3,
+                'modalidade_bolsa': 'nivel_2',
+                'valor_total_bolsa': 15000.00,
+                'valor_bolsa': 5000.00,
+                'plataforma_tecnologica': 'Machine Learning, Python, React',
+                'vigencia': 365,
+                'qualificacao_minima': 'Graduação Completa',
+                'conteudo_prova_teorica': 'Conhecimentos avancados em ML e software.',
+                'entrevista': 'Apresentacao de projeto de pesquisa.',
+                'criterios_desempate': 'Experiencia profissional previa.',
+            },
+            {
+                'nome_edital': 'Bolsa de Doutorado',
+                'area_estudo': 'Inteligencia Artificial',
+                'detalhes_edital': 'Auxilio para alunos de doutorado.',
+                'nome_instituto': 'fatec_cg',
+                'email_solicitante': f'admin@{tenant.dominio}.com.br',
+                'telefone': '(67) 99999-0003',
+                'endereco': 'Rua da Inovacao, 300 - Campo Grande/MS',
+                'numero_vagas': 2,
+                'modalidade_bolsa': 'nivel_3',
+                'valor_total_bolsa': 18000.00,
+                'valor_bolsa': 9000.00,
+                'plataforma_tecnologica': 'Deep Learning, Python, TensorFlow',
+                'vigencia': 730,
+                'qualificacao_minima': 'Mestrado Concluído',
+                'conteudo_prova_teorica': 'Conhecimentos avancados em IA e deep learning.',
+                'entrevista': 'Defesa de projeto de tese.',
+                'criterios_desempate': 'Publicacoes academicas previas.',
+            },
         ]
-        now = timezone.now()
         editais = []
-        for nome, desc, req in dados:
-            dias_atras = fake.random_int(min=5, max=30)
-            dias_frente = fake.random_int(min=15, max=60)
-            edital = Edital.objects.create(
-                nome=nome,
-                descricao=desc,
-                requisitos=req,
-                data_abertura=now - timezone.timedelta(days=dias_atras),
-                data_fechamento=now + timezone.timedelta(days=dias_frente),
-                status='aberto',
+        for d in dados:
+            edital = EditalProvisorio.objects.create(
                 criado_por=admin,
                 tenant=tenant,
+                status='aberto',
+                **d,
             )
             editais.append(edital)
         return editais

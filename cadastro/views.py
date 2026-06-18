@@ -384,7 +384,7 @@ class AdminDashboardView(ManagerRequiredMixin, TemplateView):
     template_name = 'cadastro/admin_dashboard.html'
 
     def get_context_data(self, **kwargs):
-        from editais.models import Edital, AplicacaoEdital
+        from editais.models import EditalProvisorio, AplicacaoEdital
         from classificacao.models import Classificacao, CriterioClassificacao
 
         context = super().get_context_data(**kwargs)
@@ -399,7 +399,7 @@ class AdminDashboardView(ManagerRequiredMixin, TemplateView):
         context['cadastros'] = CadastroBolsista.objects.filter(tenant=tenant).select_related('user')
         context['total_cadastros'] = context['cadastros'].count()
 
-        context['total_editais'] = Edital.objects.filter(tenant=tenant).count()
+        context['total_editais'] = EditalProvisorio.objects.filter(tenant=tenant).count()
         context['total_aplicacoes'] = AplicacaoEdital.objects.filter(tenant=tenant).count()
         context['total_classificacoes'] = Classificacao.objects.filter(tenant=tenant).count()
         context['total_criterios'] = CriterioClassificacao.objects.filter(tenant=tenant).count()
