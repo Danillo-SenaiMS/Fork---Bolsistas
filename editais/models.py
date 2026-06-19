@@ -213,6 +213,7 @@ class AplicacaoEdital(DataModel):
     bolsista = models.ForeignKey(CadastroBolsista, on_delete=models.CASCADE, related_name='aplicacoes')
     edital = models.ForeignKey(EditalProvisorio, on_delete=models.CASCADE, related_name='aplicacoes')
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='pendente')
+    nota = models.DecimalField('Nota do avaliador', max_digits=5, decimal_places=2, blank=True, null=True)
     data_aplicacao = models.DateTimeField('Data de aplicação', auto_now_add=True)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='aplicacoes')
 

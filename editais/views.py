@@ -150,6 +150,7 @@ class EditalProvisorioDetailView(TenantRequiredMixin, ContextMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['cronograma'] = self.object.cronograma.all()
+        context['aplicacoes'] = self.object.aplicacoes.select_related('bolsista__user').all()
         user = self.request.user
         context['tem_cadastro'] = hasattr(user, 'cadastro')
         if hasattr(user, 'cadastro'):
@@ -206,7 +207,7 @@ class AplicarEditalView(TenantRequiredMixin, TemplateView):
         from cadastro.utils import calcular_pontuacao_previa
         from classificacao.models import CriterioClassificacao, Classificacao, ClassificacaoCriterio
 
-        edital = get_object_or_404(EditalProvisorio, pk=kwargs['pk'], tenant=request.tenant)
+        edital = get_object_or_404(EditalProvisorio, pk=kwargs['pk'])
         if not hasattr(request.user, 'cadastro'):
             messages.warning(request, 'Complete seu cadastro antes de se candidatar.')
             return redirect('cadastro_create')
@@ -275,7 +276,7 @@ class AplicacaoListView(TenantRequiredMixin, ListView):
 class CancelarAplicacaoView(TenantRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         aplicacao = get_object_or_404(
-            AplicacaoEdital, pk=kwargs['pk'], bolsista__user=request.user, tenant=request.tenant
+            AplicacaoEdital, pk=kwargs['pk'], bolsista__user=request.user
         )
         if aplicacao.status == 'pendente':
             aplicacao.delete()
@@ -285,11 +286,27 @@ class CancelarAplicacaoView(TenantRequiredMixin, TemplateView):
         return redirect('aplicacao_list')
 
 
+class SalvarNotaAplicacaoView(ManagerRequiredMixin, TemplateView):
+    def post(self, request, *args, **kwargs):
+        aplicacao = get_object_or_404(AplicacaoEdital, pk=kwargs['pk'])
+        nota_str = request.POST.get('nota', '').strip()
+        if nota_str:
+            try:
+                nota_valor = float(nota_str.replace(',', '.'))
+                if 0 <= nota_valor <= 10:
+                    aplicacao.nota = nota_valor
+                    aplicacao.save(update_fields=['nota'])
+            except (ValueError, TypeError):
+                pass
+        else:
+            aplicacao.nota = None
+            aplicacao.save(update_fields=['nota'])
+        return HttpResponse('')
+
+
 class AlterarStatusAplicacaoView(ManagerRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
-        aplicacao = get_object_or_404(
-            AplicacaoEdital, pk=kwargs['pk'], tenant=request.tenant
-        )
+        aplicacao = get_object_or_404(AplicacaoEdital, pk=kwargs['pk'])
         novo_status = request.POST.get('status')
         if novo_status in dict(AplicacaoEdital.STATUS_CHOICES):
             aplicacao.status = novo_status
@@ -302,12 +319,57 @@ class AlterarStatusAplicacaoView(ManagerRequiredMixin, TemplateView):
                 request=request,
             )
             return HttpResponse(html)
+        next_url = request.POST.get('next')
+        if next_url:
+            return redirect(next_url)
         return redirect('aplicacao_list')
+
+
+class AvaliacaoCandidatosView(ManagerRequiredMixin, ContextMixin, DetailView):
+    model = EditalProvisorio
+    template_name = 'editais/avaliacao_candidatos.html'
+    context_object_name = 'edital'
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return EditalProvisorio.objects.all()
+        return EditalProvisorio.objects.filter(tenant=self.request.tenant)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['aplicacoes'] = self.object.aplicacoes.select_related(
+            'bolsista__user'
+        ).prefetch_related('bolsista__formacoes').all().order_by('-data_aplicacao')
+        return context
+
+
+class AvaliarCandidatoView(ManagerRequiredMixin, TemplateView):
+    def get(self, request, *args, **kwargs):
+        edital = get_object_or_404(EditalProvisorio, pk=kwargs['edital_pk'])
+        aplicacao = get_object_or_404(
+            AplicacaoEdital, pk=kwargs['aplicacao_pk'], edital=edital
+        )
+        cadastro = aplicacao.bolsista
+
+        from .ai_service import avaliar_candidato
+        result = avaliar_candidato(edital, cadastro, aplicacao)
+
+        if result["error"]:
+            html = f'<div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{result["error"]}</div>'
+        else:
+            html = render_to_string('editais/partials/avaliacao_candidato.html', {
+                'aplicacao': aplicacao,
+                'compatibilidade': result['compatibilidade'],
+                'nota': result['nota'],
+                'resumo': result['resumo'],
+            }, request=request)
+
+        return HttpResponse(html)
 
 
 class EditalResumoView(TenantRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
-        edital = get_object_or_404(EditalProvisorio, pk=kwargs['pk'], tenant=request.tenant)
+        edital = get_object_or_404(EditalProvisorio, pk=kwargs['pk'])
 
         from .ai_service import summarize_edital
         result = summarize_edital(edital)

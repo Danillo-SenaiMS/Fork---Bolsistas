@@ -92,6 +92,14 @@ class ClassificacaoCriterioForm(forms.ModelForm):
             'nota': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        tenant = kwargs.pop('tenant', None)
+        super().__init__(*args, **kwargs)
+        if tenant:
+            self.fields['criterio'].queryset = CriterioClassificacao.objects.filter(
+                tenant=tenant, ativo=True
+            )
+
 
 class ClassificacaoCreateView(ManagerRequiredMixin, FormView):
     template_name = 'classificacao/classificacao_form.html'
@@ -114,13 +122,22 @@ class ClassificacaoCreateView(ManagerRequiredMixin, FormView):
             tenant=self.request.tenant, ativo=True
         )
         initial = [{'criterio': c.pk} for c in criterios]
-        return forms.modelformset_factory(
+        FormSet = forms.modelformset_factory(
             ClassificacaoCriterio,
             form=ClassificacaoCriterioForm,
             extra=len(criterios),
             max_num=len(criterios),
             can_delete=False,
-        )(data or None, prefix='criterio', initial=initial)
+        )
+        formset_kwargs = {
+            'prefix': 'criterio',
+            'initial': initial,
+            'queryset': ClassificacaoCriterio.objects.none(),
+            'form_kwargs': {'tenant': self.request.tenant},
+        }
+        if data is not None:
+            formset_kwargs['data'] = data
+        return FormSet(**formset_kwargs)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -141,14 +158,15 @@ class ClassificacaoCreateView(ManagerRequiredMixin, FormView):
         classificacao.save()
 
         for cf in criterio_formset:
-            if cf.cleaned_data:
-                nota = cf.cleaned_data.get('nota', 0)
+            if cf.cleaned_data and not cf.cleaned_data.get('DELETE', False):
+                nota = cf.cleaned_data.get('nota') or 0
                 criterio = cf.cleaned_data['criterio']
                 pontuacao_total += float(nota) * float(criterio.peso)
                 ClassificacaoCriterio.objects.create(
                     classificacao=classificacao,
                     criterio=criterio,
                     nota=nota,
+                    tenant=self.request.tenant,
                 )
 
         classificacao.pontuacao_total = pontuacao_total

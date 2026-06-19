@@ -1,0 +1,164 @@
+{% extends 'base.html' %}{% load br_filters %}
+{% block title %}Avaliar Candidatos - {{ edital.nome_edital }} - Bolsas SENAI - MS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary mb-0">
+            <i class="bi bi-clipboard-check me-2"></i>Avaliar Candidatos
+        </h2>
+        <div>
+            <a href="{% url 'edital_detail' edital.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Voltar ao Edital
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-1">{{ edital.nome_edital }}</h5>
+            <p class="text-muted small mb-0">
+                {{ edital.get_nome_instituto_display }} |
+                <span class="badge {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'cancelado' %}bg-danger{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
+                    {{ edital.get_status_display }}
+                </span>
+                |
+                {{ aplicacoes|length }} candidato{{ aplicacoes|length|pluralize }}
+            </p>
+        </div>
+    </div>
+
+    {% if aplicacoes %}
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white py-2">
+            <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Candidatos Inscritos</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="min-width:200px">Candidato</th>
+                            <th style="min-width:200px">Formacao</th>
+                            <th>Experiencia</th>
+                            <th class="text-center">Pontuacao</th>
+                            <th>Status</th>
+                            <th class="text-center">Nota</th>
+                            <th class="text-center">Acoes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in aplicacoes %}
+                        <tr>
+                            <td>
+                                <div class="fw-medium">{{ app.bolsista.user.nome_completo }}</div>
+                                <div class="text-muted small">{{ app.bolsista.cidade }}/{{ app.bolsista.estado }}</div>
+                                <div class="text-muted small">{{ app.data_aplicacao|date:'d/m/Y' }}</div>
+                            </td>
+                            <td>
+                                {% with formacao=app.bolsista.ultima_formacao %}
+                                {% if formacao %}
+                                <span class="badge bg-info text-dark me-1">{{ formacao.get_tipo_display }}</span>
+                                <div class="small text-muted">{{ formacao.instituicao }}</div>
+                                {% if formacao.curso %}
+                                <div class="small text-muted">{{ formacao.curso }}</div>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted small">Nao informada</span>
+                                {% endif %}
+                                {% endwith %}
+                                {% with formacoes=app.bolsista.formacoes.all %}
+                                {% if formacoes|length > 1 %}
+                                <button class="btn btn-link btn-sm p-0 small" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#formacoes-{{ app.pk }}">
+                                    +{{ formacoes|length|add:"-1" }} formação{{ formacoes|length|add:"-1"|pluralize }}
+                                </button>
+                                <div class="collapse small mt-1" id="formacoes-{{ app.pk }}">
+                                    {% for f in formacoes %}
+                                    {% if not forloop.first %}
+                                    <div class="text-muted">
+                                        <span class="badge bg-light text-dark me-1">{{ f.get_tipo_display }}</span>
+                                        {{ f.instituicao }}
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td class="small">
+                                {% if app.bolsista.participacao_projetos_anos %}
+                                <div><i class="bi bi-clock-history me-1 text-muted"></i>{{ app.bolsista.participacao_projetos_anos }} ano{{ app.bolsista.participacao_projetos_anos|pluralize }} em projetos</div>
+                                {% endif %}
+                                {% if app.bolsista.participacao_congressos %}
+                                <div><i class="bi bi-megaphone me-1 text-muted"></i>Congressos</div>
+                                {% endif %}
+                                {% if app.bolsista.artigo_cientifico_nacional or app.bolsista.artigo_cientifico_internacional %}
+                                <div><i class="bi bi-journal-text me-1 text-muted"></i>Artigos</div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="fw-bold {% if app.bolsista.pontuacao_previa > 0 %}text-success{% else %}text-muted{% endif %}">
+                                    {{ app.bolsista.pontuacao_previa }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if app.status == 'aprovado' %}bg-success{% elif app.status == 'rejeitado' %}bg-danger{% elif app.status == 'em_analise' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" step="0.01" min="0" max="10"
+                                       class="form-control form-control-sm text-center"
+                                       style="width:80px"
+                                       value="{{ app.nota|default:'' }}"
+                                       placeholder="-"
+                                       name="nota"
+                                       hx-post="{% url 'salvar_nota_aplicacao' app.pk %}"
+                                       hx-trigger="blur, keydown[key=='Enter']"
+                                       hx-swap="none">
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex flex-column gap-1 align-items-center">
+                                    <button class="btn btn-outline-info btn-sm"
+                                            hx-get="{% url 'avaliar_candidato' edital.pk app.pk %}"
+                                            hx-target="#analise-{{ app.pk }}"
+                                            hx-swap="innerHTML"
+                                            hx-indicator="#spinner-{{ app.pk }}">
+                                        <i class="bi bi-robot me-1"></i>Analisar com IA
+                                    </button>
+                                    <form method="post" action="{% url 'alterar_status_aplicacao' app.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{% url 'avaliacao_candidatos' edital.pk %}">
+                                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                            <option value="">Status...</option>
+                                            <option value="pendente" {% if app.status == 'pendente' %}selected{% endif %}>Pendente</option>
+                                            <option value="em_analise" {% if app.status == 'em_analise' %}selected{% endif %}>Em Analise</option>
+                                            <option value="aprovado" {% if app.status == 'aprovado' %}selected{% endif %}>Aprovado</option>
+                                            <option value="rejeitado" {% if app.status == 'rejeitado' %}selected{% endif %}>Rejeitado</option>
+                                        </select>
+                                    </form>
+                                </div>
+                                <span id="spinner-{{ app.pk }}" class="htmx-indicator text-primary small">
+                                    <i class="bi bi-arrow-repeat spin me-1"></i>Analisando...
+                                </span>
+                            </td>
+                        </tr>
+                        <tr id="analise-{{ app.pk }}" class="bg-light">
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card p-5 text-center">
+        <i class="bi bi-inbox text-muted fs-1 mb-3"></i>
+        <h5>Nenhum candidato inscrito</h5>
+        <p class="text-muted mb-0">Este edital ainda nao recebeu inscricoes.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -122,6 +122,108 @@ def summarize_edital(edital) -> dict:
         return {"summary": None, "error": str(e)}
 
 
+AVALIAR_SYSTEM_PROMPT = """Voce e um assistente que avalia a compatibilidade de candidatos com editais de bolsas de pesquisa do SENAI.
+Analise o perfil do candidato comparando com os requisitos do edital.
+Seja PRECISO, DIRETO e OBJETIVO.
+Nao invente dados que nao estejam no contexto fornecido.
+Responda apenas em portugues brasileiro.
+
+Formato de resposta obrigatorio (exatamente assim, sem texto adicional):
+
+COMPATIBILIDADE: <percentual entre 0 e 100>
+NOTA: <nota de 0.00 a 10.00 baseada na formacao, experiencia e aderencia aos requisitos>
+RESUMO: <2 a 3 frases curtas e objetivas resumindo os pontos fortes e fracos do candidato para esta vaga>"""
+
+
+def _build_candidato_context(cadastro, aplicacao) -> str:
+    formacoes = cadastro.formacoes.all()
+    ctx = f"""
+PERFIL DO CANDIDATO
+
+Nome: {cadastro.user.nome_completo}
+Data de Nascimento: {cadastro.data_nascimento.strftime('%d/%m/%Y') if cadastro.data_nascimento else 'Nao informado'}
+Cidade/Estado: {cadastro.cidade}/{cadastro.estado}
+
+FORMACAO ACADEMICA
+"""
+    for f in formacoes:
+        status = f.get_status_display() if f.status else ''
+        ctx += f"- {f.get_tipo_display()}{' (' + status + ')' if status else ''} - {f.instituicao}"
+        if f.curso:
+            ctx += f" | Curso: {f.curso}"
+        if f.area:
+            ctx += f" | Area: {f.area}"
+        if f.ano_conclusao:
+            ctx += f" | Conclusao: {f.ano_conclusao}"
+        ctx += "\n"
+
+    if not formacoes:
+        ctx += "Nenhuma formacao cadastrada.\n"
+
+    ctx += f"""
+EXPERIENCIA E PRODUCAO
+Anos em projetos/pesquisa: {cadastro.participacao_projetos_anos}
+Participacao em congressos: {'Sim' if cadastro.participacao_congressos else 'Nao'}
+Resumo em anais: {'Sim' if cadastro.resumo_anais else 'Nao'}
+Artigo completo em anais: {'Sim' if cadastro.artigo_completo_anais else 'Nao'}
+Artigo nacional: {'Sim' if cadastro.artigo_cientifico_nacional else 'Nao'}
+Artigo internacional: {'Sim' if cadastro.artigo_cientifico_internacional else 'Nao'}
+Livro ou patente: {'Sim' if cadastro.livro_patente else 'Nao'}
+Minicurso (ate 4h): {'Sim' if cadastro.participacao_minicurso else 'Nao'}
+Treinamento (acima de 4h): {'Sim' if cadastro.treinamento else 'Nao'}
+Pontuacao previa: {cadastro.pontuacao_previa}
+
+APLICACAO
+Status: {aplicacao.get_status_display()}
+Data: {aplicacao.data_aplicacao.strftime('%d/%m/%Y')}
+"""
+    return ctx
+
+
+def avaliar_candidato(edital, cadastro, aplicacao) -> dict:
+    edital_ctx = _build_edital_context(edital)
+    candidato_ctx = _build_candidato_context(cadastro, aplicacao)
+    llm = _get_llm()
+
+    full_context = f"{edital_ctx}\n\n{candidato_ctx}"
+
+    messages = [
+        SystemMessage(content=AVALIAR_SYSTEM_PROMPT),
+        HumanMessage(content=f"Avalie a compatibilidade deste candidato com o edital abaixo:\n\n{full_context}"),
+    ]
+
+    try:
+        response = llm.invoke(messages)
+        content = response.content.strip()
+
+        compatibilidade = None
+        nota = None
+        resumo = None
+        for line in content.split('\n'):
+            upper = line.upper()
+            if upper.startswith('COMPATIBILIDADE:'):
+                try:
+                    compatibilidade = int(''.join(c for c in line.split(':', 1)[1] if c.isdigit()))
+                except ValueError:
+                    compatibilidade = None
+            elif upper.startswith('NOTA:'):
+                try:
+                    nota = float(line.split(':', 1)[1].strip().replace(',', '.'))
+                    nota = min(max(nota, 0), 10)
+                except (ValueError, IndexError):
+                    nota = None
+            elif upper.startswith('RESUMO:'):
+                resumo = line.split(':', 1)[1].strip()
+
+        if compatibilidade is None or resumo is None:
+            return {"compatibilidade": None, "nota": nota, "resumo": content, "error": None}
+
+        return {"compatibilidade": compatibilidade, "nota": nota, "resumo": resumo, "error": None}
+    except Exception as e:
+        logger.error(f"Erro ao avaliar candidato: {e}")
+        return {"compatibilidade": None, "nota": None, "resumo": None, "error": str(e)}
+
+
 def build_summarize_graph():
     workflow = StateGraph(SummarizeState)
 

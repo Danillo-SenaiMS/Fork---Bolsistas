@@ -60,6 +60,9 @@ class ClassificacaoCriterio(DataModel):
     classificacao = models.ForeignKey(Classificacao, on_delete=models.CASCADE, related_name='notas')
     criterio = models.ForeignKey(CriterioClassificacao, on_delete=models.CASCADE, related_name='notas')
     nota = models.DecimalField('Nota', max_digits=10, decimal_places=2)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='classificacao_criterios')
+
+    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Nota por Critério'
