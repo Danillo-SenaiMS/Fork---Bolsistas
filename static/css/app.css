@@ -1,0 +1,100 @@
+:root {
+    --bs-primary: #1a73e8;
+    --bs-primary-rgb: 26, 115, 232;
+    --bs-primary-dark: #1557b0;
+}
+
+body {
+    background-color: #f8fafc;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ---- BRAND ---- */
+.navbar-brand,
+.sidebar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.bg-primary-dark {
+    background-color: var(--bs-primary-dark);
+}
+
+/* ---- CARDS ---- */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* ---- BUTTONS ---- */
+.btn-primary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--bs-primary-dark);
+    border-color: var(--bs-primary-dark);
+}
+
+/* ---- LINKS ---- */
+.text-primary {
+    color: var(--bs-primary) !important;
+}
+
+a {
+    color: var(--bs-primary);
+}
+
+/* ---- TABLES ---- */
+.table thead th {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* ---- STATUS BADGES ---- */
+.badge-status-aberto    { background-color: #198754; }
+.badge-status-encerrado { background-color: #6c757d; }
+.badge-status-em_analise{ background-color: #ffc107; color: #212529; }
+.badge-status-cancelado { background-color: #dc3545; }
+
+/* ---- FOOTER ---- */
+footer {
+    margin-top: auto;
+}
+
+/* ---- HTMX ---- */
+.htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
+.htmx-request .htmx-indicator,
+.htmx-indicator.htmx-request { opacity: 1; }
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.spin {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+/* ---- FORMS ---- */
+.form-label.fw-semibold {
+    font-size: 0.9rem;
+}
+
+/* ---- MAIN CONTENT ---- */
+.main-content {
+    padding: 1.5rem 1.25rem;
+}
+
+@media (max-width: 767.98px) {
+    .main-content {
+        padding: 1rem 0.75rem;
+    }
+}

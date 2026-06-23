@@ -1,0 +1,44 @@
+{% load static %}
+<nav id="sidebar" class="shadow-sm">
+    <a href="{% url 'home' %}" class="sidebar-brand">
+        <i class="bi bi-lightbulb-fill fs-5"></i> Bolsas SENAI
+    </a>
+
+    <div class="sidebar-nav">
+        <div class="sidebar-section">Principal</div>
+        <a href="{% url 'home' %}" class="sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <i class="bi bi-grid-fill"></i> Dashboard
+        </a>
+        <a href="{% if has_cadastro %}{% url 'cadastro_detail' %}{% else %}{% url 'cadastro_create' %}{% endif %}" class="sidebar-link">
+            <i class="bi bi-person-lines-fill"></i> Meu Cadastro
+        </a>
+
+        <div class="sidebar-section">Bolsas</div>
+        <a href="{% url 'edital_list' %}" class="sidebar-link">
+            <i class="bi bi-journal-text"></i> Editais
+        </a>
+        <a href="{% url 'aplicacao_list' %}" class="sidebar-link">
+            <i class="bi bi-clipboard-check"></i> Minhas Aplicações
+        </a>
+
+        {% if user.is_superuser or tipo_usuario == 'MANAGER' %}
+        <div class="sidebar-section">Gestão</div>
+        <a href="{% url 'painel_lista' %}" class="sidebar-link">
+            <i class="bi bi-people-fill"></i> Painel de Bolsistas
+        </a>
+        <a href="{% url 'criterio_list' %}" class="sidebar-link">
+            <i class="bi bi-list-ol"></i> Critérios
+        </a>
+        <a href="{% url 'solicitacao_list' %}" class="sidebar-link">
+            <i class="bi bi-list-check"></i> Solicitações
+        </a>
+        <a href="{% url 'classificacao_list' %}" class="sidebar-link">
+            <i class="bi bi-star-fill"></i> Classificações
+        </a>
+        <a href="{% url 'csv_import' %}" class="sidebar-link">
+            <i class="bi bi-upload"></i> Importar CSV
+        </a>
+        {% endif %}
+    </div>
+</nav>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>

@@ -26,13 +26,12 @@ def _build_bolsista_context(cadastro):
     for f in formacoes:
         status = f.get_status_display() if f.status else '---'
         formacao_text += (
-            f"- {f.get_tipo_display()} em {f.curso or 'N/A'} "
-            f"({status}) - {f.instituicao}"
+            f"- {f.get_tipo_display()} em {f.curso or 'N/A'} ({status})"
         )
+        if f.area:
+            formacao_text += f" | area: {f.area}"
         if f.ano_conclusao:
             formacao_text += f", conclusão {f.ano_conclusao}"
-        if f.area:
-            formacao_text += f", área: {f.area}"
         formacao_text += '\n'
 
     if not formacao_text:

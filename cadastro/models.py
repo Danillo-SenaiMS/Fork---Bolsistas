@@ -71,6 +71,13 @@ class CadastroBolsista(DataModel):
             return None
         return max(formacoes, key=lambda f: f.ano_conclusao or 0)
 
+    def sincronizar_anos_experiencia(self):
+        total = sum(e.anos_experiencia or 0 for e in self.experiencias.all())
+        if self.participacao_projetos_anos != total:
+            self.participacao_projetos_anos = total
+            self.save(update_fields=['participacao_projetos_anos'])
+        return total
+
 
 class FormacaoAcademica(DataModel):
     TIPO_CHOICES = [
@@ -94,7 +101,6 @@ class FormacaoAcademica(DataModel):
     bolsista = models.ForeignKey(CadastroBolsista, on_delete=models.CASCADE, related_name='formacoes')
     tipo = models.CharField('Formação Acadêmica', max_length=20, choices=TIPO_CHOICES)
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, blank=True)
-    instituicao = models.CharField('Nome da Instituição', max_length=255)
     curso = models.CharField('Curso', max_length=255, blank=True)
     area = models.CharField('Área', max_length=255, blank=True)
     ano_conclusao = models.IntegerField('Ano de conclusão', blank=True, null=True)
@@ -107,13 +113,63 @@ class FormacaoAcademica(DataModel):
         verbose_name_plural = 'Formações Acadêmicas'
 
     def __str__(self):
-        return f'{self.get_tipo_display()} - {self.instituicao}'
+        return f'{self.get_tipo_display()}'
 
     @property
     def status_display(self):
         if self.tipo == 'ensino_medio':
             return ''
         return self.get_status_display()
+
+
+class ExperienciaProfissional(DataModel):
+    bolsista = models.ForeignKey(
+        CadastroBolsista, on_delete=models.CASCADE, related_name='experiencias'
+    )
+    area_atuacao = models.CharField('Área de Atuação', max_length=255, blank=True)
+    anos_experiencia = models.PositiveIntegerField('Anos de Experiência', default=0)
+    anexo = models.FileField('Comprovante (PDF)', upload_to='experiencias/', blank=True)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='experiencias')
+
+    objects = TenantManager()
+
+    class Meta:
+        verbose_name = 'Experiência Profissional'
+        verbose_name_plural = 'Experiências Profissionais'
+
+    def __str__(self):
+        return f'{self.area_atuacao} - {self.anos_experiencia} ano(s)'
+
+
+class AnexoComprobatorio(DataModel):
+    TIPO_CHOICES = [
+        ('rg_cpf', 'Documento de Identificação (RG/CPF)'),
+        ('comprovante_endereco', 'Comprovante de Endereço'),
+        ('participacao_congressos', 'Participação em congressos, feiras, eventos e palestras'),
+        ('resumo_anais', 'Resumo publicado em anais de eventos'),
+        ('artigo_completo_anais', 'Artigo completo publicado em anais de eventos'),
+        ('artigo_cientifico_nacional', 'Artigo científico ou capítulo de livro nacional publicado'),
+        ('artigo_cientifico_internacional', 'Artigo científico ou capítulo de livro internacional publicado'),
+        ('livro_patente', 'Livro publicado na área de interesse ou patente registrada'),
+        ('participacao_minicurso', 'Participação em minicurso (até 4 horas) na área de interesse'),
+        ('treinamento', 'Treinamento (acima de 4 horas) na área de interesse'),
+    ]
+
+    bolsista = models.ForeignKey(
+        CadastroBolsista, on_delete=models.CASCADE, related_name='anexos'
+    )
+    tipo = models.CharField('Tipo', max_length=40, choices=TIPO_CHOICES)
+    anexo = models.FileField('Anexo (PDF)', upload_to='anexos/')
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='anexos')
+
+    objects = TenantManager()
+
+    class Meta:
+        verbose_name = 'Anexo Comprobatório'
+        verbose_name_plural = 'Anexos Comprobatórios'
+
+    def __str__(self):
+        return f'{self.get_tipo_display()} - {self.bolsista}'
 
 
 class SolicitacaoEdicao(DataModel):

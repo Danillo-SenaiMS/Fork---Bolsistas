@@ -18,11 +18,11 @@ class RoleRequiredMixin(UserPassesTestMixin):
 
 
 class AdminRequiredMixin(RoleRequiredMixin):
-    roles = ['ADMIN']
+    roles = ['MANAGER']
 
 
 class ManagerRequiredMixin(RoleRequiredMixin):
-    roles = ['ADMIN', 'MANAGER']
+    roles = ['MANAGER']
 
 
 class TenantRequiredMixin(LoginRequiredMixin):

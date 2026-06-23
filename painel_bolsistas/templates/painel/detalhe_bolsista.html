@@ -2,7 +2,7 @@
 {% block title %}{{ bolsista.user.nome_completo }} - Perfil - Bolsas SENAI - MS{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid py-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-primary mb-0">
             <i class="bi bi-person-vcard me-2"></i>{{ bolsista.user.nome_completo }}
@@ -81,7 +81,6 @@
                     {% if fa.status %}
                     <span class="badge bg-info text-dark ms-2">{{ fa.get_status_display }}</span>
                     {% endif %}
-                    <small class="d-block text-muted">{{ fa.instituicao }}</small>
                     {% if fa.curso %}<small class="d-block">{{ fa.curso }}</small>{% endif %}
                     {% if fa.area %}<small class="text-muted">Área: {{ fa.area }}</small>{% endif %}
                     {% if fa.ano_conclusao %}<small class="text-muted d-block">Conclusão: {{ fa.ano_conclusao }}</small>{% endif %}

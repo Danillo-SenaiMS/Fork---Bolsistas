@@ -80,7 +80,6 @@ class Command(BaseCommand):
                         bolsista=cad,
                         tipo=tipo,
                         status=fake.random_element(['', 'em_andamento', 'concluida']),
-                        instituicao=fake.company(),
                         curso=fake.random_element([
                             'Engenharia de Producao', 'Administracao',
                             'Ciencia da Computacao', 'Direito',

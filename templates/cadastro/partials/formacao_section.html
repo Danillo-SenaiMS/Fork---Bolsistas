@@ -7,7 +7,7 @@
                 {% if fa.status_display %}
                 <span class="badge bg-info text-dark ms-2">{{ fa.status_display }}</span>
                 {% endif %}
-                <span class="text-muted ms-2">- {{ fa.instituicao }}</span>
+                {% if fa.area %}<span class="text-muted ms-2">- {{ fa.area }}</span>{% endif %}
                 {% if fa.curso %}<small class="text-muted d-block">{{ fa.curso }}</small>{% endif %}
                 {% if fa.ano_conclusao %}<small class="text-muted">Conclusão: {{ fa.ano_conclusao }}</small>{% endif %}
             </div>
@@ -34,15 +34,15 @@
               hx-post="{% url 'formacao_add' cadastro.pk %}"
               hx-target="#formacao-section" hx-swap="outerHTML" class="card p-3 bg-light">
             {% csrf_token %}
-            <div class="row g-2">
-                <div class="col-md-6">
-                    <label class="form-label small">Formação Acadêmica</label>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small">Formação</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-mortarboard"></i></span>
                         {{ formacao_form.tipo }}
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small">Status</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-info-circle"></i></span>
@@ -50,23 +50,16 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small">Ano Conclusão</label>
-                    {{ formacao_form.ano_conclusao }}
+                    <label class="form-label small">Área</label>
+                    {{ formacao_form.area }}
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label small">Instituição</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-building"></i></span>
-                        {{ formacao_form.instituicao }}
-                    </div>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small">Curso</label>
                     {{ formacao_form.curso }}
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small">Área</label>
-                    {{ formacao_form.area }}
+                <div class="col-md-2">
+                    <label class="form-label small">Ano de Conclusão</label>
+                    {{ formacao_form.ano_conclusao }}
                 </div>
             </div>
             <div class="mt-2 d-flex gap-2">

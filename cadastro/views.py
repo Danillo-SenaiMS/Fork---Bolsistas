@@ -9,22 +9,32 @@ from django.template.loader import render_to_string
 from django import forms
 
 from base.mixins import TenantRequiredMixin, ManagerRequiredMixin
-from .models import CadastroBolsista, FormacaoAcademica, SolicitacaoEdicao
+from .models import (
+    CadastroBolsista, FormacaoAcademica, ExperienciaProfissional,
+    AnexoComprobatorio, SolicitacaoEdicao,
+)
 from accounts.models import User, Perfil
 from .utils import calcular_pontuacao_previa
 from classificacao.models import CriterioClassificacao
 
 
+ANEXO_TIPOS = [
+    'rg_cpf', 'comprovante_endereco',
+    'participacao_congressos', 'resumo_anais', 'artigo_completo_anais',
+    'artigo_cientifico_nacional', 'artigo_cientifico_internacional',
+    'livro_patente', 'participacao_minicurso', 'treinamento',
+]
+
+
 class FormacaoAcademicaForm(forms.ModelForm):
     class Meta:
         model = FormacaoAcademica
-        fields = ['tipo', 'status', 'instituicao', 'curso', 'area', 'ano_conclusao']
+        fields = ['tipo', 'status', 'area', 'curso', 'ano_conclusao']
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
-            'instituicao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da instituicao'}),
             'curso': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do curso (opcional)'}),
-            'area': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Area de concentracao (opcional)'}),
+            'area': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Área de concentração (opcional)'}),
             'ano_conclusao': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 2024'}),
         }
 
@@ -36,13 +46,28 @@ class FormacaoAcademicaForm(forms.ModelForm):
         self.fields['ano_conclusao'].required = False
 
 
+class ExperienciaProfissionalForm(forms.ModelForm):
+    class Meta:
+        model = ExperienciaProfissional
+        fields = ['area_atuacao', 'anos_experiencia', 'anexo']
+        widgets = {
+            'area_atuacao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Engenharia de Produção'}),
+            'anos_experiencia': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': '0'}),
+            'anexo': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['area_atuacao'].required = False
+        self.fields['anexo'].required = False
+
+
 class CadastroForm(forms.ModelForm):
     class Meta:
         model = CadastroBolsista
         fields = [
             'telefone', 'data_nascimento',
             'rua', 'numero', 'bairro', 'cidade', 'estado',
-            'participacao_projetos_anos',
             'participacao_congressos', 'resumo_anais', 'artigo_completo_anais',
             'artigo_cientifico_nacional', 'artigo_cientifico_internacional',
             'livro_patente', 'participacao_minicurso', 'treinamento',
@@ -55,7 +80,6 @@ class CadastroForm(forms.ModelForm):
             'bairro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bairro'}),
             'cidade': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cidade'}),
             'estado': forms.Select(attrs={'class': 'form-select'}),
-            'participacao_projetos_anos': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'participacao_congressos': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'resumo_anais': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'artigo_completo_anais': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -88,6 +112,11 @@ class CadastroCreateView(TenantRequiredMixin, FormView):
             context['formacao_formset'] = forms.modelformset_factory(
                 FormacaoAcademica, form=FormacaoAcademicaForm, extra=1, can_delete=True
             )(queryset=FormacaoAcademica.objects.none(), prefix='formacoes')
+        if 'experiencia_formset' not in kwargs:
+            context['experiencia_formset'] = _experiencia_formset_factory(extra=1)(
+                queryset=ExperienciaProfissional.objects.none(), prefix='experiencias'
+            )
+        context['anexo_tipos'] = ANEXO_TIPOS
         context['user'] = self.request.user
         return context
 
@@ -114,6 +143,14 @@ class CadastroCreateView(TenantRequiredMixin, FormView):
                     fa.tenant = self.request.tenant
                     fa.save()
 
+        exp_formset = _experiencia_formset_factory(extra=0)(
+            self.request.POST, self.request.FILES, prefix='experiencias'
+        )
+        if exp_formset.is_valid():
+            _salvar_experiencias(exp_formset, cadastro, self.request.tenant)
+
+        _salvar_anexos(cadastro, self.request.FILES, self.request.tenant)
+
         criterios = CriterioClassificacao.objects.filter(tenant=self.request.tenant, ativo=True)
         _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
         cadastro.pontuacao_previa = pontuacao
@@ -127,14 +164,49 @@ class CadastroCreateView(TenantRequiredMixin, FormView):
             FormacaoAcademica, form=FormacaoAcademicaForm, extra=1, can_delete=True
         )
         formset = FormSet(request.POST, prefix='formacoes')
-        if form.is_valid() and formset.is_valid():
+        exp_formset = _experiencia_formset_factory(extra=1)(
+            request.POST, request.FILES, prefix='experiencias'
+        )
+        if form.is_valid() and formset.is_valid() and exp_formset.is_valid():
             return self.form_valid(form)
-        return self.render_to_response(self.get_context_data(form=form, formacao_formset=formset))
+        return self.render_to_response(self.get_context_data(
+            form=form, formacao_formset=formset, experiencia_formset=exp_formset
+        ))
 
     def get(self, request, *args, **kwargs):
         if hasattr(request.user, 'cadastro'):
             return redirect('cadastro_detail')
         return super().get(request, *args, **kwargs)
+
+
+def _experiencia_formset_factory(extra=1):
+    return forms.modelformset_factory(
+        ExperienciaProfissional, form=ExperienciaProfissionalForm,
+        extra=extra, can_delete=True,
+    )
+
+
+def _salvar_experiencias(formset, cadastro, tenant):
+    for fm in formset:
+        if fm.cleaned_data and not fm.cleaned_data.get('DELETE', False):
+            if not (fm.cleaned_data.get('area_atuacao') or
+                    fm.cleaned_data.get('anos_experiencia') or
+                    fm.cleaned_data.get('anexo')):
+                continue
+            exp = fm.save(commit=False)
+            exp.bolsista = cadastro
+            exp.tenant = tenant
+            exp.save()
+    cadastro.sincronizar_anos_experiencia()
+
+
+def _salvar_anexos(cadastro, files, tenant):
+    for tipo in ANEXO_TIPOS:
+        for f in files.getlist('anexo_' + tipo):
+            if f and f.name:
+                AnexoComprobatorio.objects.create(
+                    bolsista=cadastro, tipo=tipo, anexo=f, tenant=tenant
+                )
 
 
 class CadastroDetailView(TenantRequiredMixin, DetailView):
@@ -193,6 +265,11 @@ class CadastroUpdateView(ManagerRequiredMixin, FormView):
             context['formacao_formset'] = forms.modelformset_factory(
                 FormacaoAcademica, form=FormacaoAcademicaForm, extra=1, can_delete=True
             )(queryset=cadastro.formacoes.all(), prefix='formacoes')
+        if 'experiencia_formset' not in kwargs:
+            context['experiencia_formset'] = _experiencia_formset_factory(extra=1)(
+                queryset=cadastro.experiencias.all(), prefix='experiencias'
+            )
+        context['anexo_tipos'] = ANEXO_TIPOS
         return context
 
     def post(self, request, *args, **kwargs):
@@ -202,7 +279,10 @@ class CadastroUpdateView(ManagerRequiredMixin, FormView):
             FormacaoAcademica, form=FormacaoAcademicaForm, extra=0, can_delete=True
         )
         formset = FormSet(request.POST, prefix='formacoes')
-        if form.is_valid() and formset.is_valid():
+        exp_formset = _experiencia_formset_factory(extra=0)(
+            request.POST, request.FILES, prefix='experiencias'
+        )
+        if form.is_valid() and formset.is_valid() and exp_formset.is_valid():
             cadastro = form.save()
             for fm in formset:
                 if fm.cleaned_data and not fm.cleaned_data.get('DELETE', False):
@@ -210,13 +290,17 @@ class CadastroUpdateView(ManagerRequiredMixin, FormView):
                     fa.bolsista = cadastro
                     fa.tenant = self.request.tenant
                     fa.save()
+            _salvar_experiencias(exp_formset, cadastro, self.request.tenant)
+            _salvar_anexos(cadastro, request.FILES, self.request.tenant)
             criterios = CriterioClassificacao.objects.filter(tenant=self.request.tenant, ativo=True)
             _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
             cadastro.pontuacao_previa = pontuacao
             cadastro.save(update_fields=['pontuacao_previa'])
             messages.success(self.request, 'Cadastro atualizado com sucesso!')
             return redirect('cadastro_detail_pk', pk=cadastro.pk)
-        return self.render_to_response(self.get_context_data(form=form, formacao_formset=formset))
+        return self.render_to_response(self.get_context_data(
+            form=form, formacao_formset=formset, experiencia_formset=exp_formset
+        ))
 
     def get_success_url(self):
         return reverse_lazy('cadastro_detail_pk', kwargs={'pk': self.kwargs['pk']})
@@ -307,12 +391,21 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
             FormacaoAcademica, form=FormacaoAcademicaForm, extra=1, can_delete=True
         )(data or None, prefix='formacoes', queryset=qs)
 
+    def _make_experiencia_formset(self, data=None, files=None, cadastro=None):
+        qs = cadastro.experiencias.all() if cadastro else ExperienciaProfissional.objects.none()
+        return _experiencia_formset_factory(extra=1)(
+            data or None, files or None, prefix='experiencias', queryset=qs
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cadastro = self.get_cadastro()
         context['object'] = cadastro
         if 'formacao_formset' not in kwargs:
             context['formacao_formset'] = self._make_formset(cadastro=cadastro)
+        if 'experiencia_formset' not in kwargs:
+            context['experiencia_formset'] = self._make_experiencia_formset(cadastro=cadastro)
+        context['anexo_tipos'] = ANEXO_TIPOS
         return context
 
     def post(self, request, *args, **kwargs):
@@ -321,16 +414,19 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
             return redirect('cadastro_create')
         form = self.get_form()
         formset = self._make_formset(request.POST, cadastro=cadastro)
-        if form.is_valid() and formset.is_valid():
-            return self.form_valid(form, formset)
-        return self.form_invalid(form, formset)
+        exp_formset = self._make_experiencia_formset(
+            request.POST, request.FILES, cadastro=cadastro
+        )
+        if form.is_valid() and formset.is_valid() and exp_formset.is_valid():
+            return self.form_valid(form, formset, exp_formset)
+        return self.form_invalid(form, formset, exp_formset)
 
-    def form_invalid(self, form, formset):
+    def form_invalid(self, form, formset, exp_formset=None):
         return self.render_to_response(self.get_context_data(
-            form=form, formacao_formset=formset
+            form=form, formacao_formset=formset, experiencia_formset=exp_formset
         ))
 
-    def form_valid(self, form, formset):
+    def form_valid(self, form, formset, exp_formset=None):
         cadastro = self.get_cadastro()
         alteracoes = 0
 
@@ -342,6 +438,11 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
                 fa.save()
                 alteracoes += 1
 
+        if exp_formset is not None and exp_formset.is_valid():
+            _salvar_experiencias(exp_formset, cadastro, self.request.tenant)
+
+        _salvar_anexos(cadastro, self.request.FILES, self.request.tenant)
+
         campos_auto = [
             'participacao_projetos_anos', 'participacao_congressos', 'resumo_anais',
             'artigo_completo_anais', 'artigo_cientifico_nacional', 'artigo_cientifico_internacional',
@@ -351,6 +452,7 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
             valor_novo = form.cleaned_data.get(campo)
             if valor_novo is not None:
                 setattr(cadastro, campo, valor_novo)
+        cadastro.sincronizar_anos_experiencia()
         cadastro.save(update_fields=campos_auto)
 
         criterios = CriterioClassificacao.objects.filter(tenant=self.request.tenant, ativo=True)

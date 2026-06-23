@@ -2,12 +2,12 @@
 {% block title %}Inicio - Bolsas SENAI - MS{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid py-3">
     <h2 class="fw-bold text-primary mb-1">
         <i class="bi bi-grid-fill me-2"></i>Painel
     </h2>
     <p class="text-muted mb-4">
-        {% if tipo_usuario == 'ADMIN' %}
+        {% if user.is_superuser %}
         Visao geral da plataforma
         {% elif tipo_usuario == 'MANAGER' %}
         Gerencie editais e acompanhe aplicacoes
@@ -16,13 +16,13 @@
         {% endif %}
     </p>
 
-    {% if tipo_usuario == 'ADMIN' %}
-    <div class="row g-3 mb-4">
+    {% if user.is_superuser or tipo_usuario == 'MANAGER' %}
+    <div class="row g-4 mb-4">
         <div class="col-md-2">
             <div class="card p-3 text-center border-primary border-opacity-25 h-100">
                 <i class="bi bi-people-fill fs-3 text-primary mb-1"></i>
                 <h3 class="fw-bold mb-0">{{ total_usuarios }}</h3>
-                <small class="text-muted">Usuarios</small>
+                <small class="text-muted">Usuários</small>
             </div>
         </div>
         <div class="col-md-2">
@@ -33,63 +33,31 @@
             </div>
         </div>
         <div class="col-md-2">
-            <div class="card p-3 text-center border-info border-opacity-25 h-100">
-                <i class="bi bi-journal-text fs-3 text-info mb-1"></i>
-                <h3 class="fw-bold mb-0">{{ total_editais }}</h3>
-                <small class="text-muted">Editais</small>
+            <div class="card p-3 text-center border-success border-opacity-25 h-100">
+                <i class="bi bi-journal-text fs-3 text-success mb-1"></i>
+                <h3 class="fw-bold mb-0">{{ total_editais_abertos }}</h3>
+                <small class="text-muted">Abertos</small>
             </div>
         </div>
         <div class="col-md-2">
-            <div class="card p-3 text-center border-success border-opacity-25 h-100">
-                <i class="bi bi-clipboard-check fs-3 text-success mb-1"></i>
-                <h3 class="fw-bold mb-0">{{ total_aplicacoes }}</h3>
-                <small class="text-muted">Aplicacoes</small>
+            <div class="card p-3 text-center border-info border-opacity-25 h-100">
+                <i class="bi bi-clipboard-check fs-3 text-info mb-1"></i>
+                <h3 class="fw-bold mb-0">{{ total_pendentes_avaliacao }}</h3>
+                <small class="text-muted">Avaliar</small>
             </div>
         </div>
         <div class="col-md-2">
             <div class="card p-3 text-center border-danger border-opacity-25 h-100">
                 <i class="bi bi-star-fill fs-3 text-danger mb-1"></i>
                 <h3 class="fw-bold mb-0">{{ total_classificacoes }}</h3>
-                <small class="text-muted">Classificacoes</small>
+                <small class="text-muted">Classificações</small>
             </div>
         </div>
         <div class="col-md-2">
             <div class="card p-3 text-center border-secondary border-opacity-25 h-100">
                 <i class="bi bi-list-check fs-3 text-secondary mb-1"></i>
                 <h3 class="fw-bold mb-0">{{ total_pendentes_solicitacao }}</h3>
-                <small class="text-muted">Solic. Edicao</small>
-            </div>
-        </div>
-    </div>
-
-    {% elif tipo_usuario == 'MANAGER' %}
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card p-3 text-center border-success border-opacity-25 h-100">
-                <i class="bi bi-journal-text fs-3 text-success mb-1"></i>
-                <h3 class="fw-bold mb-0">{{ total_editais_abertos }}</h3>
-                <small class="text-muted">Editais Abertos</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card p-3 text-center border-warning border-opacity-25 h-100">
-                <i class="bi bi-hourglass-split fs-3 text-warning mb-1"></i>
-                <h3 class="fw-bold mb-0">{{ total_pendentes_avaliacao }}</h3>
-                <small class="text-muted">Aguardando Avaliacao</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card p-3 text-center border-primary border-opacity-25 h-100">
-                <i class="bi bi-clipboard-check fs-3 text-primary mb-1"></i>
-                <h3 class="fw-bold mb-0">{{ total_aplicacoes }}</h3>
-                <small class="text-muted">Total Aplicacoes</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card p-3 text-center border-secondary border-opacity-25 h-100">
-                <i class="bi bi-list-check fs-3 text-secondary mb-1"></i>
-                <h3 class="fw-bold mb-0">{{ total_pendentes_solicitacao }}</h3>
-                <small class="text-muted">Solic. Edicao</small>
+                <small class="text-muted">Solicitações</small>
             </div>
         </div>
     </div>
@@ -128,7 +96,7 @@
     {% endif %}
 
     <div class="row g-4">
-        {% if user.is_superuser or tipo_usuario == 'ADMIN' %}
+        {% if user.is_superuser %}
         <div class="col-md-6 col-lg-3">
             <div class="card p-4 text-center h-100">
                 <div class="fs-1 text-warning mb-2"><i class="bi bi-speedometer2"></i></div>
@@ -148,7 +116,7 @@
             </div>
         </div>
 
-        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'MANAGER' %}
+        {% if user.is_superuser or tipo_usuario == 'MANAGER' %}
         <div class="col-md-6 col-lg-3">
             <div class="card p-4 text-center h-100">
                 <div class="fs-1 text-success mb-2"><i class="bi bi-list-check"></i></div>
@@ -185,7 +153,7 @@
             </div>
         </div>
 
-        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'MANAGER' %}
+        {% if user.is_superuser or tipo_usuario == 'MANAGER' %}
         <div class="col-md-6 col-lg-3">
             <div class="card p-4 text-center h-100">
                 <div class="fs-1 text-secondary mb-2"><i class="bi bi-list-ol"></i></div>
@@ -204,7 +172,7 @@
         </div>
         {% endif %}
 
-        {% if tipo_usuario == 'ADMIN' %}
+        {% if user.is_superuser %}
         <div class="col-md-6 col-lg-3">
             <div class="card p-4 text-center h-100">
                 <div class="fs-1 text-info mb-2"><i class="bi bi-upload"></i></div>

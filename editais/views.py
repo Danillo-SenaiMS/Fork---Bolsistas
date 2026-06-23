@@ -1,3 +1,4 @@
+import csv
 import json
 import logging
 
@@ -56,6 +57,11 @@ class EditalProvisorioCreateView(ManagerRequiredMixin, ContextMixin, CreateView)
     form_class = EditalProvisorioForm
     success_url = reverse_lazy('edital_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
@@ -101,6 +107,11 @@ class EditalProvisorioUpdateView(ManagerRequiredMixin, ContextMixin, UpdateView)
         return EditalProvisorio.objects.filter(tenant=self.request.tenant)
 
     success_url = reverse_lazy('edital_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -389,3 +400,97 @@ class EditalResumoView(TenantRequiredMixin, TemplateView):
             }, request=request)
 
         return HttpResponse(html)
+
+
+def _build_lista_stats(qs):
+    from django.db.models import Sum, Avg, Count
+
+    abertos = qs.filter(status='aberto')
+    total_abertos = abertos.count()
+    agregado = abertos.aggregate(
+        total=Sum('valor_total_bolsa'),
+        media=Avg('valor_bolsa'),
+    )
+    valor_total = agregado['total'] or 0
+    valor_medio = agregado['media'] or 0
+
+    por_instituicao = {}
+    for inst_code, inst_label in EditalProvisorio.INSTITUTOS_CHOICES:
+        qtd = abertos.filter(nome_instituto=inst_code).count()
+        if qtd:
+            por_instituicao[inst_label] = qtd
+
+    por_periodo = {}
+    for e in abertos.order_by('created_at'):
+        ano = e.created_at.year
+        por_periodo[ano] = por_periodo.get(ano, 0) + 1
+    por_periodo = dict(sorted(por_periodo.items()))
+
+    return {
+        'total_abertos': total_abertos,
+        'total_geral': qs.count(),
+        'por_instituicao': por_instituicao,
+        'valor_total': float(valor_total),
+        'valor_medio': float(valor_medio),
+        'por_periodo': por_periodo,
+    }
+
+
+class EditalListaResumoView(TenantRequiredMixin, TemplateView):
+    def get(self, request, *args, **kwargs):
+        if request.user.is_superuser:
+            qs = EditalProvisorio.objects.all()
+        else:
+            qs = EditalProvisorio.objects.filter(tenant=request.tenant)
+        stats = _build_lista_stats(qs)
+
+        from .ai_service import summarize_editais_lista
+        result = summarize_editais_lista(stats)
+
+        if result["error"]:
+            html = f'<div id="lista-resumo"><div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{result["error"]}</div></div>'
+        else:
+            import re
+            resumo = result['summary']
+            resumo = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', resumo)
+            resumo = re.sub(r'\*(.*?)\*', r'<em>\1</em>', resumo)
+            resumo = resumo.replace('\n\n', '</p><p>')
+            resumo = '<p>' + resumo + '</p>'
+            html = render_to_string('editais/partials/lista_resumo.html', {
+                'resumo': resumo,
+                'stats': stats,
+            }, request=request)
+        return HttpResponse(html)
+
+
+class EditalListaResumoCSVView(TenantRequiredMixin, TemplateView):
+    def get(self, request, *args, **kwargs):
+        if request.user.is_superuser:
+            qs = EditalProvisorio.objects.all()
+        else:
+            qs = EditalProvisorio.objects.filter(tenant=request.tenant)
+        stats = _build_lista_stats(qs)
+
+        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+        response['Content-Disposition'] = 'attachment; filename="resumo_editais.csv"'
+        writer = csv.writer(response)
+
+        writer.writerow(['Indicador', 'Valor'])
+        writer.writerow(['Editais Abertos', stats['total_abertos']])
+        writer.writerow(['Total Geral (todos os status)', stats['total_geral']])
+        writer.writerow(['Valor Total das Bolsas (R$)', '{:.2f}'.format(stats['valor_total'])])
+        writer.writerow(['Valor Médio da Bolsa (R$)', '{:.2f}'.format(stats['valor_medio'])])
+        writer.writerow([])
+
+        if stats['por_instituicao']:
+            writer.writerow(['Instituição', 'Editais Abertos'])
+            for instituto, qtd in stats['por_instituicao'].items():
+                writer.writerow([instituto, qtd])
+            writer.writerow([])
+
+        if stats['por_periodo']:
+            writer.writerow(['Ano', 'Editais Abertos'])
+            for ano, qtd in stats['por_periodo'].items():
+                writer.writerow([ano, qtd])
+
+        return response

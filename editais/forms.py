@@ -108,6 +108,7 @@ class EditalProvisorioForm(forms.ModelForm):
         fields = [
             'nome_edital', 'area_estudo', 'detalhes_edital',
             'nome_instituto', 'email_solicitante', 'telefone', 'endereco',
+            'documento_anexo',
             'numero_vagas', 'valor_total_bolsa',
             'modalidade_bolsa', 'modalidade_atuacao',
             'plataforma_tecnologica', 'vigencia', 'endereco_atuacao',
@@ -125,6 +126,7 @@ class EditalProvisorioForm(forms.ModelForm):
             'email_solicitante': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'solicitante@instituto.br'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(67) 99999-9999'}),
             'endereco': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Rua, número, bairro, cidade - UF'}),
+            'documento_anexo': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
             'numero_vagas': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'readonly': True}),
             'valor_total_bolsa': forms.NumberInput(attrs={
                 'class': 'form-control', 'step': '0.01', 'min': '0',
@@ -150,9 +152,16 @@ class EditalProvisorioForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self._user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         self.fields['valor_minimo'].required = False
         self.fields['valor_maximo'].required = False
+        self.fields['documento_anexo'].required = False
+        self.fields['status'].required = False
+        if not (self._user and self._user.is_superuser):
+            self.fields['status'].disabled = True
+            if not self.is_bound and not self.initial.get('status'):
+                self.initial['status'] = 'em_analise'
         self._update_dynamic_fields()
 
     def _update_dynamic_fields(self):
@@ -184,6 +193,13 @@ class EditalProvisorioForm(forms.ModelForm):
                 self.add_error('vigencia', 'A vigência mínima é de 15 dias.')
             elif vigencia > 1095:
                 self.add_error('vigencia', 'A vigência máxima é de 36 meses (1095 dias).')
+
+        if not (self._user and self._user.is_superuser):
+            if cleaned_data.get('status') and cleaned_data['status'] != 'em_analise':
+                self.add_error('status', 'Apenas superusuários podem alterar o status. O status será mantido como "Em Análise".')
+                cleaned_data['status'] = 'em_analise'
+            else:
+                cleaned_data['status'] = 'em_analise'
 
         return cleaned_data
 

@@ -88,14 +88,15 @@ class HomeView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         perfil = getattr(user, 'perfil', None)
         if user.is_superuser:
-            tipo = 'ADMIN'
+            tipo = 'MANAGER'
         else:
             tipo = perfil.tipo if perfil else 'COMMON'
         tenant = perfil.tenant if perfil else None
         context['tipo_usuario'] = tipo
+        context['is_superuser'] = user.is_superuser
         context['has_cadastro'] = hasattr(user, 'cadastro')
 
-        if tipo == 'ADMIN':
+        if user.is_superuser or tipo == 'MANAGER':
             context['total_usuarios'] = User.objects.filter(
                 perfil__tenant=tenant, is_active=True
             ).count()
@@ -103,20 +104,14 @@ class HomeView(LoginRequiredMixin, TemplateView):
                 perfil__tenant=tenant, is_active=False
             ).count()
             context['total_editais'] = EditalProvisorio.objects.filter(tenant=tenant).count()
-            context['total_aplicacoes'] = AplicacaoEdital.objects.filter(tenant=tenant).count()
-            context['total_classificacoes'] = Classificacao.objects.filter(tenant=tenant).count()
-            context['total_pendentes_solicitacao'] = SolicitacaoEdicao.objects.filter(
-                tenant=tenant, status='pendente'
-            ).count()
-
-        elif tipo == 'MANAGER':
             context['total_editais_abertos'] = EditalProvisorio.objects.filter(
                 tenant=tenant, status='aberto'
             ).count()
+            context['total_aplicacoes'] = AplicacaoEdital.objects.filter(tenant=tenant).count()
             context['total_pendentes_avaliacao'] = AplicacaoEdital.objects.filter(
                 tenant=tenant, status__in=['pendente', 'em_analise']
             ).count()
-            context['total_aplicacoes'] = AplicacaoEdital.objects.filter(tenant=tenant).count()
+            context['total_classificacoes'] = Classificacao.objects.filter(tenant=tenant).count()
             context['total_pendentes_solicitacao'] = SolicitacaoEdicao.objects.filter(
                 tenant=tenant, status='pendente'
             ).count()

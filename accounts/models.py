@@ -52,7 +52,6 @@ class Tenant(DataModel):
 
 class Perfil(DataModel):
     TIPO_CHOICES = [
-        ('ADMIN', 'Administrador'),
         ('MANAGER', 'Gerente'),
         ('COMMON', 'Comum'),
     ]

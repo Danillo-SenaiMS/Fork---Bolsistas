@@ -148,11 +148,11 @@ FORMACAO ACADEMICA
 """
     for f in formacoes:
         status = f.get_status_display() if f.status else ''
-        ctx += f"- {f.get_tipo_display()}{' (' + status + ')' if status else ''} - {f.instituicao}"
-        if f.curso:
-            ctx += f" | Curso: {f.curso}"
+        ctx += f"- {f.get_tipo_display()}{' (' + status + ')' if status else ''}"
         if f.area:
             ctx += f" | Area: {f.area}"
+        if f.curso:
+            ctx += f" | Curso: {f.curso}"
         if f.ano_conclusao:
             ctx += f" | Conclusao: {f.ano_conclusao}"
         ctx += "\n"
@@ -222,6 +222,56 @@ def avaliar_candidato(edital, cadastro, aplicacao) -> dict:
     except Exception as e:
         logger.error(f"Erro ao avaliar candidato: {e}")
         return {"compatibilidade": None, "nota": None, "resumo": None, "error": str(e)}
+
+
+LISTA_SUMMARY_SYSTEM_PROMPT = """Voce e um assistente que resume o panorama geral de editais de bolsas de pesquisa do SENAI.
+Com base nos dados estatisticos fornecidos, produza um resumo conciso, direto e objetivo em linguagem natural.
+Nao invente numeros que nao estejam nos dados. Arredonde valores monetarios para facilitar a leitura.
+Responda apenas em portugues brasileiro.
+
+Formato obrigatorio (use topicos curtos, um por linha):
+
+**Panorama Geral de Editais**
+
+**Resumo:** 1-2 frases destacando o numero total de editais abertos e o destaque do periodo.
+**Editais Abertos:** quantidade total de editais com status aberto.
+**Por Instituicao:** quantidade de editais por instituto (liste cada um).
+**Valores:** valor total disponivel em bolsas e valor medio da bolsa.
+**Por Periodo:** distribuicao da quantidade de editais abertos por ano de criacao."""
+
+
+def summarize_editais_lista(stats: dict) -> dict:
+    ctx_parts = [
+        f"Numero total de editais abertos: {stats['total_abertos']}",
+        f"Numero total de editais (todos os status): {stats['total_geral']}",
+    ]
+    if stats['por_instituicao']:
+        ctx_parts.append("Editais abertos por instituicao:")
+        for instituto, qtd in stats['por_instituicao'].items():
+            ctx_parts.append(f"- {instituto}: {qtd}")
+    else:
+        ctx_parts.append("Nenhum edital aberto por instituicao.")
+    ctx_parts.append(f"Valor total das bolsas (editais abertos): R$ {stats['valor_total']:,.2f}")
+    ctx_parts.append(f"Valor medio da bolsa (editais abertos): R$ {stats['valor_medio']:,.2f}")
+    if stats['por_periodo']:
+        ctx_parts.append("Editais abertos por periodo (ano de criacao):")
+        for ano, qtd in stats['por_periodo'].items():
+            ctx_parts.append(f"- {ano}: {qtd}")
+    else:
+        ctx_parts.append("Nenhum edital aberto por periodo.")
+    ctx = "\n".join(ctx_parts)
+
+    llm = _get_llm()
+    messages = [
+        SystemMessage(content=LISTA_SUMMARY_SYSTEM_PROMPT),
+        HumanMessage(content=f"Resuma o panorama de editais a partir dos dados abaixo:\n\n{ctx}"),
+    ]
+    try:
+        response = llm.invoke(messages)
+        return {"summary": response.content, "error": None}
+    except Exception as e:
+        logger.error(f"Erro ao gerar resumo da lista de editais: {e}")
+        return {"summary": None, "error": str(e)}
 
 
 def build_summarize_graph():

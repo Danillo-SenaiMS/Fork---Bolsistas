@@ -62,7 +62,7 @@ def painel_download_csv(request):
 
     writer = csv.writer(response)
     writer.writerow(['Nome', 'E-mail', 'Telefone', 'Cidade', 'Estado',
-                     'Ultima Formacao', 'Instituicao', 'Ano Conclusao',
+                     'Ultima Formacao', 'Area', 'Ano Conclusao',
                      'Projetos (anos)', 'Congressos', 'Resumo Anais',
                      'Artigo Anais', 'Artigo Nacional', 'Artigo Internacional',
                      'Livro/Patente', 'Minicurso', 'Treinamento',
@@ -77,7 +77,7 @@ def painel_download_csv(request):
             b.cidade or '',
             b.estado or '',
             ultima.get_tipo_display() if ultima else '',
-            ultima.instituicao if ultima else '',
+            ultima.area if ultima else '',
             ultima.ano_conclusao if ultima else '',
             b.participacao_projetos_anos,
             'Sim' if b.participacao_congressos else 'Nao',

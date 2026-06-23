@@ -105,7 +105,6 @@ class Command(BaseCommand):
                 bolsista=cad,
                 tipo='graduacao',
                 status=fake.random_element(['em_andamento', 'concluida']),
-                instituicao=fake.company(),
                 curso=fake.random_element([
                     'Engenharia de Producao', 'Administracao', 'Ciencia da Computacao',
                     'Direito', 'Contabilidade', 'Psicologia',
@@ -118,7 +117,6 @@ class Command(BaseCommand):
                 bolsista=cad,
                 tipo=fake.random_element(['especializacao', 'mba', 'mestrado']),
                 status=fake.random_element(['em_andamento', 'concluida']),
-                instituicao=fake.company(),
                 area=fake.random_element([
                     'Gestao de Projetos', 'Data Science', 'Educacao',
                     'Engenharia de Software', 'Marketing Digital',

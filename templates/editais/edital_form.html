@@ -2,18 +2,16 @@
 {% block title %}{% if object %}Editar{% else %}Novo{% endif %} Edital - Bolsas SENAI - MS{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white py-3">
-                    <h4 class="fw-bold mb-0">
-                        <i class="bi bi-journal-plus me-2"></i>
-                        {% if object %}Editar Edital{% else %}Novo Edital{% endif %}
-                    </h4>
-                </div>
-                <div class="card-body p-4">
-                    <form method="post" novalidate>
+<div class="container-fluid py-3">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="fw-bold mb-0">
+                <i class="bi bi-journal-plus me-2"></i>
+                {% if object %}Editar Edital{% else %}Novo Edital{% endif %}
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
 
                         {% if form.errors or distribuicao_formset.total_error_count or cronograma_formset.total_error_count %}
@@ -49,36 +47,9 @@
                         {% endif %}
 
                         <h5 class="fw-semibold mb-3">
-                            <i class="bi bi-file-earmark-text me-2 text-primary"></i>Dados do Edital
-                        </h5>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">{{ form.nome_edital.label }}</label>
-                                {{ form.nome_edital }}
-                                {% if form.nome_edital.errors %}
-                                <div class="text-danger small mt-1">{{ form.nome_edital.errors|join:', ' }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">{{ form.area_estudo.label }}</label>
-                                {{ form.area_estudo }}
-                                {% if form.area_estudo.errors %}
-                                <div class="text-danger small mt-1">{{ form.area_estudo.errors|join:', ' }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label fw-semibold">{{ form.detalhes_edital.label }}</label>
-                                {{ form.detalhes_edital }}
-                                <div class="form-text">Campo opcional.</div>
-                                {% if form.detalhes_edital.errors %}
-                                <div class="text-danger small mt-1">{{ form.detalhes_edital.errors|join:', ' }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <h5 class="fw-semibold mb-3">
                             <i class="bi bi-building me-2 text-primary"></i>Dados do Instituto
                         </h5>
+
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.nome_instituto.label }}</label>
@@ -106,6 +77,53 @@
                                 {{ form.endereco }}
                                 {% if form.endereco.errors %}
                                 <div class="text-danger small mt-1">{{ form.endereco.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ form.documento_anexo.label }}</label>
+                                {{ form.documento_anexo }}
+                                <span class="badge bg-info text-dark mt-1">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>Termo de Parceria e/ou Plano de Projeto
+                                </span>
+                                {% if object and object.documento_anexo %}
+                                <div class="mt-1">
+                                    <a href="{% url 'protected_media' object.documento_anexo.name %}" class="btn btn-outline-info btn-sm" target="_blank">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>Visualizar documento atual
+                                    </a>
+                                </div>
+                                {% endif %}
+                                {% if form.documento_anexo.errors %}
+                                <div class="text-danger small mt-1">{{ form.documento_anexo.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-file-earmark-text me-2 text-primary"></i>Dados do Edital
+                        </h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.nome_edital.label }}</label>
+                                {{ form.nome_edital }}
+                                {% if form.nome_edital.errors %}
+                                <div class="text-danger small mt-1">{{ form.nome_edital.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.area_estudo.label }}</label>
+                                {{ form.area_estudo }}
+                                {% if form.area_estudo.errors %}
+                                <div class="text-danger small mt-1">{{ form.area_estudo.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ form.detalhes_edital.label }}</label>
+                                {{ form.detalhes_edital }}
+                                <div class="form-text">Campo opcional.</div>
+                                {% if form.detalhes_edital.errors %}
+                                <div class="text-danger small mt-1">{{ form.detalhes_edital.errors|join:', ' }}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -403,11 +421,16 @@
 
                         <hr class="my-4">
 
-                        {% if user.is_superuser or user.perfil.tipo == 'ADMIN' or user.perfil.tipo == 'MANAGER' %}
+                        {% if user.is_superuser or user.perfil.tipo == 'MANAGER' %}
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.status.label }}</label>
                                 {{ form.status }}
+                                {% if user.is_superuser %}
+                                <div class="form-text">Novos editais são criados como <strong>Em Análise</strong>. Você pode alterar o status.</div>
+                                {% else %}
+                                <div class="form-text text-warning">Novos editais são criados como <strong>Em Análise</strong>. Apenas superusuários podem alterar o status.</div>
+                                {% endif %}
                                 {% if form.status.errors %}
                                 <div class="text-danger small mt-1">{{ form.status.errors|join:', ' }}</div>
                                 {% endif %}

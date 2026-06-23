@@ -116,6 +116,7 @@ class EditalProvisorio(DataModel):
     email_solicitante               = models.EmailField('E-mail do Solicitante', help_text='Insira o seu e-mail')
     telefone                        = models.CharField('Telefone', max_length=20)
     endereco                        = models.TextField('Endereço')
+    documento_anexo                 = models.FileField('Termo de Parceria e/ou Plano de Projeto (PDF)', upload_to='editais/', blank=True)
 
     numero_vagas                    = models.PositiveIntegerField('Número de Vagas')
     modalidade_bolsa                = models.CharField('Modalidade da Bolsa', max_length=50, choices=MODALIDADE_CHOICES)

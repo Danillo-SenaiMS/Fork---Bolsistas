@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.EditalProvisorioListView.as_view(), name='edital_list'),
+    path('resumo/', views.EditalListaResumoView.as_view(), name='edital_lista_resumo'),
+    path('resumo/csv/', views.EditalListaResumoCSVView.as_view(), name='edital_lista_resumo_csv'),
     path('criar/', views.EditalProvisorioCreateView.as_view(), name='edital_create'),
     path('<int:pk>/', views.EditalProvisorioDetailView.as_view(), name='edital_detail'),
     path('<int:pk>/resumo/', views.EditalResumoView.as_view(), name='edital_resumo'),
