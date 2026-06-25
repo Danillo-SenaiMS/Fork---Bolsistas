@@ -1,6 +1,6 @@
 # File Tree: Bolsas Senai
 
-**Generated:** 6/23/2026, 9:08:48 AM
+**Generated:** 6/25/2026, 12:00:00 PM
 **Root Path:** `c:\Users\danillo.araujo\OneDrive - SESIMS\Projetos\Bolsas Senai`
 
 ```
@@ -21,21 +21,14 @@
 │   ├── 🐍 urls.py
 │   └── 🐍 views.py
 ├── 📁 base
-│   ├── 📁 management
-│   │   ├── 📁 __init__.py
-│   │   └── 📁 commands
-│   │       └── 🐍 seed_data.py
 │   ├── 📁 migrations
 │   │   └── 🐍 __init__.py
 │   ├── 🐍 __init__.py
 │   ├── 🐍 admin.py
 │   ├── 🐍 apps.py
-│   ├── 🐍 managers.py
 │   ├── 🐍 middleware.py
 │   ├── 🐍 mixins.py
 │   ├── 🐍 models.py
-│   ├── 🐍 tenant.py
-│   ├── 🐍 tenant_middleware.py
 │   ├── 🐍 tests.py
 │   └── 🐍 views.py
 ├── 📁 cadastro
@@ -53,8 +46,6 @@
 ├── 📁 classificacao
 │   ├── 📁 migrations
 │   │   ├── 🐍 0001_initial.py
-│   │   ├── 🐍 0002_add_tenant_to_classificacaocriterio.py
-│   │   ├── 🐍 0003_make_tenant_not_null_on_classificacaocriterio.py
 │   │   └── 🐍 __init__.py
 │   ├── 🐍 __init__.py
 │   ├── 🐍 admin.py
@@ -79,7 +70,6 @@
 ├── 📁 editais
 │   ├── 📁 migrations
 │   │   ├── 🐍 0001_initial.py
-│   │   ├── 🐍 0002_add_nota_aplicacao.py
 │   │   └── 🐍 __init__.py
 │   ├── 📁 templatetags
 │   │   ├── 🐍 __init__.py
@@ -141,11 +131,6 @@
 │   ├── 🐍 urls.py
 │   └── 🐍 views.py
 ├── 📁 painel_bolsistas
-│   ├── 📁 management
-│   │   ├── 📁 commands
-│   │   │   ├── 🐍 __init__.py
-│   │   │   └── 🐍 seed_painel.py
-│   │   └── 🐍 __init__.py
 │   ├── 📁 templates
 │   │   └── 📁 painel
 │   │       ├── 📁 partials

@@ -1,13 +1,13 @@
 from django.views.generic import ListView, TemplateView, View
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 
-from base.mixins import TenantRequiredMixin
 from .models import Notificacao
 
 
-class NotificacaoListView(TenantRequiredMixin, ListView):
+class NotificacaoListView(LoginRequiredMixin, ListView):
     model = Notificacao
     template_name = 'notifications/notificacao_list.html'
     context_object_name = 'notificacoes'
@@ -16,14 +16,13 @@ class NotificacaoListView(TenantRequiredMixin, ListView):
     def get_queryset(self):
         return Notificacao.objects.filter(
             destinatario=self.request.user,
-            tenant=self.request.tenant,
         ).select_related('destinatario')
 
 
-class MarcarLidaView(TenantRequiredMixin, TemplateView):
+class MarcarLidaView(LoginRequiredMixin, TemplateView):
     def post(self, request, pk):
         notificacao = get_object_or_404(
-            Notificacao, pk=pk, destinatario=request.user, tenant=request.tenant
+            Notificacao, pk=pk, destinatario=request.user
         )
         notificacao.lido = True
         notificacao.save(update_fields=['lido'])
@@ -37,9 +36,9 @@ class MarcarLidaView(TenantRequiredMixin, TemplateView):
         return redirect('notificacao_list')
 
 
-class MarcarTodasLidasView(TenantRequiredMixin, View):
+class MarcarTodasLidasView(LoginRequiredMixin, View):
     def post(self, request):
         Notificacao.objects.filter(
-            destinatario=request.user, tenant=request.tenant, lido=False
+            destinatario=request.user, lido=False
         ).update(lido=True)
         return redirect('notificacao_list')

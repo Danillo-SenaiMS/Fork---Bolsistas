@@ -3,6 +3,7 @@ from django.conf import settings
 from pathlib import Path
 
 from accounts.models import DocumentoExterno
+from .mixins import GROUP_MANAGER
 
 
 def media_protegida(request, path):
@@ -18,22 +19,14 @@ def media_protegida(request, path):
     if not arquivo_path.exists() or not arquivo_path.is_file():
         raise Http404('Arquivo não encontrado')
 
-    perfil = getattr(request.user, 'perfil', None)
-    if not perfil:
-        return HttpResponseForbidden('Acesso negado')
-
-    if perfil.tipo == 'ADMIN':
+    if request.user.is_superuser or request.user.groups.filter(name=GROUP_MANAGER).exists():
         return FileResponse(open(arquivo_path, 'rb'))
 
     relative = path.replace('\\', '/')
     if relative.startswith('documentos/'):
         doc = DocumentoExterno.objects.filter(arquivo=path).first()
-        if doc and doc.user == request.user and doc.tenant == getattr(request, 'tenant', None):
+        if doc and doc.user == request.user:
             return FileResponse(open(arquivo_path, 'rb'))
-        return HttpResponseForbidden('Acesso negado')
-
-    tenant = getattr(request, 'tenant', None)
-    if not tenant:
         return HttpResponseForbidden('Acesso negado')
 
     return FileResponse(open(arquivo_path, 'rb'))

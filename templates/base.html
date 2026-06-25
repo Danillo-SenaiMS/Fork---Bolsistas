@@ -37,7 +37,7 @@
                     </span>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                         <li><span class="dropdown-item-text text-muted small">
-                            {% if user.is_superuser %}SuperUsuário{% else %}{{ user.perfil.get_tipo_display }}{% endif %}
+                            {% if user.is_superuser %}SuperUsuário{% elif is_manager %}Manager{% elif is_execute_user %}ExecuteUser{% elif is_view_user %}ViewUser{% else %}Usuário{% endif %}
                         </span></li>
                         <li><hr class="dropdown-divider"></li>
                         {% if user.is_superuser %}

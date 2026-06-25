@@ -12,5 +12,4 @@ urlpatterns = [
     path('solicitar/', views.SolicitacaoMultiplaView.as_view(), name='solicitacao_criar'),
     path('solicitacoes/', views.SolicitacaoListView.as_view(), name='solicitacao_list'),
     path('solicitacoes/<int:pk>/revisar/', views.SolicitacaoRevisarView.as_view(), name='solicitacao_revisar'),
-    path('admin/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
 ]

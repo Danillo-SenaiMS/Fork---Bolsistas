@@ -1,4 +1,4 @@
-# 📌 PLANO DE DESENVOLVIMENTO EM SPRINTS — PORTAL DA INOVAÇÃO (DJANGO SaaS)
+# 📌 PLANO DE DESENVOLVIMENTO EM SPRINTS — PORTAL DA INOVAÇÃO (DJANGO)
 
 ## 🎯 VISÃO GERAL
 
@@ -6,7 +6,7 @@ Projeto estruturado em sprints curtas com foco em:
 
 * Entregas incrementais
 * Validação contínua
-* Base sólida de arquitetura SaaS multi-tenant
+* Base sólida de arquitetura SaaS
 
 ---
 
@@ -104,33 +104,31 @@ Implementar sistema de autenticação com roles.
 
 ---
 
-# 🟦 SPRINT 2 — MULTI-TENANT (CORE CRÍTICO)
+# 🟦 SPRINT 2 — PERMISSÕES E SEGURANÇA
 
 ## Objetivo
 
-Implementar isolamento de dados entre tenants.
+Implementar controle de acesso baseado em roles e proteger recursos sensíveis.
 
 ## Atividades
 
-### Modelagem
+### Permissões
 
-* Adicionar `tenant_id` em models base
+* Criar mixins de controle de acesso:
 
-### Middleware
+  * RoleRequiredMixin
+  * ManagerRequiredMixin
+  * AdminRequiredMixin
 
-* Criar middleware de tenant:
+### Proteção de arquivos
 
-  * identificar tenant por usuário/logado
-  * injetar no request
-
-### Query Filtering
-
-* Implementar filtro automático por tenant
-
-### Segurança de arquivos
-
-* Proteger media files por tenant
+* Proteger media files por permissão
 * Garantir acesso restrito
+
+### Revisão de segurança
+
+* Aplicar mixins nas views críticas
+* Validar redirecionamentos e fluxos de login
 
 ---
 
@@ -336,33 +334,7 @@ Refinar experiência do usuário.
 
 ---
 
-# 🟦 SPRINT 10 — SEED DE DADOS
-
-## Objetivo
-
-Gerar dados para demonstração.
-
-## Atividades
-
-### Django Command
-
-* Criar comando customizado:
-
-  * usuários variados
-  * editais
-  * aplicações
-  * classificações
-
-### Cenários
-
-* Simular:
-
-  * múltiplos tenants
-  * diferentes datas
-
----
-
-# 🟦 SPRINT 11 — HARDENING E FINALIZAÇÃO
+# 🟦 SPRINT 10 — HARDENING E FINALIZAÇÃO
 
 ## Objetivo
 
@@ -392,7 +364,7 @@ Preparar sistema para produção.
 # 📊 ORDEM DE PRIORIDADE CRÍTICA
 
 1. Autenticação
-2. Multi-tenant
+2. Permissões/Segurança
 3. Cadastro
 4. Editais
 5. Aplicações
@@ -403,7 +375,6 @@ Preparar sistema para produção.
 
 # ⚠️ RISCOS PRINCIPAIS
 
-* Erro no isolamento multi-tenant
 * Complexidade desnecessária na modelagem
 * Falhas de permissão
 * Uploads inseguros

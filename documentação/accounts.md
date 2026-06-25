@@ -1,6 +1,6 @@
 # Accounts
 
-App responsável pela autenticação, gestão de usuários, perfis e tenants.
+App responsável pela autenticação, gestão de usuários e perfis.
 
 ## Modelos
 
@@ -12,27 +12,17 @@ Modelo de usuário customizado (herda `AbstractUser`):
 
 Utiliza `UserManager` customizado.
 
-### `Tenant`
-Representa uma organização/cliente no sistema multi-tenant:
-- `nome` — Nome do tenant (ex: SESI, SENAI)
-- `dominio` — Subdomínio único usado para identificar o tenant
-- `ativo` — Flag de tenant ativo
-
 ### `Perfil`
-Vincula um usuário a um tenant com um tipo de acesso:
+Vincula um usuário a um tipo de acesso:
 - `user` — OneToOne com `User`
 - `tipo` — ADMIN, MANAGER ou COMMON
 - `telefone`, `unidade`, `data_nascimento` — Dados complementares
-- `tenant` — FK para o tenant
-
-Usa `TenantManager` para isolamento multi-tenant.
 
 ### `DocumentoExterno`
 Upload de documentos do usuário (RG, CPF, etc.):
 - `user` — FK para User
 - `arquivo` — FileField
 - `tipo` — RG, CPF ou OUTRO
-- `tenant` — FK para Tenant
 
 ## Views
 
@@ -43,7 +33,7 @@ Página inicial (landing page) para usuários não autenticados. Redireciona par
 Tela de login usando email como credencial.
 
 ### `RegistroView`
-Formulário de cadastro público que cria User, Perfil e Tenant automaticamente.
+Formulário de cadastro público que cria User e Perfil.
 
 ### `HomeView`
 Dashboard pós-login com estatísticas contextualizadas por função:
@@ -69,6 +59,6 @@ Aprova um usuário pendente (ativa `is_active`). Suporta HTMX para atualização
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `models.py` | User, Tenant, Perfil, DocumentoExterno |
+| `models.py` | User, Perfil, DocumentoExterno |
 | `views.py` | Views de autenticação e dashboard |
 | `urls.py` | Rotas da app |

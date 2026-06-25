@@ -8,7 +8,6 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('cadastro/', include('cadastro.urls')),
     path('editais/', include('editais.urls')),
-    path('classificacao/', include('classificacao.urls')),
     path('notificacoes/', include('notifications.urls')),
     path('painel/', include('painel_bolsistas.urls')),
 

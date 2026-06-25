@@ -6,7 +6,6 @@ celery
 redis
 django-celery-beat
 django-storages
-faker
 langchain
 langchain-openai
 langgraph

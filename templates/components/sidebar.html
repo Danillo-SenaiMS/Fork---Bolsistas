@@ -9,34 +9,34 @@
         <a href="{% url 'home' %}" class="sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
             <i class="bi bi-grid-fill"></i> Dashboard
         </a>
+
+        {% if is_view_user %}
         <a href="{% if has_cadastro %}{% url 'cadastro_detail' %}{% else %}{% url 'cadastro_create' %}{% endif %}" class="sidebar-link">
             <i class="bi bi-person-lines-fill"></i> Meu Cadastro
         </a>
+        {% endif %}
 
         <div class="sidebar-section">Bolsas</div>
         <a href="{% url 'edital_list' %}" class="sidebar-link">
             <i class="bi bi-journal-text"></i> Editais
         </a>
-        <a href="{% url 'aplicacao_list' %}" class="sidebar-link">
-            <i class="bi bi-clipboard-check"></i> Minhas Aplicações
-        </a>
 
-        {% if user.is_superuser or tipo_usuario == 'MANAGER' %}
+        {% if is_superuser or is_manager or is_execute_user %}
         <div class="sidebar-section">Gestão</div>
         <a href="{% url 'painel_lista' %}" class="sidebar-link">
-            <i class="bi bi-people-fill"></i> Painel de Bolsistas
+            <i class="bi bi-people-fill"></i> Lista de Bolsistas
         </a>
-        <a href="{% url 'criterio_list' %}" class="sidebar-link">
-            <i class="bi bi-list-ol"></i> Critérios
-        </a>
+        {% endif %}
+
+        {% if is_superuser or is_manager %}
         <a href="{% url 'solicitacao_list' %}" class="sidebar-link">
             <i class="bi bi-list-check"></i> Solicitações
         </a>
-        <a href="{% url 'classificacao_list' %}" class="sidebar-link">
-            <i class="bi bi-star-fill"></i> Classificações
-        </a>
-        <a href="{% url 'csv_import' %}" class="sidebar-link">
-            <i class="bi bi-upload"></i> Importar CSV
+        {% endif %}
+
+        {% if is_superuser %}
+        <a href="{% url 'admin:index' %}" class="sidebar-link">
+            <i class="bi bi-speedometer2"></i> Painel Admin
         </a>
         {% endif %}
     </div>

@@ -20,7 +20,7 @@ Modelo principal do edital com estrutura completa:
 - **Configuração da Bolsa**: `numero_vagas`, `modalidade_bolsa` (4 níveis), `valor_total_bolsa`, `valor_bolsa`, `valor_minimo`, `valor_maximo`, `modalidade_atuacao` (presencial/remota), `plataforma_tecnologica`, `vigencia` (dias, 15-1095), `endereco_atuacao`
 - **Requisitos**: `qualificacao_minima`, `detalhes_qualificacao_minima`, `conhecimento_desejavel`, `conteudo_prova_teorica`, `entrevista`, `criterios_desempate`
 - **Status**: Aberto, Encerrado, Em Análise, Cancelado
-- **Metadados**: `criado_por` (FK User), `tenant` (FK Tenant)
+- **Metadados**: `criado_por` (FK User)
 
 Propriedades computadas:
 - `total_eventos` — Quantidade de eventos no cronograma
@@ -54,7 +54,7 @@ Candidatura de um bolsista a um edital:
 ## Views
 
 ### `EditalProvisorioListView`
-Listagem paginada com busca por instituto e filtro por status. Superusuários veem todos os tenants.
+Listagem paginada com busca por instituto e filtro por status.
 
 ### `EditalProvisorioCreateView`
 Criação com formulário principal + formsets inline de Cronograma e Distribuição. Validações:
@@ -101,8 +101,8 @@ Valida que:
 Valida que evento e data de referência sejam preenchidos juntos.
 
 ### Formsets
-- `DistribuicaoBolsaFormSet` — Valida que a soma total não excede o orçamento e propaga o tenant
-- `CronogramaEventoFormSet` — Propaga o tenant para novos registros
+- `DistribuicaoBolsaFormSet` — Valida que a soma total não excede o orçamento
+- `CronogramaEventoFormSet` — Valida eventos do cronograma
 
 ## Template Tags
 

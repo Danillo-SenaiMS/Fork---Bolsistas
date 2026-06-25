@@ -1,8 +1,8 @@
-# PLANO DE DESENVOLVIMENTO — PORTAL DA INOVAÇÃO (DJANGO SaaS)
+# PLANO DE DESENVOLVIMENTO — PORTAL DA INOVAÇÃO (DJANGO)
 
 ## VISÃO GERAL
 
-Plataforma SaaS multi-tenant para gestão de bolsistas, editais e classificação de candidatos.
+Plataforma SaaS para gestão de bolsistas, editais e classificação de candidatos.
 Stack: Python + Django, PostgreSQL, Bootstrap 5, HTMX, Celery + Redis.
 
 ---
@@ -16,7 +16,7 @@ bolsas/
 ├── manage.py
 ├── config/                  ← app principal Django (settings, urls, wsgi, celery)
 ├── base/                    ← model abstrato, mixins, utils compartilhados
-├── accounts/                ← usuarios, autenticacao, roles, tenant
+├── accounts/                ← usuarios, autenticacao, roles
 ├── cadastro/                ← registro + dados pessoais/curriculo + solicitacoes edicao
 ├── editais/                 ← editais abertos e aplicacoes/inscricoes
 ├── classificacao/           ← pontuacao e avaliacao dos bolsistas
@@ -43,10 +43,9 @@ bolsas/
 
 | Aspecto | Decisão |
 |---|---|
-| Multi-tenant | Por usuário logado (campo tenant no Perfil) |
 | Login | Email como USERNAME_FIELD (sem username) |
 | Model abstrato | `DataModel` com created_at + updated_at |
-| Uploads | Media protegida via view com verificação de tenant |
+| Uploads | Media protegida via view com verificação de permissão |
 | Edição de COMMON | Fluxo SolicitacaoEdicao (aprovação pelo MANAGER) |
 | Classificação | Critérios flexíveis (model CriterioClassificacao editável por MANAGER) |
 | E-mail | SMTP nativo Django + Celery para assíncrono |
@@ -69,7 +68,7 @@ class DataModel(models.Model):
         abstract = True
 ```
 
-### accounts/models.py — User + Perfil + Tenant + DocumentoExterno
+### accounts/models.py — User + Perfil + DocumentoExterno
 
 **User (AbstractUser)**
 - email (USERNAME_FIELD, unique=True)
@@ -82,12 +81,6 @@ class DataModel(models.Model):
 - tipo (CharField, choices: ADMIN/MANAGER/COMMON)
 - telefone (CharField)
 - unidade (CharField, blank=True)
-- tenant (ForeignKey → Tenant)
-
-**Tenant**
-- nome (CharField)
-- dominio (CharField, unique=True)
-- ativo (BooleanField, default=True)
 
 **DocumentoExterno**
 - user (ForeignKey → User)
@@ -103,7 +96,6 @@ class DataModel(models.Model):
 - grau_academico (CharField, choices: fundamental/medio/superior/pos/mestrado/doutorado/pos_doutorado)
 - curriculo (FileField, blank=True)
 - foto (ImageField, blank=True)
-- tenant (ForeignKey → Tenant)
 
 **CursoSuperior**
 - bolsista (ForeignKey → CadastroBolsista)
@@ -127,7 +119,6 @@ class DataModel(models.Model):
 - status (CharField, choices: pendente/aprovado/rejeitado, default=pendente)
 - revisado_por (ForeignKey → User, blank=True, null=True)
 - data_revisao (DateTimeField, blank=True, null=True)
-- tenant (ForeignKey → Tenant)
 
 ### editais/models.py — Edital + AplicacaoEdital
 
@@ -139,14 +130,12 @@ class DataModel(models.Model):
 - data_fechamento (DateTimeField)
 - status (CharField, choices: aberto/fechado/encerrado, default=aberto)
 - criado_por (ForeignKey → User)
-- tenant (ForeignKey → Tenant)
 
 **AplicacaoEdital**
 - bolsista (ForeignKey → CadastroBolsista)
 - edital (ForeignKey → Edital)
 - status (CharField, choices: pendente/em_analise/aprovado/rejeitado, default=pendente)
 - data_aplicacao (DateTimeField, auto_now_add=True)
-- tenant (ForeignKey → Tenant)
 - UNIQUE_TOGETHER: (bolsista, edital)
 
 ### classificacao/models.py — Criterio + Classificacao + ClassificacaoCriterio
@@ -156,14 +145,12 @@ class DataModel(models.Model):
 - descricao (TextField, blank=True)
 - peso (DecimalField)
 - ativo (BooleanField, default=True)
-- tenant (ForeignKey → Tenant)
 
 **Classificacao**
 - aplicacao (ForeignKey → AplicacaoEdital)
 - classificador (ForeignKey → User)
 - pontuacao_total (DecimalField)
 - observacoes (TextField, blank=True)
-- tenant (ForeignKey → Tenant)
 
 **ClassificacaoCriterio**
 - classificacao (ForeignKey → Classificacao)
@@ -178,7 +165,6 @@ class DataModel(models.Model):
 - mensagem (TextField)
 - lido (BooleanField, default=False)
 - tipo (CharField, choices: sistema/email/classificacao/cadastro)
-- tenant (ForeignKey → Tenant)
 
 ---
 
@@ -197,7 +183,6 @@ class DataModel(models.Model):
    - redis
    - celery
    - django-storages
-   - faker
 4. `django-admin startproject config .`
 5. Criar apps: `base`, `accounts`
 6. Configurar `.env` com SECRET_KEY, DB, EMAIL, DEBUG
@@ -219,17 +204,16 @@ class DataModel(models.Model):
 
 ### Atividades
 1. **User customizado** (AbstractUser): email como USERNAME_FIELD, sem username
-2. **Perfil**: tipo (ADMIN/MANAGER/COMMON), telefone, unidade, tenant(FK)
-3. **Tenant model**: nome, dominio, ativo
-4. **DocumentoExterno**: upload de RG/CPF para usuários externos
-5. **Tela de registro**: nome, email, telefone, tipo(colaborador/bolsista/externo)
+2. **Perfil**: tipo (ADMIN/MANAGER/COMMON), telefone, unidade
+3. **DocumentoExterno**: upload de RG/CPF para usuários externos
+4. **Tela de registro**: nome, email, telefone, tipo(colaborador/bolsista/externo)
    - Se colaborador/bolsista → campo unidade (digitável)
    - Se externo → upload obrigatório de RG/CPF
-6. **Tela de login** (email + senha)
-7. **Landing page** (apresentação + botões login/cadastro)
-8. **Middleware de proteção**: redirecionar não-logados para login
-9. **Grupo padrão** para novos usuários: COMMON
-10. **Mixins em base/mixins.py**: RoleRequiredMixin, ManagerRequiredMixin, TenantRequiredMixin
+5. **Tela de login** (email + senha)
+6. **Landing page** (apresentação + botões login/cadastro)
+7. **Middleware de proteção**: redirecionar não-logados para login
+8. **Grupo padrão** para novos usuários: COMMON
+9. **Mixins em base/mixins.py**: RoleRequiredMixin, ManagerRequiredMixin
 
 ### Entregável
 - Sistema de login/cadastro funcional
@@ -239,20 +223,19 @@ class DataModel(models.Model):
 
 ---
 
-## SPRINT 2 — MULTI-TENANT (CORE CRÍTICO)
+## SPRINT 2 — PERMISSÕES E SEGURANÇA
 
 ### Atividades
-1. **TenantMiddleware**: injetar tenant no request via perfil do usuário logado
-2. **TenantManager (custom manager)**: filtrar queryset por tenant automaticamente
-3. Adicionar `tenant = ForeignKey(Tenant)` em todos os models relevantes
-4. **Proteção de media files**: view privada que verifica tenant + permissão
-5. **urls.py**: rota media protegida (`/media/<path:path>`)
-6. Middleware de proteção a arquivos/media: acesso somente por usuários com permissão
+1. **RoleRequiredMixin**, **ManagerRequiredMixin**, **AdminRequiredMixin**: proteger views por role
+2. **Proteção de media files**: view privada que verifica permissão do usuário
+3. **urls.py**: rota media protegida (`/media/<path:path>`)
+4. Middleware de proteção a arquivos/media: acesso somente por usuários com permissão
+5. Revisar permissões nas views criadas nas sprints anteriores
 
 ### Entregável
-- Isolamento de dados entre tenants funcional
-- Media files protegidos por tenant
-- Filtros automáticos em querysets
+- Acesso restrito por role
+- Media files protegidos por permissão
+- Views sensíveis protegidas por mixins
 
 ---
 
@@ -369,21 +352,7 @@ class DataModel(models.Model):
 
 ---
 
-## SPRINT 10 — SEED DE DADOS
-
-### Atividades
-1. Django management command: `seed_data`
-2. Criar: tenants, usuários (3 roles), bolsistas, editais, aplicações, classificações
-3. Datas variadas, múltiplos cenários
-4. Faker para dados em pt-BR
-
-### Entregável
-- Comando `python manage.py seed_data` funcional
-- Dados realistas para demonstração
-
----
-
-## SPRINT 11 — HARDENING E FINALIZAÇÃO
+## SPRINT 10 — HARDENING E FINALIZAÇÃO
 
 ### Atividades
 1. Revisar permissões por role
@@ -402,7 +371,7 @@ class DataModel(models.Model):
 ## ORDEM DE PRIORIDADE CRÍTICA
 
 1. **Autenticação** — base de tudo
-2. **Multi-tenant** — isolamento de dados
+2. **Permissões/Segurança** — controle de acesso
 3. **Cadastro** — core do sistema
 4. **Editais** — funcionalidade principal
 5. **Aplicações** — fluxo de candidatura
@@ -415,7 +384,6 @@ class DataModel(models.Model):
 
 | Risco | Mitigação |
 |---|---|
-| Erro no isolamento multi-tenant | TenantMiddleware + TenantManager + testes manuais |
 | Complexidade na modelagem | Manter models simples, evitar over-engineering |
 | Falhas de permissão | Mixins dedicados (RoleRequiredMixin) |
 | Uploads inseguros | View protegida de media + validação de tipo |
@@ -447,7 +415,6 @@ Cada sprint deve entregar:
 - Credenciais no .env
 - Apps na raiz do projeto
 - Models com created_at e updated_at
-- Django management command para seed de dados fake
 - Interface azul e branco com Bootstrap 5
 - HTMX para interações reativas
 - Sempre priorizar simplicidade + escalabilidade

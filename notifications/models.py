@@ -1,13 +1,11 @@
 from django.db import models
 from base.models import DataModel
-from base.managers import TenantManager
-from accounts.models import User, Tenant
+from accounts.models import User
 
 
 class Notificacao(DataModel):
     TIPO_CHOICES = [
         ('cadastro', 'Cadastro'),
-        ('classificacao', 'Classificação'),
         ('solicitacao', 'Solicitação'),
         ('sistema', 'Sistema'),
     ]
@@ -17,9 +15,6 @@ class Notificacao(DataModel):
     mensagem = models.TextField('Mensagem')
     lido = models.BooleanField('Lido', default=False)
     tipo = models.CharField('Tipo', max_length=20, choices=TIPO_CHOICES, default='sistema')
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='notificacoes')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Notificação'

@@ -11,7 +11,6 @@ Notificação para um usuário:
 - `mensagem` — Corpo da mensagem
 - `lido` — Flag de leitura (bool, default False)
 - `tipo` — Categoria: cadastro, classificacao, solicitacao, sistema
-- `tenant` — FK para Tenant
 
 ## Signals
 
@@ -25,7 +24,7 @@ Disparado no `post_save` de `Classificacao`. Quando uma classificação com pont
 
 ### `notificar_solicitacao`
 Disparado no `post_save` de `SolicitacaoEdicao`:
-- **Status pendente**: Notifica todos os gestores (ADMIN/MANAGER) do tenant
+- **Status pendente**: Notifica todos os gestores (ADMIN/MANAGER)
 - **Status aprovado**: Notifica o bolsista que a solicitação foi aprovada
 - **Status rejeitado**: Notifica o bolsista que a solicitação foi rejeitada
 

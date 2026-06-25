@@ -1,7 +1,6 @@
 from django.db import models
 from base.models import DataModel
-from base.managers import TenantManager
-from accounts.models import User, Tenant
+from accounts.models import User
 from cadastro.models import CadastroBolsista
 
 
@@ -138,9 +137,6 @@ class EditalProvisorio(DataModel):
 
     status                          = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='em_analise')
     criado_por                      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='editais_criados')
-    tenant                          = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='editais')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Edital'
@@ -169,9 +165,6 @@ class CronogramaEvento(DataModel):
     data_referencia = models.CharField('Data de Referência', max_length=255)
     observacao = models.TextField('Observação', blank=True, default='')
     ordem = models.PositiveIntegerField('Ordem', default=0)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='cronogramas')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Evento do Cronograma'
@@ -187,9 +180,6 @@ class DistribuicaoBolsa(DataModel):
     experiencia = models.CharField('Experiência', max_length=255)
     quantidade = models.PositiveIntegerField('Quantidade de Bolsistas')
     valor_unitario = models.DecimalField('Valor Unitário (R$)', max_digits=10, decimal_places=2)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='distribuicoes')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Distribuição de Bolsa'
@@ -216,9 +206,6 @@ class AplicacaoEdital(DataModel):
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='pendente')
     nota = models.DecimalField('Nota do avaliador', max_digits=5, decimal_places=2, blank=True, null=True)
     data_aplicacao = models.DateTimeField('Data de aplicação', auto_now_add=True)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='aplicacoes')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Aplicação em Edital'

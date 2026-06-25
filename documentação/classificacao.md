@@ -12,7 +12,6 @@ Critério de pontuação configurável:
 - `peso` — Peso (pontos por unidade)
 - `peso_maximo` — Teto de pontuação (para critérios cumulativos como projetos)
 - `ativo` — Flag de critério ativo
-- `tenant` — FK para Tenant
 
 ### `Classificacao`
 Pontuação atribuída a uma candidatura:
@@ -20,15 +19,12 @@ Pontuação atribuída a uma candidatura:
 - `classificador` — FK para User (quem classificou)
 - `pontuacao_total` — Soma das notas × pesos
 - `observacoes` — Justificativa/observações
-- `tenant` — FK para Tenant
 
 ### `ClassificacaoCriterio`
 Nota individual por critério dentro de uma classificação:
 - `classificacao` — FK para Classificacao
 - `criterio` — FK para CriterioClassificacao
 - `nota` — Valor da nota para este critério
-
-Nota: Este modelo não possui campo `tenant` próprio — a proteção é transitiva via `Classificacao`.
 
 ## Views
 
@@ -39,7 +35,7 @@ Listagem de critérios de classificação.
 CRUD de critérios.
 
 ### `ClassificacaoListView`
-Listagem de classificações por tenant.
+Listagem de classificações.
 
 ### `ClassificacaoCreateView`
 Criação de classificação para uma candidatura, com notas por critério.

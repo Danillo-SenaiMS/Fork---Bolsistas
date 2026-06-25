@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import EditalProvisorio, CronogramaEvento, DistribuicaoBolsa, AplicacaoEdital
+from .models import EditalProvisorio, CronogramaEvento, DistribuicaoBolsa
 
 
 class CronogramaEventoInline(admin.TabularInline):
@@ -41,15 +41,13 @@ class EditalProvisorioAdmin(admin.ModelAdmin):
                        'conteudo_prova_teorica', 'entrevista', 'criterios_desempate'),
         }),
         ('Metadados', {
-            'fields': ('status', 'criado_por', 'tenant'),
+            'fields': ('status', 'criado_por'),
         }),
     )
 
     def save_model(self, request, obj, form, change):
         if not change:
             obj.criado_por = request.user
-        if not change and not obj.tenant_id and getattr(request, 'tenant', None):
-            obj.tenant = request.tenant
         super().save_model(request, obj, form, change)
 
     def criado_em(self, obj):
@@ -59,9 +57,3 @@ class EditalProvisorioAdmin(admin.ModelAdmin):
     def atualizado_em(self, obj):
         return obj.updated_at.strftime('%d/%m/%Y %H:%M')
     atualizado_em.short_description = 'Atualizado em'
-
-
-@admin.register(AplicacaoEdital)
-class AplicacaoEditalAdmin(admin.ModelAdmin):
-    list_display = ['bolsista', 'edital', 'status', 'data_aplicacao']
-    list_filter = ['status']

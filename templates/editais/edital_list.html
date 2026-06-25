@@ -8,20 +8,13 @@
             <i class="bi bi-journal-plus me-2"></i>Editais
         </h2>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-info"
-                    hx-get="{% url 'edital_lista_resumo' %}"
-                    hx-target="#lista-resumo-area" hx-swap="innerHTML">
-                <i class="bi bi-robot me-1"></i>Resumo IA
-            </button>
-            {% if user.is_superuser or user.perfil.tipo == 'MANAGER' %}
+            {% if is_superuser or is_manager or is_execute_user %}
             <a href="{% url 'edital_create' %}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>Novo Edital
             </a>
             {% endif %}
         </div>
     </div>
-
-    <div id="lista-resumo-area" class="mb-4"></div>
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -71,7 +64,7 @@
                                 <a href="{% url 'edital_detail' edital.pk %}" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                {% if user.is_superuser or user.perfil.tipo == 'MANAGER' %}
+                                {% if is_superuser or is_manager %}
                                 <a href="{% url 'edital_update' edital.pk %}" class="btn btn-sm btn-outline-warning" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>

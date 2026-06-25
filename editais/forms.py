@@ -76,7 +76,6 @@ class DistribuicaoBolsaForm(forms.ModelForm):
 class BaseDistribuicaoFormSet(BaseInlineFormSet):
     def save_new(self, form, commit=True):
         obj = super().save_new(form, commit=False)
-        obj.tenant = self.instance.tenant
         if commit:
             obj.save()
         return obj
@@ -217,7 +216,6 @@ DistribuicaoBolsaFormSet = inlineformset_factory(
 class BaseCronogramaFormSet(BaseInlineFormSet):
     def save_new(self, form, commit=True):
         obj = super().save_new(form, commit=False)
-        obj.tenant = self.instance.tenant
         if commit:
             obj.save()
         return obj

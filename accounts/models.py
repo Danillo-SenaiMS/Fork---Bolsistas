@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from base.models import DataModel
-from base.managers import TenantManager
 
 
 class UserManager(BaseUserManager):
@@ -37,40 +36,18 @@ class User(AbstractUser):
         return self.nome_completo or self.email
 
 
-class Tenant(DataModel):
-    nome = models.CharField('Nome', max_length=255)
-    dominio = models.CharField('Domínio', max_length=255, unique=True)
-    ativo = models.BooleanField('Ativo', default=True)
-
-    class Meta:
-        verbose_name = 'Tenant'
-        verbose_name_plural = 'Tenants'
-
-    def __str__(self):
-        return self.nome
-
-
 class Perfil(DataModel):
-    TIPO_CHOICES = [
-        ('MANAGER', 'Gerente'),
-        ('COMMON', 'Comum'),
-    ]
-
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
-    tipo = models.CharField('Tipo', max_length=20, choices=TIPO_CHOICES, default='COMMON')
     telefone = models.CharField('Telefone', max_length=20, blank=True)
     unidade = models.CharField('Unidade', max_length=255, blank=True)
     data_nascimento = models.DateField('Data de nascimento', null=True, blank=True)
-    tenant = models.ForeignKey(Tenant, on_delete=models.SET_NULL, null=True, blank=True, related_name='perfis')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Perfil'
         verbose_name_plural = 'Perfis'
 
     def __str__(self):
-        return f'{self.user} - {self.get_tipo_display()}'
+        return str(self.user)
 
 
 class DocumentoExterno(DataModel):
@@ -83,9 +60,6 @@ class DocumentoExterno(DataModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documentos')
     arquivo = models.FileField('Arquivo', upload_to='documentos/')
     tipo = models.CharField('Tipo', max_length=10, choices=TIPO_CHOICES)
-    tenant = models.ForeignKey(Tenant, on_delete=models.SET_NULL, null=True, blank=True, related_name='documentos')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Documento Externo'

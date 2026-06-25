@@ -8,11 +8,11 @@
             <i class="bi bi-person-lines-fill me-2"></i>Meu Cadastro
         </h2>
         <div>
-            {% if user.is_superuser or user.perfil.tipo == 'MANAGER' %}
+            {% if is_superuser or is_manager %}
             <a href="{% url 'cadastro_update_pk' cadastro.pk %}" class="btn btn-warning me-2">
                 <i class="bi bi-pencil-square me-1"></i>Editar (Admin)
             </a>
-            {% else %}
+            {% elif is_view_user %}
             <a href="{% url 'solicitacao_criar' %}" class="btn btn-outline-primary me-2">
                 <i class="bi bi-pencil-square me-1"></i>Solicitar Edicao
             </a>
@@ -96,7 +96,7 @@
 
             <div class="card p-4 mt-3">
                 <h5 class="fw-semibold mb-3">
-                    <i class="bi bi-bar-chart-line me-2 text-primary"></i>Classificacao
+                    <i class="bi bi-bar-chart-line me-2 text-primary"></i>Critérios e Pontuação
                 </h5>
                 <div class="row g-3">
                     <div class="col-md-4">

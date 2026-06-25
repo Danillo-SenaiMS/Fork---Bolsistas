@@ -421,7 +421,7 @@
 
                         <hr class="my-4">
 
-                        {% if user.is_superuser or user.perfil.tipo == 'MANAGER' %}
+                        {% if is_superuser or is_manager %}
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.status.label }}</label>

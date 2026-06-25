@@ -2,17 +2,13 @@ from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.template.loader import render_to_string
-from django.urls import reverse_lazy
 import csv
 
-from base.mixins import ManagerRequiredMixin
+from base.mixins import ManagerOrExecuteRequiredMixin, GROUP_MANAGER, GROUP_EXECUTE_USER
 from cadastro.models import CadastroBolsista, FormacaoAcademica
-from editais.models import EditalProvisorio
-from .ai_service import gerar_resumo_bolsista, analisar_candidato
 
 
-class PainelBolsistasListView(ManagerRequiredMixin, ListView):
+class PainelBolsistasListView(ManagerOrExecuteRequiredMixin, ListView):
     model = CadastroBolsista
     template_name = 'painel/lista_bolsistas.html'
     context_object_name = 'bolsistas'
@@ -35,7 +31,7 @@ class PainelBolsistasListView(ManagerRequiredMixin, ListView):
         return ctx
 
 
-class PainelBolsistaDetailView(ManagerRequiredMixin, DetailView):
+class PainelBolsistaDetailView(ManagerOrExecuteRequiredMixin, DetailView):
     model = CadastroBolsista
     template_name = 'painel/detalhe_bolsista.html'
     context_object_name = 'bolsista'
@@ -52,7 +48,11 @@ class PainelBolsistaDetailView(ManagerRequiredMixin, DetailView):
 def painel_download_csv(request):
     if not request.user.is_authenticated:
         return HttpResponse('Nao autorizado', status=401)
-    if not (request.user.is_superuser or getattr(getattr(request.user, 'perfil', None), 'tipo', None) in ['ADMIN', 'MANAGER']):
+
+    if not (
+        request.user.is_superuser
+        or request.user.groups.filter(name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]).exists()
+    ):
         return HttpResponse('Nao autorizado', status=401)
 
     bolsistas = CadastroBolsista.objects.select_related('user').prefetch_related('formacoes').order_by('user__nome_completo')
@@ -92,37 +92,3 @@ def painel_download_csv(request):
         ])
 
     return response
-
-
-def gerar_resumo_view(request, pk):
-    if not request.user.is_authenticated:
-        return HttpResponse('Nao autorizado', status=401)
-
-    cadastro = get_object_or_404(CadastroBolsista, pk=pk)
-    result = gerar_resumo_bolsista(cadastro)
-
-    html = render_to_string('painel/partials/resumo_ia.html', {
-        'bolsista': cadastro,
-        'resumo': result.get('summary'),
-        'erro': result.get('error'),
-    }, request=request)
-
-    return HttpResponse(html)
-
-
-def analisar_candidato_view(request, pk):
-    if not request.user.is_authenticated:
-        return HttpResponse('Nao autorizado', status=401)
-
-    cadastro = get_object_or_404(CadastroBolsista, pk=pk)
-    editais = EditalProvisorio.objects.filter(status='aberto').order_by('-created_at')
-
-    result = analisar_candidato(cadastro, editais)
-
-    html = render_to_string('painel/partials/analise_ia.html', {
-        'bolsista': cadastro,
-        'analise': result.get('analise'),
-        'erro': result.get('error'),
-    }, request=request)
-
-    return HttpResponse(html)

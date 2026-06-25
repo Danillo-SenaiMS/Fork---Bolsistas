@@ -1,37 +1,37 @@
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.contrib.auth.mixins import UserPassesTestMixin
 
 
-class RoleRequiredMixin(UserPassesTestMixin):
-    roles = []
+GROUP_MANAGER = 'Manager'
+GROUP_VIEW_USER = 'ViewUser'
+GROUP_EXECUTE_USER = 'ExecuteUser'
+
+
+def user_has_group(user, groups):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return user.groups.filter(name__in=groups).exists()
+
+
+class GroupRequiredMixin(UserPassesTestMixin):
+    groups = []
 
     def test_func(self):
-        if not self.request.user.is_authenticated:
-            return False
-        if self.request.user.is_superuser:
-            return True
-        perfil = getattr(self.request.user, 'perfil', None)
-        if not perfil:
-            return False
-        return perfil.tipo in self.roles
+        return user_has_group(self.request.user, self.groups)
 
 
-class AdminRequiredMixin(RoleRequiredMixin):
-    roles = ['MANAGER']
+class ManagerRequiredMixin(GroupRequiredMixin):
+    groups = [GROUP_MANAGER]
 
 
-class ManagerRequiredMixin(RoleRequiredMixin):
-    roles = ['MANAGER']
+class ViewUserRequiredMixin(GroupRequiredMixin):
+    groups = [GROUP_VIEW_USER]
 
 
-class TenantRequiredMixin(LoginRequiredMixin):
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-        if request.user.is_superuser:
-            return super().dispatch(request, *args, **kwargs)
-        tenant = getattr(request, 'tenant', None)
-        if not tenant:
-            return redirect(reverse_lazy('landing'))
-        return super().dispatch(request, *args, **kwargs)
+class ExecuteUserRequiredMixin(GroupRequiredMixin):
+    groups = [GROUP_EXECUTE_USER]
+
+
+class ManagerOrExecuteRequiredMixin(GroupRequiredMixin):
+    groups = [GROUP_MANAGER, GROUP_EXECUTE_USER]

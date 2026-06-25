@@ -11,10 +11,7 @@
             <a href="{% url 'edital_pdf' edital.pk %}" class="btn btn-success">
                 <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
             </a>
-            {% if user.is_superuser or user.perfil.tipo == 'MANAGER' %}
-            <a href="{% url 'avaliacao_candidatos' edital.pk %}" class="btn btn-info">
-                <i class="bi bi-robot me-1"></i>Avaliar Candidatos
-            </a>
+            {% if is_superuser or is_manager %}
             <a href="{% url 'edital_update' edital.pk %}" class="btn btn-warning">
                 <i class="bi bi-pencil-square me-1"></i>Editar
             </a>
@@ -30,19 +27,6 @@
 
     <div class="row g-4">
         <div class="col-lg-8">
-
-            <div id="resumo-container" class="mb-4">
-                <button class="btn btn-outline-info btn-sm"
-                        hx-get="{% url 'edital_resumo' edital.pk %}"
-                        hx-target="#resumo-container"
-                        hx-swap="innerHTML"
-                        hx-indicator="#resumo-spinner">
-                    <i class="bi bi-robot me-1"></i>Gerar Resumo com IA
-                </button>
-                <span id="resumo-spinner" class="htmx-indicator text-muted small ms-2">
-                    <i class="bi bi-arrow-repeat spin"></i> Gerando...
-                </span>
-            </div>
 
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-primary text-white py-2">
@@ -227,32 +211,34 @@
                 </div>
             </div>
 
-            {% if edital.status == 'aberto' and tem_cadastro and not ja_aplicou %}
-            <div class="card shadow-sm mb-4 text-center">
-                <div class="card-body">
-                    <form method="post" action="{% url 'aplicar_edital' edital.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success btn-lg w-100">
-                            <i class="bi bi-send-check me-2"></i>Candidatar-se
-                        </button>
-                    </form>
+            {% if is_view_user %}
+                {% if edital.status == 'aberto' and tem_cadastro and not ja_aplicou %}
+                <div class="card shadow-sm mb-4 text-center">
+                    <div class="card-body">
+                        <form method="post" action="{% url 'aplicar_edital' edital.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-send-check me-2"></i>Candidatar-se
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
-            {% elif ja_aplicou %}
-            <div class="card shadow-sm mb-4 text-center bg-success bg-opacity-10">
-                <div class="card-body">
-                    <i class="bi bi-check-circle text-success fs-3 mb-2"></i>
-                    <p class="fw-medium text-success mb-0">Voce ja se candidatou a este edital</p>
+                {% elif ja_aplicou %}
+                <div class="card shadow-sm mb-4 text-center bg-success bg-opacity-10">
+                    <div class="card-body">
+                        <i class="bi bi-check-circle text-success fs-3 mb-2"></i>
+                        <p class="fw-medium text-success mb-0">Você já se candidatou a este edital</p>
+                    </div>
                 </div>
-            </div>
-            {% elif not tem_cadastro %}
-            <div class="card shadow-sm mb-4 text-center bg-warning bg-opacity-10">
-                <div class="card-body">
-                    <i class="bi bi-exclamation-triangle text-warning fs-3 mb-2"></i>
-                    <p class="fw-medium mb-2">Complete seu cadastro para se candidatar</p>
-                    <a href="{% url 'cadastro_create' %}" class="btn btn-outline-warning btn-sm">Criar Cadastro</a>
+                {% elif not tem_cadastro %}
+                <div class="card shadow-sm mb-4 text-center bg-warning bg-opacity-10">
+                    <div class="card-body">
+                        <i class="bi bi-exclamation-triangle text-warning fs-3 mb-2"></i>
+                        <p class="fw-medium mb-2">Complete seu cadastro para se candidatar</p>
+                        <a href="{% url 'cadastro_create' %}" class="btn btn-outline-warning btn-sm">Criar Cadastro</a>
+                    </div>
                 </div>
-            </div>
+                {% endif %}
             {% endif %}
 
         </div>
@@ -283,31 +269,6 @@
                             <span class="fw-medium">{{ edital.updated_at|date:'d/m/Y H:i' }}</span>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Inscrições</h5>
-                </div>
-                <div class="card-body">
-                    <p class="fw-bold mb-2">
-                        Total: {{ aplicacoes|length }} inscrição{{ aplicacoes|length|pluralize:"ões" }}
-                    </p>
-                    {% if aplicacoes %}
-                    <ul class="list-group list-group-flush small">
-                        {% for app in aplicacoes %}
-                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <span>{{ app.bolsista.user.nome_completo }}</span>
-                            <span class="badge bg-{% if app.status == 'aprovado' %}success{% elif app.status == 'rejeitado' %}danger{% elif app.status == 'em_analise' %}warning text-dark{% else %}secondary{% endif %}">
-                                {{ app.get_status_display }}
-                            </span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <p class="text-muted small mb-0">Nenhuma inscrição realizada.</p>
-                    {% endif %}
                 </div>
             </div>
 

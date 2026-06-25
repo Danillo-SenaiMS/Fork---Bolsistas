@@ -3,17 +3,18 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseForbidden
 from django.template.loader import render_to_string
 from django import forms
 
-from base.mixins import TenantRequiredMixin, ManagerRequiredMixin
+from base.mixins import ManagerRequiredMixin, ViewUserRequiredMixin, GROUP_MANAGER
 from .models import (
     CadastroBolsista, FormacaoAcademica, ExperienciaProfissional,
     AnexoComprobatorio, SolicitacaoEdicao,
 )
-from accounts.models import User, Perfil
+
 from .utils import calcular_pontuacao_previa
 from classificacao.models import CriterioClassificacao
 
@@ -24,6 +25,10 @@ ANEXO_TIPOS = [
     'artigo_cientifico_nacional', 'artigo_cientifico_internacional',
     'livro_patente', 'participacao_minicurso', 'treinamento',
 ]
+
+
+def _is_manager(user):
+    return user.is_superuser or user.groups.filter(name=GROUP_MANAGER).exists()
 
 
 class FormacaoAcademicaForm(forms.ModelForm):
@@ -100,7 +105,7 @@ class CadastroForm(forms.ModelForm):
         self.fields['estado'].required = False
 
 
-class CadastroCreateView(TenantRequiredMixin, FormView):
+class CadastroCreateView(ViewUserRequiredMixin, FormView):
     template_name = 'cadastro/cadastro_form.html'
     form_class = CadastroForm
     success_url = reverse_lazy('cadastro_detail')
@@ -123,11 +128,10 @@ class CadastroCreateView(TenantRequiredMixin, FormView):
     def form_valid(self, form):
         cadastro = form.save(commit=False)
         cadastro.user = self.request.user
-        cadastro.tenant = self.request.tenant
         if not cadastro.data_nascimento:
             try:
                 cadastro.data_nascimento = self.request.user.perfil.data_nascimento
-            except (AttributeError, Perfil.DoesNotExist):
+            except (AttributeError, CadastroBolsista.DoesNotExist):
                 pass
         cadastro.save()
 
@@ -140,18 +144,17 @@ class CadastroCreateView(TenantRequiredMixin, FormView):
                 if fm.cleaned_data and not fm.cleaned_data.get('DELETE', False):
                     fa = fm.save(commit=False)
                     fa.bolsista = cadastro
-                    fa.tenant = self.request.tenant
                     fa.save()
 
         exp_formset = _experiencia_formset_factory(extra=0)(
             self.request.POST, self.request.FILES, prefix='experiencias'
         )
         if exp_formset.is_valid():
-            _salvar_experiencias(exp_formset, cadastro, self.request.tenant)
+            _salvar_experiencias(exp_formset, cadastro)
 
-        _salvar_anexos(cadastro, self.request.FILES, self.request.tenant)
+        _salvar_anexos(cadastro, self.request.FILES)
 
-        criterios = CriterioClassificacao.objects.filter(tenant=self.request.tenant, ativo=True)
+        criterios = CriterioClassificacao.objects.filter(ativo=True)
         _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
         cadastro.pontuacao_previa = pontuacao
         cadastro.save(update_fields=['pontuacao_previa'])
@@ -186,7 +189,7 @@ def _experiencia_formset_factory(extra=1):
     )
 
 
-def _salvar_experiencias(formset, cadastro, tenant):
+def _salvar_experiencias(formset, cadastro):
     for fm in formset:
         if fm.cleaned_data and not fm.cleaned_data.get('DELETE', False):
             if not (fm.cleaned_data.get('area_atuacao') or
@@ -195,49 +198,46 @@ def _salvar_experiencias(formset, cadastro, tenant):
                 continue
             exp = fm.save(commit=False)
             exp.bolsista = cadastro
-            exp.tenant = tenant
             exp.save()
     cadastro.sincronizar_anos_experiencia()
 
 
-def _salvar_anexos(cadastro, files, tenant):
+def _salvar_anexos(cadastro, files):
     for tipo in ANEXO_TIPOS:
         for f in files.getlist('anexo_' + tipo):
             if f and f.name:
                 AnexoComprobatorio.objects.create(
-                    bolsista=cadastro, tipo=tipo, anexo=f, tenant=tenant
+                    bolsista=cadastro, tipo=tipo, anexo=f
                 )
 
 
-class CadastroDetailView(TenantRequiredMixin, DetailView):
+class CadastroDetailView(LoginRequiredMixin, DetailView):
     model = CadastroBolsista
     template_name = 'cadastro/cadastro_detail.html'
     context_object_name = 'cadastro'
 
     def get(self, request, *args, **kwargs):
-        perfil = getattr(request.user, 'perfil', None)
-        if perfil and perfil.tipo in ('ADMIN', 'MANAGER'):
+        if _is_manager(request.user):
             pk = kwargs.get('pk')
             if pk:
                 return super().get(request, *args, **kwargs)
+        if not request.user.groups.filter(name='ViewUser').exists() and not request.user.is_superuser:
+            return redirect('home')
         if not hasattr(request.user, 'cadastro'):
             return redirect('cadastro_create')
         return super().get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
-        perfil = getattr(self.request.user, 'perfil', None)
-        if perfil and perfil.tipo in ('ADMIN', 'MANAGER'):
+        if _is_manager(self.request.user):
             pk = self.kwargs.get('pk')
             if pk:
-                return get_object_or_404(CadastroBolsista, pk=pk, tenant=self.request.tenant)
-        return get_object_or_404(CadastroBolsista, user=self.request.user, tenant=self.request.tenant)
+                return get_object_or_404(CadastroBolsista, pk=pk)
+        return get_object_or_404(CadastroBolsista, user=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cadastro = context['cadastro']
-        perfil = getattr(self.request.user, 'perfil', None)
-        can_edit = cadastro.user == self.request.user or (perfil and perfil.tipo in ('ADMIN', 'MANAGER'))
-        context['can_edit'] = can_edit
+        context['can_edit'] = cadastro.user == self.request.user or _is_manager(self.request.user)
         context['formacoes'] = cadastro.formacoes.all()
         return context
 
@@ -247,7 +247,7 @@ class CadastroUpdateView(ManagerRequiredMixin, FormView):
 
     def get_object(self):
         return get_object_or_404(
-            CadastroBolsista, pk=self.kwargs['pk'], tenant=self.request.tenant
+            CadastroBolsista, pk=self.kwargs['pk']
         )
 
     def get_form_class(self):
@@ -288,11 +288,10 @@ class CadastroUpdateView(ManagerRequiredMixin, FormView):
                 if fm.cleaned_data and not fm.cleaned_data.get('DELETE', False):
                     fa = fm.save(commit=False)
                     fa.bolsista = cadastro
-                    fa.tenant = self.request.tenant
                     fa.save()
-            _salvar_experiencias(exp_formset, cadastro, self.request.tenant)
-            _salvar_anexos(cadastro, request.FILES, self.request.tenant)
-            criterios = CriterioClassificacao.objects.filter(tenant=self.request.tenant, ativo=True)
+            _salvar_experiencias(exp_formset, cadastro)
+            _salvar_anexos(cadastro, request.FILES)
+            criterios = CriterioClassificacao.objects.filter(ativo=True)
             _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
             cadastro.pontuacao_previa = pontuacao
             cadastro.save(update_fields=['pontuacao_previa'])
@@ -312,7 +311,7 @@ class CadastroListView(ManagerRequiredMixin, ListView):
     context_object_name = 'cadastros'
 
     def get_queryset(self):
-        return CadastroBolsista.objects.filter(tenant=self.request.tenant).select_related('user')
+        return CadastroBolsista.objects.all().select_related('user')
 
 
 class SolicitacaoForm(forms.ModelForm):
@@ -325,7 +324,7 @@ class SolicitacaoForm(forms.ModelForm):
         }
 
 
-class SolicitacaoCreateView(TenantRequiredMixin, CreateView):
+class SolicitacaoCreateView(ViewUserRequiredMixin, CreateView):
     model = SolicitacaoEdicao
     template_name = 'cadastro/solicitacao_form.html'
     form_class = SolicitacaoForm
@@ -340,13 +339,12 @@ class SolicitacaoCreateView(TenantRequiredMixin, CreateView):
 
     def form_valid(self, form):
         cadastro = get_object_or_404(
-            CadastroBolsista, user=self.request.user, tenant=self.request.tenant
+            CadastroBolsista, user=self.request.user
         )
         campo = form.cleaned_data['campo']
         valor_original = str(getattr(cadastro, campo, ''))
         form.instance.bolsista = cadastro
         form.instance.valor_original = valor_original
-        form.instance.tenant = self.request.tenant
         messages.success(self.request, 'Solicitação de edição enviada para aprovação.')
         return super().form_valid(form)
 
@@ -358,11 +356,11 @@ class SolicitacaoListView(ManagerRequiredMixin, ListView):
 
     def get_queryset(self):
         return SolicitacaoEdicao.objects.filter(
-            tenant=self.request.tenant, status='pendente'
+            status='pendente'
         ).select_related('bolsista', 'bolsista__user')
 
 
-class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
+class SolicitacaoMultiplaView(ViewUserRequiredMixin, FormView):
     template_name = 'cadastro/solicitacao_multipla.html'
     form_class = CadastroForm
     success_url = reverse_lazy('cadastro_detail')
@@ -381,7 +379,7 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
 
     def get_cadastro(self):
         try:
-            return CadastroBolsista.objects.get(user=self.request.user, tenant=self.request.tenant)
+            return CadastroBolsista.objects.get(user=self.request.user)
         except CadastroBolsista.DoesNotExist:
             return None
 
@@ -434,14 +432,13 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
             if fm.cleaned_data and fm not in formset.deleted_forms:
                 fa = fm.save(commit=False)
                 fa.bolsista = cadastro
-                fa.tenant = self.request.tenant
                 fa.save()
                 alteracoes += 1
 
         if exp_formset is not None and exp_formset.is_valid():
-            _salvar_experiencias(exp_formset, cadastro, self.request.tenant)
+            _salvar_experiencias(exp_formset, cadastro)
 
-        _salvar_anexos(cadastro, self.request.FILES, self.request.tenant)
+        _salvar_anexos(cadastro, self.request.FILES)
 
         campos_auto = [
             'participacao_projetos_anos', 'participacao_congressos', 'resumo_anais',
@@ -455,7 +452,7 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
         cadastro.sincronizar_anos_experiencia()
         cadastro.save(update_fields=campos_auto)
 
-        criterios = CriterioClassificacao.objects.filter(tenant=self.request.tenant, ativo=True)
+        criterios = CriterioClassificacao.objects.filter(ativo=True)
         _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
         cadastro.pontuacao_previa = pontuacao
         cadastro.save(update_fields=['pontuacao_previa'])
@@ -474,7 +471,7 @@ class SolicitacaoMultiplaView(TenantRequiredMixin, FormView):
 class SolicitacaoRevisarView(ManagerRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         solicitacao = get_object_or_404(
-            SolicitacaoEdicao, pk=kwargs['pk'], tenant=request.tenant, status='pendente'
+            SolicitacaoEdicao, pk=kwargs['pk'], status='pendente'
         )
         acao = request.POST.get('acao')
 
@@ -506,53 +503,8 @@ class SolicitacaoRevisarView(ManagerRequiredMixin, TemplateView):
         return redirect('solicitacao_list')
 
 
-class AdminDashboardView(ManagerRequiredMixin, TemplateView):
-    template_name = 'cadastro/admin_dashboard.html'
-
-    def get_context_data(self, **kwargs):
-        from editais.models import EditalProvisorio, AplicacaoEdital
-        from classificacao.models import Classificacao, CriterioClassificacao
-
-        context = super().get_context_data(**kwargs)
-        tenant = self.request.tenant
-
-        context['total_usuarios'] = User.objects.filter(perfil__tenant=tenant).count()
-        context['total_usuarios_ativos'] = User.objects.filter(perfil__tenant=tenant, is_active=True).count()
-        context['usuarios_pendentes'] = User.objects.filter(
-            perfil__tenant=tenant, is_active=False
-        ).select_related('perfil')
-
-        context['cadastros'] = CadastroBolsista.objects.filter(tenant=tenant).select_related('user')
-        context['total_cadastros'] = context['cadastros'].count()
-
-        context['total_editais'] = EditalProvisorio.objects.filter(tenant=tenant).count()
-        context['total_aplicacoes'] = AplicacaoEdital.objects.filter(tenant=tenant).count()
-        context['total_classificacoes'] = Classificacao.objects.filter(tenant=tenant).count()
-        context['total_criterios'] = CriterioClassificacao.objects.filter(tenant=tenant).count()
-
-        context['solicitacoes_pendentes'] = SolicitacaoEdicao.objects.filter(
-            tenant=tenant, status='pendente'
-        ).select_related('bolsista__user')[:10]
-
-        context['ultimos_cadastros'] = context['cadastros'].order_by('-created_at')[:5]
-
-        return context
-
-
-class CsvImportView(ManagerRequiredMixin, TemplateView):
-    template_name = 'classificacao/csv_import.html'
-
-
-def _check_cadastro_permission(request, pk):
-    cadastro = get_object_or_404(CadastroBolsista, pk=pk)
-    perfil = getattr(request.user, 'perfil', None)
-    if not perfil or (perfil.tipo not in ('ADMIN', 'MANAGER') and cadastro.user != request.user):
-        return None, None, HttpResponseForbidden()
-    return cadastro, perfil, None
-
-
-def _recalcular_pontuacao(cadastro, tenant):
-    criterios = CriterioClassificacao.objects.filter(tenant=tenant, ativo=True)
+def _recalcular_pontuacao(cadastro):
+    criterios = CriterioClassificacao.objects.filter(ativo=True)
     _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
     cadastro.pontuacao_previa = pontuacao
     cadastro.save(update_fields=['pontuacao_previa'])
@@ -560,7 +512,7 @@ def _recalcular_pontuacao(cadastro, tenant):
 
 @login_required
 def formacao_add(request, pk):
-    cadastro, perfil, error = _check_cadastro_permission(request, pk)
+    cadastro, error = _check_cadastro_permission(request, pk)
     if error:
         return error
 
@@ -569,9 +521,8 @@ def formacao_add(request, pk):
         if form.is_valid():
             fa = form.save(commit=False)
             fa.bolsista = cadastro
-            fa.tenant = request.tenant
             fa.save()
-            _recalcular_pontuacao(cadastro, request.tenant)
+            _recalcular_pontuacao(cadastro)
             messages.success(request, 'Formação adicionada com sucesso!')
             return render(request, 'cadastro/partials/formacao_section.html', {
                 'formacoes': cadastro.formacoes.all(),
@@ -597,13 +548,13 @@ def formacao_add(request, pk):
 
 @login_required
 def formacao_remove(request, pk, formacao_pk):
-    cadastro, perfil, error = _check_cadastro_permission(request, pk)
+    cadastro, error = _check_cadastro_permission(request, pk)
     if error:
         return error
 
     fa = get_object_or_404(FormacaoAcademica, pk=formacao_pk, bolsista=cadastro)
     fa.delete()
-    _recalcular_pontuacao(cadastro, request.tenant)
+    _recalcular_pontuacao(cadastro)
     messages.success(request, 'Formação removida com sucesso!')
 
     return render(request, 'cadastro/partials/formacao_section.html', {
@@ -611,3 +562,10 @@ def formacao_remove(request, pk, formacao_pk):
         'cadastro': cadastro,
         'can_edit': True,
     })
+
+
+def _check_cadastro_permission(request, pk):
+    cadastro = get_object_or_404(CadastroBolsista, pk=pk)
+    if not (request.user.is_superuser or _is_manager(request.user) or cadastro.user == request.user):
+        return None, HttpResponseForbidden()
+    return cadastro, None

@@ -18,7 +18,6 @@ Dados do candidato a bolsista:
   - `artigo_cientifico_nacional`, `artigo_cientifico_internacional`
   - `livro_patente`, `participacao_minicurso`, `treinamento`
 - `pontuacao_previa` — Pontuação calculada automaticamente
-- `tenant` — FK para Tenant
 
 ### `FormacaoAcademica`
 Formação acadêmica unificada (substitui CursoSuperior e PosGraduacao):

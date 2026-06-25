@@ -2,8 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from base.models import DataModel
-from base.managers import TenantManager
-from accounts.models import User, Tenant
+from accounts.models import User
 
 
 ESTADOS_CHOICES = [
@@ -53,10 +52,6 @@ class CadastroBolsista(DataModel):
     treinamento = models.BooleanField('Treinamento (acima de 4 horas) na área de interesse', default=False)
     pontuacao_previa = models.DecimalField('Pontuação prévia', max_digits=8, decimal_places=2, default=0)
 
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='cadastros')
-
-    objects = TenantManager()
-
     class Meta:
         verbose_name = 'Cadastro de Bolsista'
         verbose_name_plural = 'Cadastros de Bolsistas'
@@ -104,9 +99,6 @@ class FormacaoAcademica(DataModel):
     curso = models.CharField('Curso', max_length=255, blank=True)
     area = models.CharField('Área', max_length=255, blank=True)
     ano_conclusao = models.IntegerField('Ano de conclusão', blank=True, null=True)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='formacoes')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Formação Acadêmica'
@@ -129,9 +121,6 @@ class ExperienciaProfissional(DataModel):
     area_atuacao = models.CharField('Área de Atuação', max_length=255, blank=True)
     anos_experiencia = models.PositiveIntegerField('Anos de Experiência', default=0)
     anexo = models.FileField('Comprovante (PDF)', upload_to='experiencias/', blank=True)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='experiencias')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Experiência Profissional'
@@ -160,9 +149,6 @@ class AnexoComprobatorio(DataModel):
     )
     tipo = models.CharField('Tipo', max_length=40, choices=TIPO_CHOICES)
     anexo = models.FileField('Anexo (PDF)', upload_to='anexos/')
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='anexos')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Anexo Comprobatório'
@@ -186,9 +172,6 @@ class SolicitacaoEdicao(DataModel):
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='pendente')
     revisado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='revisoes')
     data_revisao = models.DateTimeField('Data de revisão', blank=True, null=True)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='solicitacoes_edicao')
-
-    objects = TenantManager()
 
     class Meta:
         verbose_name = 'Solicitação de Edição'
