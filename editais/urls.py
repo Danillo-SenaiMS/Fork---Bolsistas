@@ -9,4 +9,6 @@ urlpatterns = [
     path('<int:pk>/editar/', views.EditalProvisorioUpdateView.as_view(), name='edital_update'),
     path('<int:pk>/excluir/', views.EditalProvisorioDeleteView.as_view(), name='edital_delete'),
     path('<int:pk>/aplicar/', views.AplicarEditalView.as_view(), name='aplicar_edital'),
+    path('<int:pk>/resumir/', views.resumir_edital, name='edital_resumir'),
+    path('<int:pk>/analisar/', views.analisar_edital, name='edital_analisar'),
 ]

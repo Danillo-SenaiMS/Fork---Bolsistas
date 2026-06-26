@@ -102,11 +102,23 @@ class BaseDistribuicaoFormSet(BaseInlineFormSet):
 
 
 class EditalProvisorioForm(forms.ModelForm):
+    vigencia_meses = forms.IntegerField(
+        label='Vigência (meses)',
+        min_value=1,
+        max_value=36,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 36,
+            'placeholder': 'Ex: 12',
+        }),
+    )
+
     class Meta:
         model = EditalProvisorio
         fields = [
             'nome_edital', 'area_estudo', 'detalhes_edital',
-            'nome_instituto', 'email_solicitante', 'telefone', 'endereco',
+            'nome_instituto', 'email_solicitante',
             'documento_anexo',
             'numero_vagas', 'valor_total_bolsa',
             'modalidade_bolsa', 'modalidade_atuacao',
@@ -122,9 +134,7 @@ class EditalProvisorioForm(forms.ModelForm):
             'area_estudo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Ciência da Computação, Biotecnologia'}),
             'detalhes_edital': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Detalhes adicionais sobre o edital (opcional)'}),
             'nome_instituto': forms.Select(attrs={'class': 'form-select'}),
-            'email_solicitante': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'solicitante@instituto.br'}),
-            'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(67) 99999-9999'}),
-            'endereco': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Rua, número, bairro, cidade - UF'}),
+            'email_solicitante': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'solicitante@instituto.br', 'readonly': True}),
             'documento_anexo': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
             'numero_vagas': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'readonly': True}),
             'valor_total_bolsa': forms.NumberInput(attrs={
@@ -157,10 +167,23 @@ class EditalProvisorioForm(forms.ModelForm):
         self.fields['valor_maximo'].required = False
         self.fields['documento_anexo'].required = False
         self.fields['status'].required = False
+        self.fields['vigencia'].required = False
+        self.fields['vigencia'].widget = forms.HiddenInput()
+
+        if self._user:
+            if not self.is_bound and not self.initial.get('email_solicitante'):
+                self.initial['email_solicitante'] = self._user.email
+
         if not (self._user and self._user.is_superuser):
             self.fields['status'].disabled = True
             if not self.is_bound and not self.initial.get('status'):
                 self.initial['status'] = 'em_analise'
+
+        if not self.is_bound and self.instance and self.instance.pk and self.instance.vigencia:
+            self.initial['vigencia_meses'] = max(1, self.instance.vigencia // 30)
+        elif not self.is_bound and not self.initial.get('vigencia_meses'):
+            self.initial['vigencia_meses'] = 6
+
         self._update_dynamic_fields()
 
     def _update_dynamic_fields(self):
@@ -186,12 +209,18 @@ class EditalProvisorioForm(forms.ModelForm):
         if modalidade_atuacao == 'remota' and not endereco_atuacao:
             self.add_error('endereco_atuacao', 'Endereço de atuação é obrigatório para modalidade remota.')
 
+        vigencia_meses = cleaned_data.get('vigencia_meses')
+        if vigencia_meses is not None:
+            cleaned_data['vigencia'] = vigencia_meses * 30
+        else:
+            cleaned_data['vigencia'] = 180
+
         vigencia = cleaned_data.get('vigencia')
         if vigencia is not None:
             if vigencia < 15:
-                self.add_error('vigencia', 'A vigência mínima é de 15 dias.')
+                self.add_error('vigencia_meses', 'A vigência mínima é de 15 dias.')
             elif vigencia > 1095:
-                self.add_error('vigencia', 'A vigência máxima é de 36 meses (1095 dias).')
+                self.add_error('vigencia_meses', 'A vigência máxima é de 36 meses (1095 dias).')
 
         if not (self._user and self._user.is_superuser):
             if cleaned_data.get('status') and cleaned_data['status'] != 'em_analise':

@@ -12,10 +12,12 @@
                 <a href="?sort=nome" class="btn btn-outline-primary btn-sm {% if sort == 'nome' %}active{% endif %}">
                     <i class="bi bi-sort-alpha-down me-1"></i>Nome
                 </a>
-                <a href="?sort=pontuacao" class="btn btn-outline-primary btn-sm {% if sort == 'pontuacao' %}active{% endif %}">
-                    <i class="bi bi-trophy me-1"></i>Pontuação
-                </a>
             </div>
+            {% if user.is_superuser or is_manager or is_execute_user %}
+            <a href="{% url 'bolsista_create' %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Novo Bolsista
+            </a>
+            {% endif %}
             <a href="{% url 'painel_download_csv' %}" class="btn btn-success btn-sm">
                 <i class="bi bi-download me-1"></i>Download CSV
             </a>
@@ -28,14 +30,13 @@
     {% if bolsistas %}
     <div class="table-responsive">
         <table class="table table-hover align-middle bg-white rounded-3 shadow-sm">
-            <thead class="table-light">
-                <tr>
-                    <th>Nome</th>
-                    <th>Última Formação</th>
-                    <th>Pontuação</th>
-                    <th class="text-end">Ações</th>
-                </tr>
-            </thead>
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Última Formação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
             <tbody>
                 {% for b in bolsistas %}
                 <tr>
@@ -56,13 +57,38 @@
                         {% endif %}
                         {% endwith %}
                     </td>
-                    <td>
-                        <span class="badge bg-info fs-6">{{ b.pontuacao_previa }} pts</span>
-                    </td>
                     <td class="text-end">
+                        <button class="btn btn-outline-success btn-sm me-1"
+                                title="Resumir com IA"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#resumo-ia-{{ b.pk }}"
+                                hx-get="{% url 'painel_resumir_bolsista' b.pk %}"
+                                hx-target="#resumo-ia-{{ b.pk }}"
+                                hx-indicator="#resumo-ia-spinner-{{ b.pk }}"
+                                hx-swap="innerHTML">
+                            <i class="bi bi-magic"></i>
+                        </button>
+                        <a href="{% url 'painel_avaliar_bolsista' b.pk %}" class="btn btn-outline-warning btn-sm me-1" title="Avaliar Bolsista">
+                            <i class="bi bi-star-fill me-1"></i>Avaliar
+                        </a>
                         <a href="{% url 'painel_detalhe' b.pk %}" class="btn btn-outline-primary btn-sm" title="Ver detalhes">
                             <i class="bi bi-eye-fill"></i>
                         </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3" class="p-0 border-0">
+                        <div id="resumo-ia-{{ b.pk }}" class="collapse">
+                            <div class="bg-light border-start border-4 border-success p-3 m-2 rounded">
+                                <div id="resumo-ia-spinner-{{ b.pk }}" class="htmx-indicator text-center py-2">
+                                    <div class="spinner-border spinner-border-sm text-success" role="status">
+                                        <span class="visually-hidden">Gerando resumo...</span>
+                                    </div>
+                                    <span class="text-muted small ms-2">Gerando resumo com IA...</span>
+                                </div>
+                                <p class="text-muted small mb-0">Clique no botão <i class="bi bi-magic"></i> para gerar um resumo objetivo do candidato.</p>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

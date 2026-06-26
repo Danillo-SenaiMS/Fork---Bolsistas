@@ -7,6 +7,11 @@
         <h2 class="fw-bold text-primary mb-0">
             <i class="bi bi-person-lines-fill me-2"></i>Cadastros de Bolsistas
         </h2>
+        {% if is_superuser or is_manager or is_execute_user %}
+        <a href="{% url 'bolsista_create' %}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>Novo Bolsista
+        </a>
+        {% endif %}
     </div>
 
     {% if cadastros %}

@@ -110,3 +110,6 @@ LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Integração com IA (OpenAI)
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')

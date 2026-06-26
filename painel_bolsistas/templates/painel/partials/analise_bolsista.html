@@ -1,0 +1,25 @@
+<div class="p-3">
+    <h6 class="fw-semibold text-primary mb-2">
+        <i class="bi bi-stars me-2"></i>Resumo do Perfil
+    </h6>
+    <p class="mb-3">{{ resumo }}</p>
+
+    <h6 class="fw-semibold text-primary mb-2">
+        <i class="bi bi-binoculars me-2"></i>Análise frente aos Editais
+    </h6>
+    <p class="mb-3">{{ analise }}</p>
+
+    {% if radar %}
+    <h6 class="fw-semibold text-primary mb-3">
+        <i class="bi bi-bullseye me-2"></i>Aderência aos Editais
+    </h6>
+    <div class="mb-3" style="max-width: 450px; margin: 0 auto;">
+        <canvas id="radarChart" width="400" height="300"></canvas>
+    </div>
+    <script>
+        renderRadarChart({{ radar_labels|safe }}, {{ radar_scores|safe }});
+    </script>
+    {% else %}
+    <p class="text-muted">Nenhum edital cadastrado para exibir o gráfico de aderência.</p>
+    {% endif %}
+</div>

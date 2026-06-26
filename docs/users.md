@@ -21,8 +21,8 @@ Usuários:
     - e-mail:  l.okamura@ms.senai.br
         - senha: layssa_senai2026
 
-    - e-mail:
-        - senha:
+    - e-mail: userview@senai.br
+        - senha: usuarioview2026
 
     - e-mail:
         - senha:

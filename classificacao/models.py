@@ -1,5 +1,7 @@
 from django.db import models
 from base.models import DataModel
+from cadastro.models import CadastroBolsista
+from accounts.models import User
 
 
 class CriterioClassificacao(DataModel):
@@ -31,3 +33,36 @@ class CriterioClassificacao(DataModel):
 
     def __str__(self):
         return self.nome
+
+
+class AvaliacaoBolsista(DataModel):
+    bolsista = models.ForeignKey(
+        CadastroBolsista,
+        on_delete=models.CASCADE,
+        related_name='avaliacoes',
+        verbose_name='Bolsista',
+    )
+    criterio = models.ForeignKey(
+        CriterioClassificacao,
+        on_delete=models.CASCADE,
+        related_name='avaliacoes',
+        verbose_name='Critério',
+    )
+    pontos = models.DecimalField('Pontos', max_digits=10, decimal_places=2, default=0)
+    avaliado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='avaliacoes_realizadas',
+        verbose_name='Avaliado por',
+    )
+    observacao = models.TextField('Observação', blank=True)
+
+    class Meta:
+        verbose_name = 'Avaliação de Bolsista'
+        verbose_name_plural = 'Avaliações de Bolsistas'
+        unique_together = ('bolsista', 'criterio')
+
+    def __str__(self):
+        return f'{self.bolsista} - {self.criterio}: {self.pontos} pts'

@@ -9,14 +9,18 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.template.loader import render_to_string
 from django import forms
 
-from base.mixins import ManagerRequiredMixin, ViewUserRequiredMixin, GROUP_MANAGER
+from base.mixins import (
+    ManagerRequiredMixin, ViewUserRequiredMixin,
+    ManagerOrExecuteRequiredMixin, GROUP_MANAGER,
+)
 from .models import (
     CadastroBolsista, FormacaoAcademica, ExperienciaProfissional,
-    AnexoComprobatorio, SolicitacaoEdicao,
+    AnexoComprobatorio, SolicitacaoEdicao, validar_maioridade,
 )
 
 from .utils import calcular_pontuacao_previa
 from classificacao.models import CriterioClassificacao
+from accounts.models import User, Perfil
 
 
 ANEXO_TIPOS = [
@@ -29,6 +33,13 @@ ANEXO_TIPOS = [
 
 def _is_manager(user):
     return user.is_superuser or user.groups.filter(name=GROUP_MANAGER).exists()
+
+
+def _is_manager_or_executor(user):
+    from base.mixins import GROUP_EXECUTE_USER
+    return user.is_superuser or user.groups.filter(
+        name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]
+    ).exists()
 
 
 class FormacaoAcademicaForm(forms.ModelForm):
@@ -312,6 +323,120 @@ class CadastroListView(ManagerRequiredMixin, ListView):
 
     def get_queryset(self):
         return CadastroBolsista.objects.all().select_related('user')
+
+
+class BolsistaCreateForm(forms.ModelForm):
+    data_nascimento = forms.DateField(
+        label='Data de nascimento',
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        validators=[validar_maioridade],
+    )
+    telefone = forms.CharField(
+        label='Telefone', required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(67) 99999-9999'}),
+    )
+    unidade = forms.CharField(
+        label='Unidade', required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+
+    class Meta:
+        model = User
+        fields = ['nome_completo', 'email']
+        widgets = {
+            'nome_completo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo do bolsista'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@exemplo.com'}),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('Já existe um usuário cadastrado com este e-mail.')
+        return email
+
+
+class BolsistaCreateView(ManagerOrExecuteRequiredMixin, FormView):
+    template_name = 'cadastro/bolsista_form.html'
+    form_class = CadastroForm
+    success_url = reverse_lazy('cadastro_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object'] = None
+        if 'user_form' not in kwargs:
+            context['user_form'] = BolsistaCreateForm()
+        if 'formacao_formset' not in kwargs:
+            context['formacao_formset'] = forms.modelformset_factory(
+                FormacaoAcademica, form=FormacaoAcademicaForm, extra=1, can_delete=True
+            )(queryset=FormacaoAcademica.objects.none(), prefix='formacoes')
+        if 'experiencia_formset' not in kwargs:
+            context['experiencia_formset'] = _experiencia_formset_factory(extra=1)(
+                queryset=ExperienciaProfissional.objects.none(), prefix='experiencias'
+            )
+        context['anexo_tipos'] = ANEXO_TIPOS
+        return context
+
+    def post(self, request, *args, **kwargs):
+        user_form = BolsistaCreateForm(request.POST)
+        form = self.get_form()
+        FormSet = forms.modelformset_factory(
+            FormacaoAcademica, form=FormacaoAcademicaForm, extra=1, can_delete=True
+        )
+        formset = FormSet(request.POST, prefix='formacoes')
+        exp_formset = _experiencia_formset_factory(extra=1)(
+            request.POST, request.FILES, prefix='experiencias'
+        )
+
+        if user_form.is_valid() and form.is_valid() and formset.is_valid() and exp_formset.is_valid():
+            return self.form_valid(user_form, form, formset, exp_formset)
+        return self.render_to_response(self.get_context_data(
+            user_form=user_form, form=form, formacao_formset=formset,
+            experiencia_formset=exp_formset
+        ))
+
+    def form_valid(self, user_form, form, formset, exp_formset):
+        import secrets
+
+        user = User.objects.create_user(
+            email=user_form.cleaned_data['email'],
+            nome_completo=user_form.cleaned_data['nome_completo'],
+            password=secrets.token_urlsafe(16),
+        )
+        user.is_active = True
+        user.save()
+
+        perfil, _ = Perfil.objects.get_or_create(user=user)
+        perfil.telefone = user_form.cleaned_data.get('telefone', '')
+        perfil.unidade = user_form.cleaned_data.get('unidade', '')
+        perfil.data_nascimento = user_form.cleaned_data.get('data_nascimento')
+        perfil.save()
+
+        cadastro = form.save(commit=False)
+        cadastro.user = user
+        cadastro.data_nascimento = user_form.cleaned_data.get('data_nascimento')
+        cadastro.save()
+
+        for fm in formset:
+            if fm.cleaned_data and not fm.cleaned_data.get('DELETE', False):
+                fa = fm.save(commit=False)
+                fa.bolsista = cadastro
+                fa.save()
+
+        if exp_formset.is_valid():
+            _salvar_experiencias(exp_formset, cadastro)
+
+        _salvar_anexos(cadastro, self.request.FILES)
+
+        criterios = CriterioClassificacao.objects.filter(ativo=True)
+        _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
+        cadastro.pontuacao_previa = pontuacao
+        cadastro.save(update_fields=['pontuacao_previa'])
+
+        messages.success(
+            self.request,
+            f'Bolsista {user.nome_completo} cadastrado com sucesso!'
+        )
+        return redirect('cadastro_detail_pk', pk=cadastro.pk)
 
 
 class SolicitacaoForm(forms.ModelForm):

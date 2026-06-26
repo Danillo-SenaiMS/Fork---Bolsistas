@@ -1,11 +1,17 @@
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from decimal import Decimal
 import csv
+import json
 
 from base.mixins import ManagerOrExecuteRequiredMixin, GROUP_MANAGER, GROUP_EXECUTE_USER
 from cadastro.models import CadastroBolsista, FormacaoAcademica
+from classificacao.models import CriterioClassificacao, AvaliacaoBolsista
+from editais.models import EditalProvisorio
+from . import ai_service
 
 
 class PainelBolsistasListView(ManagerOrExecuteRequiredMixin, ListView):
@@ -17,9 +23,7 @@ class PainelBolsistasListView(ManagerOrExecuteRequiredMixin, ListView):
     def get_queryset(self):
         qs = super().get_queryset().select_related('user').prefetch_related('formacoes')
         sort = self.request.GET.get('sort', 'nome')
-        if sort == 'pontuacao':
-            qs = qs.order_by('-pontuacao_previa')
-        elif sort == 'nome':
+        if sort == 'nome':
             qs = qs.order_by('user__nome_completo')
         else:
             qs = qs.order_by('user__nome_completo')
@@ -92,3 +96,118 @@ def painel_download_csv(request):
         ])
 
     return response
+
+
+def resumir_bolsista(request, pk):
+    if not request.user.is_authenticated:
+        return HttpResponse('Não autorizado', status=401)
+
+    if not (
+        request.user.is_superuser
+        or request.user.groups.filter(name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]).exists()
+    ):
+        return HttpResponse('Não autorizado', status=401)
+
+    bolsista = get_object_or_404(
+        CadastroBolsista.objects.select_related('user').prefetch_related('formacoes', 'experiencias'),
+        pk=pk,
+    )
+    resultado = ai_service.resumir_bolsista(bolsista)
+    html = render_to_string('painel/partials/resumo_bolsista.html', {
+        'resumo': resultado['resumo'],
+    })
+    return HttpResponse(html, content_type='text/html; charset=utf-8')
+
+
+def analisar_bolsista(request, pk):
+    if not request.user.is_authenticated:
+        return HttpResponse('Não autorizado', status=401)
+
+    if not (
+        request.user.is_superuser
+        or request.user.groups.filter(name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]).exists()
+    ):
+        return HttpResponse('Não autorizado', status=401)
+
+    bolsista = get_object_or_404(
+        CadastroBolsista.objects.select_related('user').prefetch_related('formacoes', 'experiencias'),
+        pk=pk,
+    )
+    editais = list(EditalProvisorio.objects.all())
+    resultado = ai_service.analisar_bolsista(bolsista, editais)
+
+    html = render_to_string('painel/partials/analise_bolsista.html', {
+        'resumo': resultado['resumo'],
+        'analise': resultado['analise'],
+        'radar': resultado['radar'],
+        'radar_labels': json.dumps([item['edital'] for item in resultado['radar']]),
+        'radar_scores': json.dumps([item['score'] for item in resultado['radar']]),
+    })
+    return HttpResponse(html, content_type='text/html; charset=utf-8')
+
+
+def avaliar_bolsista(request, pk):
+    if not request.user.is_authenticated:
+        return HttpResponse('Não autorizado', status=401)
+
+    if not (
+        request.user.is_superuser
+        or request.user.groups.filter(name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]).exists()
+    ):
+        return HttpResponse('Não autorizado', status=401)
+
+    bolsista = get_object_or_404(
+        CadastroBolsista.objects.select_related('user').prefetch_related('formacoes'),
+        pk=pk,
+    )
+
+    criterios = CriterioClassificacao.objects.filter(ativo=True).order_by('nome')
+
+    if request.method == 'POST':
+        total = Decimal('0')
+        for criterio in criterios:
+            pontos_str = request.POST.get(f'criterio_{criterio.pk}', '0')
+            try:
+                pontos = Decimal(pontos_str.replace(',', '.'))
+            except Exception:
+                pontos = Decimal('0')
+
+            pontos = max(Decimal('0'), pontos)
+            if criterio.peso_maximo > 0:
+                pontos = min(pontos, criterio.peso_maximo)
+
+            AvaliacaoBolsista.objects.update_or_create(
+                bolsista=bolsista,
+                criterio=criterio,
+                defaults={
+                    'pontos': pontos,
+                    'avaliado_por': request.user,
+                },
+            )
+            total += pontos
+
+        bolsista.pontuacao_previa = total
+        bolsista.save(update_fields=['pontuacao_previa'])
+
+        return redirect('painel_lista')
+
+    avaliacoes_existentes = {
+        a.criterio_id: a.pontos
+        for a in AvaliacaoBolsista.objects.filter(bolsista=bolsista)
+    }
+
+    itens = []
+    for criterio in criterios:
+        pontos_default = avaliacoes_existentes.get(criterio.pk)
+        if pontos_default is None:
+            pontos_default = criterio.peso
+        itens.append({
+            'criterio': criterio,
+            'pontos': pontos_default,
+        })
+
+    return render(request, 'painel/avaliar_bolsista.html', {
+        'bolsista': bolsista,
+        'formacoes': bolsista.formacoes.order_by('-ano_conclusao'),
+        'itens': itens,
+    })

@@ -15,8 +15,55 @@
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-6">
+        <div class="col-12">
             <div class="card p-4">
+                <div class="text-center mb-3">
+                    <h5 class="fw-semibold mb-3">
+                        <i class="bi bi-stars me-2 text-primary"></i>Análise por IA
+                    </h5>
+                    <button class="btn btn-primary btn-sm"
+                            hx-get="{% url 'painel_analisar_bolsista' bolsista.pk %}"
+                            hx-target="#analise-ia-resultado"
+                            hx-indicator="#analise-ia-spinner"
+                            hx-swap="innerHTML">
+                        <i class="bi bi-magic me-1"></i>Resumir por IA
+                    </button>
+                </div>
+
+                <div id="analise-ia-spinner" class="htmx-indicator text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Analisando...</span>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">A IA está analisando o perfil e comparando com os editais...</p>
+                </div>
+
+                <div id="analise-ia-resultado">
+                    <p class="text-muted mb-0">Clique em <strong>Resumir por IA</strong> para gerar um resumo do perfil e uma análise comparativa com os editais disponíveis.</p>
+                </div>
+            </div>
+
+            <div class="card p-4 mt-3">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-mortarboard me-2 text-primary"></i>Formação Acadêmica
+                </h5>
+                {% if formacoes %}
+                {% for fa in formacoes %}
+                <div class="border-start border-4 border-primary ps-3 mb-3">
+                    <span class="fw-semibold">{{ fa.get_tipo_display }}</span>
+                    {% if fa.status %}
+                    <span class="badge bg-info text-dark ms-2">{{ fa.get_status_display }}</span>
+                    {% endif %}
+                    {% if fa.curso %}<small class="d-block">{{ fa.curso }}</small>{% endif %}
+                    {% if fa.area %}<small class="text-muted">Área: {{ fa.area }}</small>{% endif %}
+                    {% if fa.ano_conclusao %}<small class="text-muted d-block">Conclusão: {{ fa.ano_conclusao }}</small>{% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted">Nenhuma formação acadêmica cadastrada.</p>
+                {% endif %}
+            </div>
+
+            <div class="card p-4 mt-3">
                 <h5 class="fw-semibold mb-3">
                     <i class="bi bi-person me-2 text-primary"></i>Dados Pessoais
                 </h5>
@@ -38,12 +85,12 @@
                         <p class="fw-medium">{{ bolsista.data_nascimento|date:'d/m/Y' }}</p>
                     </div>
                 </div>
-            </div>
 
-            <div class="card p-4 mt-3">
-                <h5 class="fw-semibold mb-3">
+                <hr class="my-4">
+
+                <h6 class="fw-semibold mb-3">
                     <i class="bi bi-geo-alt me-2 text-primary"></i>Endereço
-                </h5>
+                </h6>
                 <div class="row g-3">
                     <div class="col-sm-8">
                         <label class="form-label small text-muted mb-0">Rua</label>
@@ -68,78 +115,63 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-lg-6">
-            <div class="card p-4">
-                <h5 class="fw-semibold mb-3">
-                    <i class="bi bi-mortarboard me-2 text-primary"></i>Formação Acadêmica
-                </h5>
-                {% if formacoes %}
-                {% for fa in formacoes %}
-                <div class="border-start border-4 border-primary ps-3 mb-3">
-                    <span class="fw-semibold">{{ fa.get_tipo_display }}</span>
-                    {% if fa.status %}
-                    <span class="badge bg-info text-dark ms-2">{{ fa.get_status_display }}</span>
-                    {% endif %}
-                    {% if fa.curso %}<small class="d-block">{{ fa.curso }}</small>{% endif %}
-                    {% if fa.area %}<small class="text-muted">Área: {{ fa.area }}</small>{% endif %}
-                    {% if fa.ano_conclusao %}<small class="text-muted d-block">Conclusão: {{ fa.ano_conclusao }}</small>{% endif %}
-                </div>
-                {% endfor %}
-                {% else %}
-                <p class="text-muted">Nenhuma formação acadêmica cadastrada.</p>
-                {% endif %}
-            </div>
-
-            <div class="card p-4 mt-3">
-                <h5 class="fw-semibold mb-3">
-                    <i class="bi bi-bar-chart-line me-2 text-primary"></i>Critérios e Pontuação
-                </h5>
-                <div class="row g-2">
-                    <div class="col-6">
-                        <small class="text-muted">Projetos/Pesquisa</small>
-                        <p class="fw-medium mb-1">{{ bolsista.participacao_projetos_anos }} anos</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Congressos</small>
-                        <p class="mb-1">{% if bolsista.participacao_congressos %}<i class="bi bi-check-circle-fill text-success"></i> Sim{% else %}<span class="text-muted">Não</span>{% endif %}</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Resumo em Anais</small>
-                        <p class="mb-1">{% if bolsista.resumo_anais %}<i class="bi bi-check-circle-fill text-success"></i> Sim{% else %}<span class="text-muted">Não</span>{% endif %}</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Artigo em Anais</small>
-                        <p class="mb-1">{% if bolsista.artigo_completo_anais %}<i class="bi bi-check-circle-fill text-success"></i> Sim{% else %}<span class="text-muted">Não</span>{% endif %}</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Artigo Nacional</small>
-                        <p class="mb-1">{% if bolsista.artigo_cientifico_nacional %}<i class="bi bi-check-circle-fill text-success"></i> Sim{% else %}<span class="text-muted">Não</span>{% endif %}</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Artigo Internacional</small>
-                        <p class="mb-1">{% if bolsista.artigo_cientifico_internacional %}<i class="bi bi-check-circle-fill text-success"></i> Sim{% else %}<span class="text-muted">Não</span>{% endif %}</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Livro/Patente</small>
-                        <p class="mb-1">{% if bolsista.livro_patente %}<i class="bi bi-check-circle-fill text-success"></i> Sim{% else %}<span class="text-muted">Não</span>{% endif %}</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Minicurso</small>
-                        <p class="mb-1">{% if bolsista.participacao_minicurso %}<i class="bi bi-check-circle-fill text-success"></i> Sim{% else %}<span class="text-muted">Não</span>{% endif %}</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Treinamento</small>
-                        <p class="mb-1">{% if bolsista.treinamento %}<i class="bi bi-check-circle-fill text-success"></i> Sim{% else %}<span class="text-muted">Não</span>{% endif %}</p>
-                    </div>
-                </div>
-                <hr>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold">Pontuação Previa</span>
-                    <span class="badge bg-info fs-6 px-3 py-2">{{ bolsista.pontuacao_previa }} pts</span>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+let radarChartInstance = null;
+
+function renderRadarChart(labels, scores) {
+    const ctx = document.getElementById('radarChart');
+    if (!ctx) return;
+
+    if (radarChartInstance) {
+        radarChartInstance.destroy();
+    }
+
+    radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Aderência ao perfil (%)',
+                data: scores,
+                fill: true,
+                backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                pointBackgroundColor: 'rgba(13, 110, 253, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(13, 110, 253, 1)',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20,
+                        backdropColor: 'transparent',
+                    },
+                    pointLabels: {
+                        font: {
+                            size: 12,
+                        },
+                    },
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+</script>
 {% endblock %}

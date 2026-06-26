@@ -1,18 +1,20 @@
-import json
-
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.template.loader import render_to_string
+import json
 
 from base.mixins import (
     ManagerRequiredMixin, ManagerOrExecuteRequiredMixin,
-    ViewUserRequiredMixin, GROUP_MANAGER, GROUP_EXECUTE_USER,
+    ViewUserRequiredMixin, GROUP_MANAGER, GROUP_EXECUTE_USER, GROUP_VIEW_USER,
 )
+from cadastro.models import CadastroBolsista
 from .models import EditalProvisorio, AplicacaoEdital, NIVEL_BOLSA_CONFIG
-from .forms import EditalProvisorioForm, CronogramaEventoFormSet, DistribuicaoBolsaFormSet
+from .forms import EditalProvisorioForm, CronogramaEventoFormSet
+from . import ai_service
 
 
 class ContextMixin:
@@ -63,26 +65,19 @@ class EditalProvisorioCreateView(ManagerOrExecuteRequiredMixin, ContextMixin, Cr
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 self.request.POST, prefix='cronograma'
             )
-            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
-                self.request.POST, prefix='distribuicao'
-            )
         else:
             context['cronograma_formset'] = CronogramaEventoFormSet(prefix='cronograma')
-            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(prefix='distribuicao')
         return context
 
     def form_valid(self, form):
         context = self.get_context_data(form=form)
         cronograma_formset = context['cronograma_formset']
-        distribuicao_formset = context['distribuicao_formset']
-        if cronograma_formset.is_valid() and distribuicao_formset.is_valid():
+        if cronograma_formset.is_valid():
             self.object = form.save(commit=False)
             self.object.criado_por = self.request.user
             self.object.save()
             cronograma_formset.instance = self.object
             cronograma_formset.save()
-            distribuicao_formset.instance = self.object
-            distribuicao_formset.save()
             messages.success(self.request, 'Edital criado com sucesso!')
             return redirect(self.get_success_url())
         return self.render_to_response(context)
@@ -105,28 +100,19 @@ class EditalProvisorioUpdateView(ManagerRequiredMixin, ContextMixin, UpdateView)
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 self.request.POST, instance=self.object, prefix='cronograma'
             )
-            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
-                self.request.POST, instance=self.object, prefix='distribuicao'
-            )
         else:
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 instance=self.object, prefix='cronograma'
-            )
-            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
-                instance=self.object, prefix='distribuicao'
             )
         return context
 
     def form_valid(self, form):
         context = self.get_context_data(form=form)
         cronograma_formset = context['cronograma_formset']
-        distribuicao_formset = context['distribuicao_formset']
-        if cronograma_formset.is_valid() and distribuicao_formset.is_valid():
+        if cronograma_formset.is_valid():
             self.object = form.save()
             cronograma_formset.instance = self.object
             cronograma_formset.save()
-            distribuicao_formset.instance = self.object
-            distribuicao_formset.save()
             messages.success(self.request, 'Edital atualizado com sucesso!')
             return redirect(self.get_success_url())
         return self.render_to_response(context)
@@ -221,3 +207,39 @@ class AplicarEditalView(ViewUserRequiredMixin, TemplateView):
 
             messages.success(request, 'Candidatura realizada com sucesso!')
         return redirect('edital_detail', pk=edital.pk)
+
+
+def resumir_edital(request, pk):
+    if not request.user.is_authenticated:
+        return HttpResponse('Não autorizado', status=401)
+
+    edital = get_object_or_404(
+        EditalProvisorio.objects.prefetch_related('distribuicoes', 'cronograma'),
+        pk=pk,
+    )
+    resultado = ai_service.resumir_edital(edital)
+    html = render_to_string('editais/partials/resumo_edital.html', {
+        'resumo': resultado['resumo'],
+    })
+    return HttpResponse(html, content_type='text/html; charset=utf-8')
+
+
+def analisar_edital(request, pk):
+    if not request.user.is_authenticated:
+        return HttpResponse('Não autorizado', status=401)
+
+    edital = get_object_or_404(
+        EditalProvisorio.objects.prefetch_related('distribuicoes', 'cronograma'),
+        pk=pk,
+    )
+    bolsistas = list(CadastroBolsista.objects.select_related('user').prefetch_related('formacoes'))
+    resultado = ai_service.analisar_edital(edital, bolsistas)
+
+    html = render_to_string('editais/partials/analise_edital.html', {
+        'resumo': resultado['resumo'],
+        'analise': resultado['analise'],
+        'radar': resultado['radar'],
+        'radar_labels': json.dumps([item['bolsista'] for item in resultado['radar']]),
+        'radar_scores': json.dumps([item['score'] for item in resultado['radar']]),
+    })
+    return HttpResponse(html, content_type='text/html; charset=utf-8')

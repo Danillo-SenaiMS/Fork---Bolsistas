@@ -26,281 +26,347 @@
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-8">
+        <div class="col-12">
+            <div class="card mb-4">
+                <button class="card-header bg-white border-0 w-100 text-center py-3" type="button" data-bs-toggle="collapse" data-bs-target="#analise-ia-collapse" aria-expanded="false" aria-controls="analise-ia-collapse">
+                    <h5 class="fw-semibold mb-0">
+                        <i class="bi bi-stars me-2 text-primary"></i>Análise por IA
+                        <i class="bi bi-chevron-down ms-2 small text-muted"></i>
+                    </h5>
+                </button>
+                <div class="collapse" id="analise-ia-collapse">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <button class="btn btn-primary btn-sm"
+                                    hx-get="{% url 'edital_analisar' edital.pk %}"
+                                    hx-target="#analise-ia-resultado"
+                                    hx-indicator="#analise-ia-spinner"
+                                    hx-swap="innerHTML">
+                                <i class="bi bi-magic me-1"></i>Resumir por IA
+                            </button>
+                        </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Dados do Edital</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted mb-0">Nome do Edital</label>
-                            <p class="fw-medium fs-6">{{ edital.nome_edital }}</p>
+                        <div id="analise-ia-spinner" class="htmx-indicator text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Analisando...</span>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0">A IA está analisando o edital e comparando com os bolsistas...</p>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted mb-0">Área de Estudo</label>
-                            <p class="fw-medium">{{ edital.area_estudo }}</p>
+
+                        <div id="analise-ia-resultado">
+                            <p class="text-muted mb-0">Clique em <strong>Resumir por IA</strong> para gerar um resumo do edital e uma análise comparativa com os bolsistas disponíveis.</p>
                         </div>
-                        {% if edital.detalhes_edital %}
-                        <div class="col-12">
-                            <label class="form-label small text-muted mb-0">Detalhes do Edital</label>
-                            <p class="fw-medium">{{ edital.detalhes_edital|linebreaksbr }}</p>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-building me-2"></i>Dados do Instituto</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted mb-0">Nome do Instituto</label>
-                            <p class="fw-medium fs-6">{{ edital.get_nome_instituto_display }}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted mb-0">E-mail</label>
-                            <p class="fw-medium">{{ edital.email_solicitante }}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted mb-0">Telefone</label>
-                            <p class="fw-medium">{{ edital.telefone }}</p>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small text-muted mb-0">Endereço</label>
-                            <p class="fw-medium">{{ edital.endereco|linebreaksbr }}</p>
-                        </div>
-                        {% if edital.documento_anexo %}
-                        <div class="col-12">
-                            <label class="form-label small text-muted mb-0">Documentos Anexados</label>
-                            <p>
-                                <a href="{% url 'protected_media' edital.documento_anexo.name %}" class="btn btn-outline-info btn-sm" target="_blank">
-                                    <i class="bi bi-file-earmark-pdf me-1"></i>Termo de Parceria e/ou Plano de Projeto
-                                </a>
-                            </p>
-                        </div>
-                        {% endif %}
+            <div class="card p-4 mb-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-file-earmark-text me-2 text-primary"></i>Dados do Edital
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Nome do Edital</label>
+                        <p class="fw-medium fs-6">{{ edital.nome_edital }}</p>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Área de Estudo</label>
+                        <p class="fw-medium">{{ edital.area_estudo }}</p>
+                    </div>
+                    {% if edital.detalhes_edital %}
+                    <div class="col-12">
+                        <label class="form-label small text-muted mb-0">Detalhes do Edital</label>
+                        <p class="fw-medium">{{ edital.detalhes_edital|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Configuração da Bolsa</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-sm-4">
-                            <label class="form-label small text-muted mb-0">Valor Total da Bolsa</label>
-                            <p class="fw-semibold fs-5 text-primary">{{ edital.valor_total_bolsa|br_money }}</p>
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="form-label small text-muted mb-0">Modalidade</label>
-                            <p class="fw-medium">{{ edital.get_modalidade_bolsa_display }}</p>
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="form-label small text-muted mb-0">Modalidade de Atuação</label>
-                            <p class="fw-medium">{{ edital.get_modalidade_atuacao_display }}</p>
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="form-label small text-muted mb-0">Plataforma Tecnológica</label>
-                            <p class="fw-medium">{{ edital.plataforma_tecnologica }}</p>
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="form-label small text-muted mb-0">Vigência</label>
-                            <p class="fw-medium">{{ edital.vigencia }} dias</p>
-                        </div>
-                        {% if edital.endereco_atuacao %}
-                        <div class="col-sm-4">
-                            <label class="form-label small text-muted mb-0">Endereço de Atuação</label>
-                            <p class="fw-medium">{{ edital.endereco_atuacao|linebreaksbr }}</p>
-                        </div>
-                        {% endif %}
+            <div class="card p-4 mb-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-building me-2 text-primary"></i>Dados do Instituto
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Nome do Instituto</label>
+                        <p class="fw-medium fs-6">{{ edital.get_nome_instituto_display }}</p>
                     </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-0">E-mail</label>
+                        <p class="fw-medium">{{ edital.email_solicitante }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-0">Telefone</label>
+                        <p class="fw-medium">{{ edital.telefone }}</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small text-muted mb-0">Endereço</label>
+                        <p class="fw-medium">{{ edital.endereco|linebreaksbr }}</p>
+                    </div>
+                    {% if edital.documento_anexo %}
+                    <div class="col-12">
+                        <label class="form-label small text-muted mb-0">Documentos Anexados</label>
+                        <p>
+                            <a href="{% url 'protected_media' edital.documento_anexo.name %}" class="btn btn-outline-info btn-sm" target="_blank">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>Termo de Parceria e/ou Plano de Projeto
+                            </a>
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card p-4 mb-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-cash-stack me-2 text-primary"></i>Configuração da Bolsa
+                </h5>
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Valor Total da Bolsa</label>
+                        <p class="fw-semibold fs-5 text-primary">{{ edital.valor_total_bolsa|br_money }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Modalidade</label>
+                        <p class="fw-medium">{{ edital.get_modalidade_bolsa_display }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Modalidade de Atuação</label>
+                        <p class="fw-medium">{{ edital.get_modalidade_atuacao_display }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Plataforma Tecnológica</label>
+                        <p class="fw-medium">{{ edital.plataforma_tecnologica }}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Vigência</label>
+                        <p class="fw-medium">{{ edital.vigencia }} dias</p>
+                    </div>
+                    {% if edital.endereco_atuacao %}
+                    <div class="col-sm-4">
+                        <label class="form-label small text-muted mb-0">Endereço de Atuação</label>
+                        <p class="fw-medium">{{ edital.endereco_atuacao|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
             {% if edital.distribuicoes.exists %}
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Distribuição de Bolsistas</h5>
+            <div class="card p-0 mb-4">
+                <div class="p-3 border-bottom">
+                    <h5 class="fw-semibold mb-0">
+                        <i class="bi bi-diagram-3 me-2 text-primary"></i>Distribuição de Bolsistas
+                    </h5>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped mb-0 align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Experiência</th>
-                                    <th class="text-center">Quantidade</th>
-                                    <th class="text-end">Valor Unitário</th>
-                                    <th class="text-end">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for d in edital.distribuicoes.all %}
-                                <tr>
-                                    <td>{{ d.experiencia }}</td>
-                                    <td class="text-center">{{ d.quantidade }}</td>
-                                    <td class="text-end">{{ d.valor_unitario|br_money }}</td>
-                                    <td class="text-end">{{ d.subtotal|br_money }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="table-group-divider">
-                                <tr class="fw-bold">
-                                    <td colspan="2" class="text-end">Total de Vagas: {{ edital.total_vagas_distribuidas }}</td>
-                                    <td class="text-end">Total Distribuído:</td>
-                                    <td class="text-end text-primary">{{ edital.total_distribuido|br_money }}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Experiência</th>
+                                <th class="text-center">Quantidade</th>
+                                <th class="text-end">Valor Unitário</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in edital.distribuicoes.all %}
+                            <tr>
+                                <td>{{ d.experiencia }}</td>
+                                <td class="text-center">{{ d.quantidade }}</td>
+                                <td class="text-end">{{ d.valor_unitario|br_money }}</td>
+                                <td class="text-end">{{ d.subtotal|br_money }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-group-divider">
+                            <tr class="fw-bold">
+                                <td colspan="2" class="text-end">Total de Vagas: {{ edital.total_vagas_distribuidas }}</td>
+                                <td class="text-end">Total Distribuído:</td>
+                                <td class="text-end text-primary">{{ edital.total_distribuido|br_money }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
             {% endif %}
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Requisitos para Bolsas</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted mb-0">Qualificação Mínima</label>
-                            <p class="fw-medium">{{ edital.qualificacao_minima }}</p>
-                        </div>
-                        {% if edital.detalhes_qualificacao_minima %}
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted mb-0">Qualificação Mínima em</label>
-                            <p class="fw-medium">{{ edital.detalhes_qualificacao_minima }}</p>
-                        </div>
-                        {% endif %}
-                        {% if edital.conhecimento_desejavel %}
-                        <div class="col-md-12">
-                            <label class="form-label small text-muted mb-0">Conhecimento Desejável</label>
-                            <p class="fw-medium">{{ edital.conhecimento_desejavel|linebreaksbr }}</p>
-                        </div>
-                        {% endif %}
+            <div class="card p-4 mb-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-list-check me-2 text-primary"></i>Requisitos para Bolsas
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-0">Qualificação Mínima</label>
+                        <p class="fw-medium">{{ edital.qualificacao_minima }}</p>
                     </div>
+                    {% if edital.detalhes_qualificacao_minima %}
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-0">Qualificação Mínima em</label>
+                        <p class="fw-medium">{{ edital.detalhes_qualificacao_minima }}</p>
+                    </div>
+                    {% endif %}
+                    {% if edital.conhecimento_desejavel %}
+                    <div class="col-md-12">
+                        <label class="form-label small text-muted mb-0">Conhecimento Desejável</label>
+                        <p class="fw-medium">{{ edital.conhecimento_desejavel|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Detalhes Adicionais</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted mb-0">Conteúdo da Prova Teórica</label>
-                            <p class="fw-medium">{{ edital.conteudo_prova_teorica|linebreaksbr }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted mb-0">Entrevista</label>
-                            <p class="fw-medium">{{ edital.entrevista|linebreaksbr }}</p>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small text-muted mb-0">Critérios de Desempate</label>
-                            <p class="fw-medium">{{ edital.criterios_desempate|linebreaksbr }}</p>
-                        </div>
+            <div class="card p-4 mb-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-file-text me-2 text-primary"></i>Detalhes Adicionais
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Conteúdo da Prova Teórica</label>
+                        <p class="fw-medium">{{ edital.conteudo_prova_teorica|linebreaksbr }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Entrevista</label>
+                        <p class="fw-medium">{{ edital.entrevista|linebreaksbr }}</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small text-muted mb-0">Critérios de Desempate</label>
+                        <p class="fw-medium">{{ edital.criterios_desempate|linebreaksbr }}</p>
                     </div>
                 </div>
             </div>
 
             {% if is_view_user %}
                 {% if edital.status == 'aberto' and tem_cadastro and not ja_aplicou %}
-                <div class="card shadow-sm mb-4 text-center">
-                    <div class="card-body">
-                        <form method="post" action="{% url 'aplicar_edital' edital.pk %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success btn-lg w-100">
-                                <i class="bi bi-send-check me-2"></i>Candidatar-se
-                            </button>
-                        </form>
-                    </div>
+                <div class="card p-4 mb-4 text-center">
+                    <form method="post" action="{% url 'aplicar_edital' edital.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-send-check me-2"></i>Candidatar-se
+                        </button>
+                    </form>
                 </div>
                 {% elif ja_aplicou %}
-                <div class="card shadow-sm mb-4 text-center bg-success bg-opacity-10">
-                    <div class="card-body">
-                        <i class="bi bi-check-circle text-success fs-3 mb-2"></i>
-                        <p class="fw-medium text-success mb-0">Você já se candidatou a este edital</p>
-                    </div>
+                <div class="card p-4 mb-4 text-center bg-success bg-opacity-10">
+                    <i class="bi bi-check-circle text-success fs-3 mb-2"></i>
+                    <p class="fw-medium text-success mb-0">Você já se candidatou a este edital</p>
                 </div>
                 {% elif not tem_cadastro %}
-                <div class="card shadow-sm mb-4 text-center bg-warning bg-opacity-10">
-                    <div class="card-body">
-                        <i class="bi bi-exclamation-triangle text-warning fs-3 mb-2"></i>
-                        <p class="fw-medium mb-2">Complete seu cadastro para se candidatar</p>
-                        <a href="{% url 'cadastro_create' %}" class="btn btn-outline-warning btn-sm">Criar Cadastro</a>
-                    </div>
+                <div class="card p-4 mb-4 text-center bg-warning bg-opacity-10">
+                    <i class="bi bi-exclamation-triangle text-warning fs-3 mb-2"></i>
+                    <p class="fw-medium mb-2">Complete seu cadastro para se candidatar</p>
+                    <a href="{% url 'cadastro_create' %}" class="btn btn-outline-warning btn-sm">Criar Cadastro</a>
                 </div>
                 {% endif %}
             {% endif %}
 
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informações</h5>
+            <div class="card p-4 mb-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>Informações
+                </h5>
+                <div class="text-center mb-3">
+                    <span class="badge fs-6 {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'cancelado' %}bg-danger{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
+                        {{ edital.get_status_display }}
+                    </span>
                 </div>
-                <div class="card-body text-center">
-                    <p class="mb-1">
-                        <span class="badge fs-6 {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'cancelado' %}bg-danger{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
-                            {{ edital.get_status_display }}
-                        </span>
-                    </p>
-                    <hr>
-                    <div class="text-start">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small"><i class="bi bi-person me-1"></i>Criado por</span>
-                            <span class="fw-medium">{{ edital.criado_por.nome_completo }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small"><i class="bi bi-calendar-plus me-1"></i>Criado em</span>
-                            <span class="fw-medium">{{ edital.created_at|date:'d/m/Y H:i' }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted small"><i class="bi bi-calendar-check me-1"></i>Atualizado em</span>
-                            <span class="fw-medium">{{ edital.updated_at|date:'d/m/Y H:i' }}</span>
-                        </div>
+                <hr>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-0">Criado por</label>
+                        <p class="fw-medium">{{ edital.criado_por.nome_completo }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-0">Criado em</label>
+                        <p class="fw-medium">{{ edital.created_at|date:'d/m/Y H:i' }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-0">Atualizado em</label>
+                        <p class="fw-medium">{{ edital.updated_at|date:'d/m/Y H:i' }}</p>
                     </div>
                 </div>
             </div>
 
             {% if cronograma %}
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Cronograma</h5>
-                </div>
-                <div class="card-body">
-                    <div class="timeline">
-                        {% for evento in cronograma %}
-                        <div class="d-flex mb-3">
-                            <div class="d-flex flex-column align-items-center me-3">
-                                <div class="bg-primary rounded-circle p-1" style="width:12px;height:12px;"></div>
-                                {% if not forloop.last %}
-                                <div class="bg-primary" style="width:2px;flex:1;min-height:30px;"></div>
-                                {% endif %}
-                            </div>
-                            <div class="flex-grow-1 pb-2">
-                                <p class="fw-semibold mb-0 small">{{ evento.get_evento_display }}</p>
-                                <p class="text-muted mb-0" style="font-size:0.85rem">{{ evento.data_referencia }}</p>
-                                {% if evento.observacao %}
-                                <p class="text-warning mb-0" style="font-size:0.8rem"><i class="bi bi-info-circle me-1"></i>{{ evento.observacao }}</p>
-                                {% endif %}
-                            </div>
+            <div class="card p-4 mb-4">
+                <h5 class="fw-semibold mb-3">
+                    <i class="bi bi-calendar-event me-2 text-primary"></i>Cronograma
+                </h5>
+                <div class="timeline">
+                    {% for evento in cronograma %}
+                    <div class="d-flex mb-3">
+                        <div class="d-flex flex-column align-items-center me-3">
+                            <div class="bg-primary rounded-circle p-1" style="width:12px;height:12px;"></div>
+                            {% if not forloop.last %}
+                            <div class="bg-primary" style="width:2px;flex:1;min-height:30px;"></div>
+                            {% endif %}
                         </div>
-                        {% endfor %}
+                        <div class="flex-grow-1 pb-2">
+                            <p class="fw-semibold mb-0 small">{{ evento.get_evento_display }}</p>
+                            <p class="text-muted mb-0" style="font-size:0.85rem">{{ evento.data_referencia }}</p>
+                            {% if evento.observacao %}
+                            <p class="text-warning mb-0" style="font-size:0.8rem"><i class="bi bi-info-circle me-1"></i>{{ evento.observacao }}</p>
+                            {% endif %}
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+let radarChartInstance = null;
+
+function renderRadarChart(labels, scores) {
+    const ctx = document.getElementById('radarChart');
+    if (!ctx) return;
+
+    if (radarChartInstance) {
+        radarChartInstance.destroy();
+    }
+
+    radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Aderência ao edital (%)',
+                data: scores,
+                fill: true,
+                backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                pointBackgroundColor: 'rgba(13, 110, 253, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(13, 110, 253, 1)',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20,
+                        backdropColor: 'transparent',
+                    },
+                    pointLabels: {
+                        font: {
+                            size: 12,
+                        },
+                    },
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+</script>
 {% endblock %}

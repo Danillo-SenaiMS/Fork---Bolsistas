@@ -43,6 +43,9 @@ Solicitações de alteração de dados que requerem aprovação:
 ### `CadastroCreateView`
 Criação do cadastro com formulário estruturado em seções: Dados Pessoais, Endereço, Dados Acadêmicos (formset de FormacaoAcademica), Outras Informações.
 
+### `BolsistaCreateView`
+Criação de um novo bolsista (usuário + cadastro) por gestores (`Manager`), executores (`ExecuteUser`) ou superusuários. Gera uma senha aleatória e redireciona para o detalhe do cadastro criado.
+
 ### `CadastroDetailView`
 Visualização do cadastro com seções organizadas.
 
@@ -71,6 +74,7 @@ Calcula pontuação com base nos critérios ativos e nas formações acadêmicas
 | Path | View | Nome |
 |------|------|------|
 | `criar/` | CadastroCreateView | `cadastro_create` |
+| `novo/` | BolsistaCreateView | `bolsista_create` |
 | (vazio) | CadastroDetailView | `cadastro_detail` |
 | `<pk>/` | CadastroDetailView | `cadastro_detail_pk` |
 | `<pk>/editar/` | CadastroUpdateView | `cadastro_update_pk` |
