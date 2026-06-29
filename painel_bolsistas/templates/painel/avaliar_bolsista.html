@@ -62,6 +62,21 @@
                 Informe a pontuação para cada critério ativo. Os valores serão somados e salvos como pontuação prévia do bolsista.
             </p>
 
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-primary btn-sm"
+                        hx-get="{% url 'painel_sugerir_avaliacao' bolsista.pk %}"
+                        hx-target="#sugestao-ia-container"
+                        hx-swap="innerHTML"
+                        hx-indicator="#ia-indicator">
+                    <i class="bi bi-robot me-1"></i>
+                    <span id="ia-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                    Consultar Avaliação por IA
+                </button>
+                <small class="text-muted ms-2">A IA analisa o perfil e sugere pontuações para cada critério.</small>
+            </div>
+
+            <div id="sugestao-ia-container"></div>
+
             {% if itens %}
             <div class="table-responsive">
                 <table class="table table-hover align-middle">

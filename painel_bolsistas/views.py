@@ -215,3 +215,35 @@ def avaliar_bolsista(request, pk):
         'formacoes': bolsista.formacoes.order_by('-ano_conclusao'),
         'itens': itens,
     })
+
+
+def sugerir_avaliacao_bolsista(request, pk):
+    if not request.user.is_authenticated:
+        return HttpResponse('Não autorizado', status=401)
+
+    if not (
+        request.user.is_superuser
+        or request.user.groups.filter(name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]).exists()
+    ):
+        return HttpResponse('Não autorizado', status=401)
+
+    bolsista = get_object_or_404(
+        CadastroBolsista.objects.select_related('user').prefetch_related('formacoes', 'experiencias'),
+        pk=pk,
+    )
+
+    criterios = CriterioClassificacao.objects.filter(ativo=True).order_by('nome')
+    resultado = ai_service.sugerir_avaliacao(bolsista, criterios)
+
+    sugestoes = resultado['sugestoes']
+    total_sugerido = sum(s['pontos'] for s in sugestoes)
+
+    html = render_to_string('painel/partials/sugestao_avaliacao.html', {
+        'bolsista': bolsista,
+        'resumo': resultado['resumo'],
+        'sugestoes': sugestoes,
+        'sugestoes_json': json.dumps(sugestoes, default=str),
+        'total_sugerido': str(total_sugerido),
+        'criterios': criterios,
+    })
+    return HttpResponse(html, content_type='text/html; charset=utf-8')
