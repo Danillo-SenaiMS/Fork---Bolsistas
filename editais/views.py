@@ -13,7 +13,7 @@ from base.mixins import (
 )
 from cadastro.models import CadastroBolsista
 from .models import EditalProvisorio, AplicacaoEdital, NIVEL_BOLSA_CONFIG
-from .forms import EditalProvisorioForm, CronogramaEventoFormSet
+from .forms import EditalProvisorioForm, CronogramaEventoFormSet, DistribuicaoBolsaFormSet
 from . import ai_service
 
 
@@ -65,19 +65,26 @@ class EditalProvisorioCreateView(ManagerOrExecuteRequiredMixin, ContextMixin, Cr
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 self.request.POST, prefix='cronograma'
             )
+            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
+                self.request.POST, prefix='distribuicao'
+            )
         else:
             context['cronograma_formset'] = CronogramaEventoFormSet(prefix='cronograma')
+            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(prefix='distribuicao')
         return context
 
     def form_valid(self, form):
         context = self.get_context_data(form=form)
         cronograma_formset = context['cronograma_formset']
-        if cronograma_formset.is_valid():
+        distribuicao_formset = context['distribuicao_formset']
+        if cronograma_formset.is_valid() and distribuicao_formset.is_valid():
             self.object = form.save(commit=False)
             self.object.criado_por = self.request.user
             self.object.save()
             cronograma_formset.instance = self.object
             cronograma_formset.save()
+            distribuicao_formset.instance = self.object
+            distribuicao_formset.save()
             messages.success(self.request, 'Edital criado com sucesso!')
             return redirect(self.get_success_url())
         return self.render_to_response(context)
@@ -100,19 +107,28 @@ class EditalProvisorioUpdateView(ManagerRequiredMixin, ContextMixin, UpdateView)
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 self.request.POST, instance=self.object, prefix='cronograma'
             )
+            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
+                self.request.POST, instance=self.object, prefix='distribuicao'
+            )
         else:
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 instance=self.object, prefix='cronograma'
+            )
+            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
+                instance=self.object, prefix='distribuicao'
             )
         return context
 
     def form_valid(self, form):
         context = self.get_context_data(form=form)
         cronograma_formset = context['cronograma_formset']
-        if cronograma_formset.is_valid():
+        distribuicao_formset = context['distribuicao_formset']
+        if cronograma_formset.is_valid() and distribuicao_formset.is_valid():
             self.object = form.save()
             cronograma_formset.instance = self.object
             cronograma_formset.save()
+            distribuicao_formset.instance = self.object
+            distribuicao_formset.save()
             messages.success(self.request, 'Edital atualizado com sucesso!')
             return redirect(self.get_success_url())
         return self.render_to_response(context)
@@ -180,10 +196,6 @@ def edital_pdf_view(request, pk):
 
 class AplicarEditalView(ViewUserRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
-        from decimal import Decimal
-        from cadastro.utils import calcular_pontuacao_previa
-        from classificacao.models import CriterioClassificacao
-
         edital = get_object_or_404(EditalProvisorio, pk=kwargs['pk'])
 
         if edital.status != 'aberto':
@@ -199,14 +211,86 @@ class AplicarEditalView(ViewUserRequiredMixin, TemplateView):
             messages.warning(request, 'Você já se candidatou a este edital.')
         else:
             AplicacaoEdital.objects.create(bolsista=bolsista, edital=edital)
-
-            criterios = CriterioClassificacao.objects.filter(ativo=True)
-            _, pontuacao_total = calcular_pontuacao_previa(bolsista, criterios)
-            bolsista.pontuacao_previa = Decimal(str(pontuacao_total))
-            bolsista.save(update_fields=['pontuacao_previa'])
-
             messages.success(request, 'Candidatura realizada com sucesso!')
         return redirect('edital_detail', pk=edital.pk)
+
+
+class AplicacaoListView(LoginRequiredMixin, ListView):
+    model = AplicacaoEdital
+    template_name = 'editais/aplicacao_list.html'
+    context_object_name = 'aplicacoes'
+    paginate_by = 20
+
+    def get_queryset(self):
+        qs = AplicacaoEdital.objects.select_related(
+            'bolsista', 'bolsista__user', 'edital'
+        ).order_by('-data_aplicacao')
+
+        user = self.request.user
+        is_manager = user.is_superuser or user.groups.filter(
+            name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]
+        ).exists()
+
+        if not is_manager:
+            if hasattr(user, 'cadastro'):
+                qs = qs.filter(bolsista=user.cadastro)
+            else:
+                qs = qs.none()
+
+        status = self.request.GET.get('status', '')
+        if status:
+            qs = qs.filter(status=status)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_atual'] = self.request.GET.get('status', '')
+        user = self.request.user
+        context['is_manager'] = user.is_superuser or user.groups.filter(
+            name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]
+        ).exists()
+        return context
+
+
+class CancelarAplicacaoView(ViewUserRequiredMixin, TemplateView):
+    def post(self, request, *args, **kwargs):
+        if hasattr(request.user, 'cadastro'):
+            aplicacao = get_object_or_404(
+                AplicacaoEdital,
+                pk=kwargs['pk'],
+                bolsista=request.user.cadastro,
+                status='pendente',
+            )
+            aplicacao.delete()
+            messages.success(request, 'Candidatura cancelada com sucesso.')
+        return redirect('aplicacao_list')
+
+
+class AlterarStatusAplicacaoView(ManagerOrExecuteRequiredMixin, TemplateView):
+    def post(self, request, *args, **kwargs):
+        aplicacao = get_object_or_404(AplicacaoEdital, pk=kwargs['pk'])
+        novo_status = request.POST.get('status')
+
+        if novo_status not in dict(AplicacaoEdital.STATUS_CHOICES):
+            messages.error(request, 'Status inválido.')
+            return redirect('aplicacao_list')
+
+        aplicacao.status = novo_status
+        aplicacao.save(update_fields=['status'])
+        messages.success(
+            request,
+            f'Status da candidatura de {aplicacao.bolsista.user.nome_completo} alterado para {aplicacao.get_status_display()}.'
+        )
+
+        if request.headers.get('HX-Request'):
+            html = render_to_string(
+                'editais/partials/aplicacao_row.html',
+                {'a': aplicacao},
+                request=request,
+            )
+            return HttpResponse(html)
+        return redirect('aplicacao_list')
 
 
 def resumir_edital(request, pk):

@@ -11,4 +11,7 @@ urlpatterns = [
     path('<int:pk>/aplicar/', views.AplicarEditalView.as_view(), name='aplicar_edital'),
     path('<int:pk>/resumir/', views.resumir_edital, name='edital_resumir'),
     path('<int:pk>/analisar/', views.analisar_edital, name='edital_analisar'),
+    path('aplicacoes/', views.AplicacaoListView.as_view(), name='aplicacao_list'),
+    path('aplicacoes/<int:pk>/cancelar/', views.CancelarAplicacaoView.as_view(), name='cancelar_aplicacao'),
+    path('aplicacoes/<int:pk>/status/', views.AlterarStatusAplicacaoView.as_view(), name='alterar_status_aplicacao'),
 ]

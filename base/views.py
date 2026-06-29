@@ -3,7 +3,36 @@ from django.conf import settings
 from pathlib import Path
 
 from accounts.models import DocumentoExterno
+from cadastro.models import CadastroBolsista, AnexoComprobatorio, ExperienciaProfissional
 from .mixins import GROUP_MANAGER
+
+PASTAS_RESTRITAS = {
+    'curriculos': CadastroBolsista,
+    'fotos': CadastroBolsista,
+    'anexos': AnexoComprobatorio,
+    'experiencias': ExperienciaProfissional,
+}
+
+
+def _verificar_dono_arquivo(request, relative):
+    """Verifica se o usuario autenticado eh dono do arquivo em pastas restritas."""
+    for prefix, model in PASTAS_RESTRITAS.items():
+        if not relative.startswith(prefix + '/'):
+            continue
+        if model == CadastroBolsista:
+            cadastro = CadastroBolsista.objects.filter(user=request.user).first()
+            if cadastro:
+                campo_arquivo = 'curriculo' if prefix == 'curriculos' else 'foto'
+                arquivo_campo = getattr(cadastro, campo_arquivo, None)
+                if arquivo_campo and arquivo_campo.name == relative:
+                    return True
+            return False
+        else:
+            obj = model.objects.filter(anexo=relative).first()
+            if obj and hasattr(obj, 'bolsista') and obj.bolsista.user == request.user:
+                return True
+            return False
+    return False
 
 
 def media_protegida(request, path):
@@ -24,9 +53,12 @@ def media_protegida(request, path):
 
     relative = path.replace('\\', '/')
     if relative.startswith('documentos/'):
-        doc = DocumentoExterno.objects.filter(arquivo=path).first()
+        doc = DocumentoExterno.objects.filter(arquivo=relative).first()
         if doc and doc.user == request.user:
             return FileResponse(open(arquivo_path, 'rb'))
         return HttpResponseForbidden('Acesso negado')
 
-    return FileResponse(open(arquivo_path, 'rb'))
+    if _verificar_dono_arquivo(request, relative):
+        return FileResponse(open(arquivo_path, 'rb'))
+
+    return HttpResponseForbidden('Acesso negado')

@@ -2,12 +2,15 @@ from django.shortcuts import redirect
 from django.conf import settings
 
 PATHS_LIVRES = [
-    '/',
-    '/login/',
-    '/registro/',
-    '/admin/',
-    '/static/',
-    '/media/',
+    'login',
+    'registro',
+    'admin',
+    'static',
+    'media',
+]
+
+PATHS_EXATOS = [
+    '',
 ]
 
 
@@ -17,7 +20,9 @@ class LoginRequiredMiddleware:
 
     def __call__(self, request):
         if not request.user.is_authenticated:
-            path = request.path_info
+            path = request.path_info.strip('/')
+            if path in PATHS_EXATOS:
+                return self.get_response(request)
             if not any(path.startswith(p) for p in PATHS_LIVRES):
                 return redirect(settings.LOGIN_URL)
         return self.get_response(request)

@@ -23,6 +23,9 @@ class PainelBolsistasListView(ManagerOrExecuteRequiredMixin, ListView):
     def get_queryset(self):
         qs = super().get_queryset().select_related('user').prefetch_related('formacoes')
         sort = self.request.GET.get('sort', 'nome')
+        edital_id = self.request.GET.get('edital')
+        if edital_id:
+            qs = qs.filter(aplicacoes__edital_id=edital_id).distinct()
         if sort == 'nome':
             qs = qs.order_by('user__nome_completo')
         else:
@@ -32,6 +35,7 @@ class PainelBolsistasListView(ManagerOrExecuteRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['sort'] = self.request.GET.get('sort', 'nome')
+        ctx['edital_id'] = self.request.GET.get('edital', '')
         return ctx
 
 

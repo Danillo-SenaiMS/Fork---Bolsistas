@@ -111,5 +111,44 @@ LOGOUT_REDIRECT_URL = 'login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simples': {
+            'format': '[{levelname}] {asctime} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simples',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'painel_bolsistas': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'editais': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
 # Integração com IA (OpenAI)
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')

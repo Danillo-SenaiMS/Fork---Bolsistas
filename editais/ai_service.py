@@ -159,7 +159,7 @@ def analisar_edital(edital, bolsistas):
         "- cada item representa um bolsista cadastrado;\n"
         "- o score deve ser um inteiro de 0 a 100 representando o quanto o perfil do bolsista se aproxima dos requisitos do edital (100 = muito adequado);\n"
         "- se não houver bolsistas, retorne uma lista vazia.\n\n"
-        "Editail:\n"
+        "Edital:\n"
         f"{descricao}\n\n"
         "Bolsistas cadastrados:\n"
         f"{bolsistas_texto}"

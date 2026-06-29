@@ -2,6 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from cadastro.models import CadastroBolsista, SolicitacaoEdicao
+from classificacao.models import AvaliacaoBolsista
 from accounts.models import User
 from base.mixins import GROUP_MANAGER
 from .models import Notificacao
@@ -15,6 +16,20 @@ def notificar_cadastro(sender, instance, created, **kwargs):
             titulo='Cadastro realizado',
             mensagem='Seu cadastro de bolsista foi criado com sucesso.',
             tipo='cadastro',
+        )
+
+
+@receiver(post_save, sender=AvaliacaoBolsista)
+def notificar_avaliacao(sender, instance, created, **kwargs):
+    if created and instance.pontos > 0:
+        Notificacao.objects.create(
+            destinatario=instance.bolsista.user,
+            titulo='Nova avaliação registrada',
+            mensagem=(
+                f'Você recebeu {instance.pontos} pontos no critério '
+                f'"{instance.criterio.nome}".'
+            ),
+            tipo='sistema',
         )
 
 

@@ -25,7 +25,7 @@ class RegistroForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Crie uma senha'})
     )
     password2 = forms.CharField(
-        label='Palavra-Passe',
+        label='Confirme a Senha',
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirme a senha'})
     )
 
@@ -73,6 +73,8 @@ class RegistroView(FormView):
             password=form.cleaned_data['password1'],
         )
         Perfil.objects.create(user=user)
+        view_group, _ = Group.objects.get_or_create(name=GROUP_VIEW_USER)
+        user.groups.add(view_group)
         messages.success(self.request, 'Conta criada com sucesso! Faça login.')
         return super().form_valid(form)
 

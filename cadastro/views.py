@@ -45,10 +45,11 @@ def _is_manager_or_executor(user):
 class FormacaoAcademicaForm(forms.ModelForm):
     class Meta:
         model = FormacaoAcademica
-        fields = ['tipo', 'status', 'area', 'curso', 'ano_conclusao']
+        fields = ['tipo', 'status', 'instituicao', 'area', 'curso', 'ano_conclusao']
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'instituicao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da instituição (opcional)'}),
             'curso': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do curso (opcional)'}),
             'area': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Área de concentração (opcional)'}),
             'ano_conclusao': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 2024'}),
@@ -57,6 +58,7 @@ class FormacaoAcademicaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['status'].required = False
+        self.fields['instituicao'].required = False
         self.fields['curso'].required = False
         self.fields['area'].required = False
         self.fields['ano_conclusao'].required = False
@@ -165,10 +167,12 @@ class CadastroCreateView(ViewUserRequiredMixin, FormView):
 
         _salvar_anexos(cadastro, self.request.FILES)
 
-        criterios = CriterioClassificacao.objects.filter(ativo=True)
-        _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
-        cadastro.pontuacao_previa = pontuacao
-        cadastro.save(update_fields=['pontuacao_previa'])
+        from classificacao.models import AvaliacaoBolsista
+        if not AvaliacaoBolsista.objects.filter(bolsista=cadastro).exists():
+            criterios = CriterioClassificacao.objects.filter(ativo=True)
+            _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
+            cadastro.pontuacao_previa = pontuacao
+            cadastro.save(update_fields=['pontuacao_previa'])
         messages.success(self.request, 'Cadastro criado com sucesso!')
         return redirect(self.success_url)
 
@@ -302,10 +306,12 @@ class CadastroUpdateView(ManagerRequiredMixin, FormView):
                     fa.save()
             _salvar_experiencias(exp_formset, cadastro)
             _salvar_anexos(cadastro, request.FILES)
-            criterios = CriterioClassificacao.objects.filter(ativo=True)
-            _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
-            cadastro.pontuacao_previa = pontuacao
-            cadastro.save(update_fields=['pontuacao_previa'])
+            from classificacao.models import AvaliacaoBolsista
+            if not AvaliacaoBolsista.objects.filter(bolsista=cadastro).exists():
+                criterios = CriterioClassificacao.objects.filter(ativo=True)
+                _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
+                cadastro.pontuacao_previa = pontuacao
+                cadastro.save(update_fields=['pontuacao_previa'])
             messages.success(self.request, 'Cadastro atualizado com sucesso!')
             return redirect('cadastro_detail_pk', pk=cadastro.pk)
         return self.render_to_response(self.get_context_data(
@@ -434,7 +440,8 @@ class BolsistaCreateView(ManagerOrExecuteRequiredMixin, FormView):
 
         messages.success(
             self.request,
-            f'Bolsista {user.nome_completo} cadastrado com sucesso!'
+            f'Bolsista {user.nome_completo} cadastrado com sucesso! '
+            f'O bolsista deverá usar a opção "Esqueci minha senha" no primeiro acesso para definir sua senha.'
         )
         return redirect('cadastro_detail_pk', pk=cadastro.pk)
 
@@ -577,10 +584,12 @@ class SolicitacaoMultiplaView(ViewUserRequiredMixin, FormView):
         cadastro.sincronizar_anos_experiencia()
         cadastro.save(update_fields=campos_auto)
 
-        criterios = CriterioClassificacao.objects.filter(ativo=True)
-        _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
-        cadastro.pontuacao_previa = pontuacao
-        cadastro.save(update_fields=['pontuacao_previa'])
+        from classificacao.models import AvaliacaoBolsista
+        if not AvaliacaoBolsista.objects.filter(bolsista=cadastro).exists():
+            criterios = CriterioClassificacao.objects.filter(ativo=True)
+            _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
+            cadastro.pontuacao_previa = pontuacao
+            cadastro.save(update_fields=['pontuacao_previa'])
 
         if alteracoes:
             messages.success(
@@ -600,9 +609,11 @@ class SolicitacaoRevisarView(ManagerRequiredMixin, TemplateView):
         )
         acao = request.POST.get('acao')
 
+        solicitacao.revisado_por = request.user
+        solicitacao.data_revisao = timezone.now()
+
         if acao == 'aprovar':
             solicitacao.status = 'aprovado'
-            solicitacao.save()
             cadastro = solicitacao.bolsista
             campo = solicitacao.campo
             if hasattr(cadastro, campo):
@@ -611,11 +622,8 @@ class SolicitacaoRevisarView(ManagerRequiredMixin, TemplateView):
             messages.success(request, f'Solicitação de {solicitacao.campo} aprovada.')
         else:
             solicitacao.status = 'rejeitado'
-            solicitacao.save()
             messages.warning(request, f'Solicitação de {solicitacao.campo} rejeitada.')
 
-        solicitacao.revisado_por = request.user
-        solicitacao.data_revisao = timezone.now()
         solicitacao.save()
 
         if request.headers.get('HX-Request'):
@@ -629,6 +637,10 @@ class SolicitacaoRevisarView(ManagerRequiredMixin, TemplateView):
 
 
 def _recalcular_pontuacao(cadastro):
+    from classificacao.models import AvaliacaoBolsista
+    tem_avaliacao_manual = AvaliacaoBolsista.objects.filter(bolsista=cadastro).exists()
+    if tem_avaliacao_manual:
+        return
     criterios = CriterioClassificacao.objects.filter(ativo=True)
     _, pontuacao = calcular_pontuacao_previa(cadastro, criterios)
     cadastro.pontuacao_previa = pontuacao

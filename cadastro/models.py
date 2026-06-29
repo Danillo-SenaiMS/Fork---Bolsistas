@@ -20,7 +20,10 @@ ESTADOS_CHOICES = [
 def validar_maioridade(data_nascimento):
     if not data_nascimento:
         return
-    idade = timezone.now().year - data_nascimento.year
+    hoje = timezone.now().date()
+    idade = hoje.year - data_nascimento.year - (
+        (hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day)
+    )
     if idade < 18:
         raise ValidationError('É necessário ter pelo menos 18 anos.')
 
@@ -96,6 +99,7 @@ class FormacaoAcademica(DataModel):
     bolsista = models.ForeignKey(CadastroBolsista, on_delete=models.CASCADE, related_name='formacoes')
     tipo = models.CharField('Formação Acadêmica', max_length=20, choices=TIPO_CHOICES)
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, blank=True)
+    instituicao = models.CharField('Instituição', max_length=255, blank=True, default='')
     curso = models.CharField('Curso', max_length=255, blank=True)
     area = models.CharField('Área', max_length=255, blank=True)
     ano_conclusao = models.IntegerField('Ano de conclusão', blank=True, null=True)
