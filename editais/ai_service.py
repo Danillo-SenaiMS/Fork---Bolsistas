@@ -1,32 +1,11 @@
-import json
 import logging
 from decimal import Decimal
 
 from django.conf import settings
-from google import genai
-from google.genai import types
+
+from base import ai_client
 
 logger = logging.getLogger(__name__)
-
-
-def _client():
-    api_key = getattr(settings, "GOOGLE_API_KEY", None)
-    if not api_key:
-        return None
-    return genai.Client(api_key=api_key)
-
-
-def _gerar_json(client, prompt, max_tokens):
-    response = client.models.generate_content(
-        model=getattr(settings, "GOOGLE_MODEL", "gemini-1.5-flash"),
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.4,
-            max_output_tokens=max_tokens,
-        ),
-    )
-    return _parse_json(response.text)
 
 
 def _edital_texto(edital):
@@ -96,19 +75,6 @@ def _bolsistas_texto(bolsistas):
     return "\n\n".join(partes)
 
 
-def _parse_json(resposta):
-    """Tenta extrair JSON de uma resposta que pode vir envolta em markdown."""
-    texto = resposta.strip()
-    if texto.startswith("```"):
-        linhas = texto.splitlines()
-        if linhas[0].startswith("```"):
-            linhas = linhas[1:]
-        if linhas and linhas[-1].startswith("```"):
-            linhas = linhas[:-1]
-        texto = "\n".join(linhas).strip()
-    return json.loads(texto)
-
-
 def resumir_edital(edital):
     """Gera um resumo curto e objetivo do edital."""
     descricao = _edital_texto(edital)
@@ -120,12 +86,11 @@ def resumir_edital(edital):
         "Responda APENAS com um objeto JSON no formato: {\"resumo\": \"texto aqui\"}"
     )
 
-    client = _client()
-    if not client:
+    if not ai_client.get_provider():
         return {"resumo": _resumo_fallback(edital)}
 
     try:
-        dados = _gerar_json(client, prompt, max_tokens=250)
+        dados = ai_client.gerar_json(prompt, max_tokens=250)
         return {"resumo": dados.get("resumo", _resumo_fallback(edital))}
     except Exception as e:
         logger.exception("Erro ao gerar resumo de edital com IA: %s", e)
@@ -169,12 +134,11 @@ def analisar_edital(edital, bolsistas):
         f"{bolsistas_texto}"
     )
 
-    client = _client()
-    if not client:
+    if not ai_client.get_provider():
         return _analise_fallback(edital, bolsistas)
 
     try:
-        dados = _gerar_json(client, prompt, max_tokens=1500)
+        dados = ai_client.gerar_json(prompt, max_tokens=1500)
         return {
             "resumo": dados.get("resumo", _resumo_fallback(edital)),
             "analise": dados.get("analise", "Não foi possível gerar a análise comparativa."),

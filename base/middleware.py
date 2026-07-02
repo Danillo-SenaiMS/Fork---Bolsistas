@@ -7,6 +7,7 @@ PATHS_LIVRES = [
     'admin',
     'static',
     'media',
+    'health',
 ]
 
 PATHS_EXATOS = [

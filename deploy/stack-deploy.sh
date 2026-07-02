@@ -26,10 +26,13 @@ mkdir -p "$SECRETS_DIR"
 REQUIRED_SECRETS=(
     "secret_key"
     "db_password"
+    "openai_api_key"
     "google_api_key"
     "rabbitmq_password"
     "cf_dns_api_token"
 )
+
+# O segredo nao utilizado pelo IA_PROVIDER atual pode conter um placeholder.
 
 MISSING=0
 for secret in "${REQUIRED_SECRETS[@]}"; do

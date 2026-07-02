@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 
-from base.views import media_protegida
+from base import views as base_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -12,6 +12,7 @@ urlpatterns = [
     path('notificacoes/', include('notifications.urls')),
     path('classificacao/', include('classificacao.urls')),
     path('painel/', include('painel_bolsistas.urls')),
+    path('health/', base_views.health_check, name='health_check'),
 
-    path('media/<path:path>', media_protegida, name='protected_media'),
+    path('media/<path:path>', base_views.media_protegida, name='protected_media'),
 ]

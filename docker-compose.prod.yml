@@ -53,13 +53,17 @@ services:
     environment:
       SECRET_KEY_FILE: /run/secrets/secret_key
       DB_PASSWORD_FILE: /run/secrets/db_password
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
       GOOGLE_API_KEY_FILE: /run/secrets/google_api_key
       RABBITMQ_PASSWORD_FILE: /run/secrets/rabbitmq_password
     secrets:
       - secret_key
       - db_password
+      - openai_api_key
       - google_api_key
       - rabbitmq_password
+    volumes:
+      - media_data:/app/media
     networks:
       - public
     deploy:
@@ -73,6 +77,8 @@ services:
         - traefik.http.routers.bolsas.tls.domains[0].main=${DOMAIN}
         - traefik.http.routers.bolsas.tls.domains[0].sans=*.${DOMAIN}
         - traefik.http.services.bolsas.loadbalancer.server.port=8000
+        - traefik.http.services.bolsas.loadbalancer.healthcheck.path=/health/
+        - traefik.http.services.bolsas.loadbalancer.healthcheck.interval=10s
       update_config:
         parallelism: 1
         delay: 10s
@@ -89,11 +95,13 @@ services:
     environment:
       SECRET_KEY_FILE: /run/secrets/secret_key
       DB_PASSWORD_FILE: /run/secrets/db_password
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
       GOOGLE_API_KEY_FILE: /run/secrets/google_api_key
       RABBITMQ_PASSWORD_FILE: /run/secrets/rabbitmq_password
     secrets:
       - secret_key
       - db_password
+      - openai_api_key
       - google_api_key
       - rabbitmq_password
     networks:
@@ -113,11 +121,13 @@ services:
     environment:
       SECRET_KEY_FILE: /run/secrets/secret_key
       DB_PASSWORD_FILE: /run/secrets/db_password
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
       GOOGLE_API_KEY_FILE: /run/secrets/google_api_key
       RABBITMQ_PASSWORD_FILE: /run/secrets/rabbitmq_password
     secrets:
       - secret_key
       - db_password
+      - openai_api_key
       - google_api_key
       - rabbitmq_password
     networks:
@@ -194,6 +204,8 @@ secrets:
     file: .secrets/secret_key.txt
   db_password:
     file: .secrets/db_password.txt
+  openai_api_key:
+    file: .secrets/openai_api_key.txt
   google_api_key:
     file: .secrets/google_api_key.txt
   rabbitmq_password:

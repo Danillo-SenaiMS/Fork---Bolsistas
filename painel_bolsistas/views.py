@@ -10,6 +10,8 @@ from decimal import Decimal
 import csv
 import json
 
+from django.conf import settings
+
 from base.mixins import ManagerOrExecuteRequiredMixin, GROUP_MANAGER, GROUP_EXECUTE_USER
 from cadastro.models import CadastroBolsista, FormacaoAcademica
 from classificacao.models import CriterioClassificacao, AvaliacaoBolsista
@@ -118,12 +120,55 @@ def _task_running_partial(request, task_id):
     })
 
 
+def _render_bolsista_result(dados, bolsista_id=None):
+    if dados.get('erro'):
+        return (
+            f'<p class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>'
+            f'{dados["erro"]}</p>'
+        )
+
+    bolsista = None
+    if bolsista_id:
+        bolsista = get_object_or_404(CadastroBolsista, pk=bolsista_id)
+
+    if 'sugestoes' in dados:
+        return render_to_string('painel/partials/sugestao_avaliacao.html', {
+            'bolsista': bolsista,
+            'resumo': dados.get('resumo', ''),
+            'sugestoes': dados.get('sugestoes', []),
+            'sugestoes_json': json.dumps(dados.get('sugestoes', []), default=str),
+            'total_sugerido': str(sum(s.get('pontos', 0) for s in dados.get('sugestoes', []))),
+            'criterios': list(CriterioClassificacao.objects.filter(ativo=True).order_by('nome')),
+        })
+
+    if 'radar' in dados:
+        radar = dados.get('radar', [])
+        return render_to_string('painel/partials/analise_bolsista.html', {
+            'resumo': dados.get('resumo', ''),
+            'analise': dados.get('analise', ''),
+            'radar': radar,
+            'radar_labels': json.dumps([item.get('edital', '') for item in radar]),
+            'radar_scores': json.dumps([item.get('score', 0) for item in radar]),
+        })
+
+    return render_to_string('painel/partials/resumo_bolsista.html', {
+        'resumo': dados.get('resumo', ''),
+    })
+
+
 @require_POST
 def resumir_bolsista(request, pk):
     if not _pode_usar_ia(request):
         return HttpResponse('Não autorizado', status=401)
 
     get_object_or_404(CadastroBolsista, pk=pk)
+
+    if not settings.IA_ASYNC:
+        dados = ia_tasks.resumir_bolsista_task.run(
+            bolsista_id=pk, user_id=request.user.id
+        ) or {}
+        return HttpResponse(_render_bolsista_result(dados, pk), content_type='text/html; charset=utf-8')
+
     task = ia_tasks.resumir_bolsista_task.delay(bolsista_id=pk, user_id=request.user.id)
     cache.set(f'task_owner:{task.id}', request.user.id, timeout=3600)
     cache.set(f'task_context:{task.id}', {'bolsista_id': pk}, timeout=3600)
@@ -136,6 +181,13 @@ def analisar_bolsista(request, pk):
         return HttpResponse('Não autorizado', status=401)
 
     get_object_or_404(CadastroBolsista, pk=pk)
+
+    if not settings.IA_ASYNC:
+        dados = ia_tasks.analisar_bolsista_task.run(
+            bolsista_id=pk, user_id=request.user.id
+        ) or {}
+        return HttpResponse(_render_bolsista_result(dados, pk), content_type='text/html; charset=utf-8')
+
     task = ia_tasks.analisar_bolsista_task.delay(bolsista_id=pk, user_id=request.user.id)
     cache.set(f'task_owner:{task.id}', request.user.id, timeout=3600)
     cache.set(f'task_context:{task.id}', {'bolsista_id': pk}, timeout=3600)
@@ -150,7 +202,7 @@ def painel_task_status(request, task_id):
 
     result = AsyncResult(task_id)
     if result.status in ('PENDING', 'STARTED', 'RETRY'):
-        return _task_running_partial(request, task_id, 'painel_task_status')
+        return _task_running_partial(request, task_id)
 
     if result.failed():
         return HttpResponse(
@@ -161,31 +213,8 @@ def painel_task_status(request, task_id):
     dados = cache.get(f'task_result:{task_id}') or result.result or {}
     context = cache.get(f'task_context:{task_id}') or {}
     bolsista_id = context.get('bolsista_id')
-    bolsista = get_object_or_404(CadastroBolsista, pk=bolsista_id) if bolsista_id else None
 
-    if 'sugestoes' in dados:
-        html = render_to_string('painel/partials/sugestao_avaliacao.html', {
-            'bolsista': bolsista,
-            'resumo': dados.get('resumo', ''),
-            'sugestoes': dados.get('sugestoes', []),
-            'sugestoes_json': json.dumps(dados.get('sugestoes', []), default=str),
-            'total_sugerido': str(sum(s.get('pontos', 0) for s in dados.get('sugestoes', []))),
-            'criterios': list(CriterioClassificacao.objects.filter(ativo=True).order_by('nome')),
-        })
-    elif 'radar' in dados:
-        radar = dados.get('radar', [])
-        html = render_to_string('painel/partials/analise_bolsista.html', {
-            'resumo': dados.get('resumo', ''),
-            'analise': dados.get('analise', ''),
-            'radar': radar,
-            'radar_labels': json.dumps([item.get('edital', '') for item in radar]),
-            'radar_scores': json.dumps([item.get('score', 0) for item in radar]),
-        })
-    else:
-        html = render_to_string('painel/partials/resumo_bolsista.html', {
-            'resumo': dados.get('resumo', ''),
-        })
-
+    html = _render_bolsista_result(dados, bolsista_id)
     return HttpResponse(html, content_type='text/html; charset=utf-8')
 
 
@@ -262,6 +291,13 @@ def sugerir_avaliacao_bolsista(request, pk):
         return HttpResponse('Não autorizado', status=401)
 
     get_object_or_404(CadastroBolsista, pk=pk)
+
+    if not settings.IA_ASYNC:
+        dados = ia_tasks.sugerir_avaliacao_task.run(
+            bolsista_id=pk, user_id=request.user.id
+        ) or {}
+        return HttpResponse(_render_bolsista_result(dados, pk), content_type='text/html; charset=utf-8')
+
     task = ia_tasks.sugerir_avaliacao_task.delay(bolsista_id=pk, user_id=request.user.id)
     cache.set(f'task_owner:{task.id}', request.user.id, timeout=3600)
     cache.set(f'task_context:{task.id}', {'bolsista_id': pk}, timeout=3600)

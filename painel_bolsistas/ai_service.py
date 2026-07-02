@@ -1,32 +1,11 @@
-import json
 import logging
 from decimal import Decimal
 
 from django.conf import settings
-from google import genai
-from google.genai import types
+
+from base import ai_client
 
 logger = logging.getLogger(__name__)
-
-
-def _client():
-    api_key = getattr(settings, "GOOGLE_API_KEY", None)
-    if not api_key:
-        return None
-    return genai.Client(api_key=api_key)
-
-
-def _gerar_json(client, prompt, max_tokens):
-    response = client.models.generate_content(
-        model=getattr(settings, "GOOGLE_MODEL", "gemini-1.5-flash"),
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.4,
-            max_output_tokens=max_tokens,
-        ),
-    )
-    return _parse_json(response.text)
 
 
 def _perfil_texto(bolsista):
@@ -102,19 +81,6 @@ def _editais_texto(editais):
     return "\n\n".join(partes)
 
 
-def _parse_json(resposta):
-    """Tenta extrair JSON de uma resposta que pode vir envolta em markdown."""
-    texto = resposta.strip()
-    if texto.startswith("```"):
-        linhas = texto.splitlines()
-        if linhas[0].startswith("```"):
-            linhas = linhas[1:]
-        if linhas and linhas[-1].startswith("```"):
-            linhas = linhas[:-1]
-        texto = "\n".join(linhas).strip()
-    return json.loads(texto)
-
-
 def resumir_bolsista(bolsista):
     """Gera um resumo curto e objetivo do candidato."""
     perfil = _perfil_texto(bolsista)
@@ -127,12 +93,11 @@ def resumir_bolsista(bolsista):
         "Responda APENAS com um objeto JSON no formato: {\"resumo\": \"texto aqui\"}"
     )
 
-    client = _client()
-    if not client:
+    if not ai_client.get_provider():
         return {"resumo": _resumo_fallback(bolsista)}
 
     try:
-        dados = _gerar_json(client, prompt, max_tokens=250)
+        dados = ai_client.gerar_json(prompt, max_tokens=250)
         return {"resumo": dados.get("resumo", _resumo_fallback(bolsista))}
     except Exception as e:
         logger.exception("Erro ao gerar resumo com IA: %s", e)
@@ -192,12 +157,11 @@ def analisar_bolsista(bolsista, editais):
         f"{editais_texto}"
     )
 
-    client = _client()
-    if not client:
+    if not ai_client.get_provider():
         return _analise_fallback(bolsista, editais)
 
     try:
-        dados = _gerar_json(client, prompt, max_tokens=1200)
+        dados = ai_client.gerar_json(prompt, max_tokens=1200)
         return {
             "resumo": dados.get("resumo", _resumo_fallback(bolsista)),
             "analise": dados.get("analise", "Não foi possível gerar a análise comparativa."),
@@ -346,12 +310,11 @@ def sugerir_avaliacao(bolsista, criterios):
         "IMPORTANTE: use o ID numérico exato de cada critério. Pontos devem ser números decimais com até 2 casas."
     )
 
-    client = _client()
-    if not client:
+    if not ai_client.get_provider():
         return _sugerir_avaliacao_fallback(bolsista, criterios_lista)
 
     try:
-        dados = _gerar_json(client, prompt, max_tokens=1500)
+        dados = ai_client.gerar_json(prompt, max_tokens=1500)
         sugestoes_raw = dados.get("sugestoes", [])
         sugestoes = _normalizar_sugestoes(sugestoes_raw, criterios_lista)
         return {

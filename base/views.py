@@ -1,10 +1,22 @@
-from django.http import FileResponse, Http404, HttpResponseForbidden
+from django.http import FileResponse, Http404, HttpResponseForbidden, JsonResponse
 from django.conf import settings
+from django.db import connection
 from pathlib import Path
 
 from accounts.models import DocumentoExterno
 from cadastro.models import CadastroBolsista, AnexoComprobatorio, ExperienciaProfissional
 from .mixins import GROUP_MANAGER
+
+
+def health_check(request):
+    """Endpoint simples para health checks do load balancer/monitoramento."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        return JsonResponse({"status": "ok"}, status=200)
+    except Exception as exc:
+        return JsonResponse({"status": "error", "detail": str(exc)}, status=503)
 
 PASTAS_RESTRITAS = {
     'curriculos': CadastroBolsista,

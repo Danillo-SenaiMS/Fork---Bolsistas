@@ -57,6 +57,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -117,16 +118,21 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Cache e result backend do Celery (Redis)
+# Cache (Redis por padrao; locmem:// para dev local sem Docker)
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': env('CACHE_URL', default='redis://redis:6379/1'),
-    }
+    'default': env.cache(default='redis://redis:6379/1'),
 }
 
 # Celery
@@ -182,6 +188,9 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=31536000)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    # Traefik encaminha o protocolo original via X-Forwarded-Proto
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
 
 # Logging
 LOGGING = {
@@ -227,6 +236,17 @@ LOGGING = {
     },
 }
 
-# Integracao com IA (Google Gemini - modelo gratuito)
+# Integracao com IA (OpenAI / Google Gemini)
+OPENAI_API_KEY = read_secret('OPENAI_API_KEY')
+OPENAI_MODEL = env('OPENAI_MODEL', default='gpt-4o-mini')
 GOOGLE_API_KEY = read_secret('GOOGLE_API_KEY')
-GOOGLE_MODEL = env('GOOGLE_MODEL', default='gemini-1.5-flash')
+GOOGLE_MODEL = env('GOOGLE_MODEL', default='gemini-2.0-flash')
+
+# Provedor de IA: 'openai' ou 'google'. Por padrao, usa openai se a chave existir.
+IA_PROVIDER = env(
+    'IA_PROVIDER',
+    default='openai' if OPENAI_API_KEY else ('google' if GOOGLE_API_KEY else ''),
+)
+
+# Modo de execucao das tarefas de IA: True = Celery (async), False = sincrono
+IA_ASYNC = env.bool('IA_ASYNC', default=True)

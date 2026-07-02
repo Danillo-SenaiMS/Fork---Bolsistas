@@ -8,7 +8,9 @@ django-celery-beat
 dj-celery-panel
 django-storages
 gunicorn
+whitenoise
 google-genai
+openai>=1.0
 psycopg2-binary
 faker
 xhtml2pdf

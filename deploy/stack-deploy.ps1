@@ -24,10 +24,13 @@ New-Item -ItemType Directory -Force -Path $SecretsDir | Out-Null
 $RequiredSecrets = @(
     "secret_key",
     "db_password",
+    "openai_api_key",
     "google_api_key",
     "rabbitmq_password",
     "cf_dns_api_token"
 )
+
+# O segredo nao utilizado pelo IA_PROVIDER atual pode conter um placeholder.
 
 $Missing = $false
 foreach ($secret in $RequiredSecrets) {

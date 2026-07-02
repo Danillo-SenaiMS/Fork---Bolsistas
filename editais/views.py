@@ -10,6 +10,8 @@ from django.core.cache import cache
 from celery.result import AsyncResult
 import json
 
+from django.conf import settings
+
 from base.mixins import (
     ManagerRequiredMixin, ManagerOrExecuteRequiredMixin,
     ViewUserRequiredMixin, GROUP_MANAGER, GROUP_EXECUTE_USER, GROUP_VIEW_USER,
@@ -302,12 +304,41 @@ def _task_running_partial(request, task_id):
     })
 
 
+def _render_edital_result(dados):
+    if dados.get('erro'):
+        return (
+            f'<p class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>'
+            f'{dados["erro"]}</p>'
+        )
+
+    if 'radar' in dados:
+        radar = dados.get('radar', [])
+        return render_to_string('editais/partials/analise_edital.html', {
+            'resumo': dados.get('resumo', ''),
+            'analise': dados.get('analise', ''),
+            'radar': radar,
+            'radar_labels': json.dumps([item.get('bolsista', '') for item in radar]),
+            'radar_scores': json.dumps([item.get('score', 0) for item in radar]),
+        })
+
+    return render_to_string('editais/partials/resumo_edital.html', {
+        'resumo': dados.get('resumo', ''),
+    })
+
+
 @require_POST
 def resumir_edital(request, pk):
     if not request.user.is_authenticated:
         return HttpResponse('Não autorizado', status=401)
 
     get_object_or_404(EditalProvisorio, pk=pk)
+
+    if not settings.IA_ASYNC:
+        dados = ia_tasks.resumir_edital_task.run(
+            edital_id=pk, user_id=request.user.id
+        ) or {}
+        return HttpResponse(_render_edital_result(dados), content_type='text/html; charset=utf-8')
+
     task = ia_tasks.resumir_edital_task.delay(edital_id=pk, user_id=request.user.id)
     cache.set(f'task_owner:{task.id}', request.user.id, timeout=3600)
     cache.set(f'task_context:{task.id}', {'edital_id': pk}, timeout=3600)
@@ -320,6 +351,13 @@ def analisar_edital(request, pk):
         return HttpResponse('Não autorizado', status=401)
 
     get_object_or_404(EditalProvisorio, pk=pk)
+
+    if not settings.IA_ASYNC:
+        dados = ia_tasks.analisar_edital_task.run(
+            edital_id=pk, user_id=request.user.id
+        ) or {}
+        return HttpResponse(_render_edital_result(dados), content_type='text/html; charset=utf-8')
+
     task = ia_tasks.analisar_edital_task.delay(edital_id=pk, user_id=request.user.id)
     cache.set(f'task_owner:{task.id}', request.user.id, timeout=3600)
     cache.set(f'task_context:{task.id}', {'edital_id': pk}, timeout=3600)
@@ -343,19 +381,5 @@ def edital_task_status(request, task_id):
         )
 
     dados = cache.get(f'task_result:{task_id}') or result.result or {}
-
-    if 'radar' in dados:
-        radar = dados.get('radar', [])
-        html = render_to_string('editais/partials/analise_edital.html', {
-            'resumo': dados.get('resumo', ''),
-            'analise': dados.get('analise', ''),
-            'radar': radar,
-            'radar_labels': json.dumps([item.get('bolsista', '') for item in radar]),
-            'radar_scores': json.dumps([item.get('score', 0) for item in radar]),
-        })
-    else:
-        html = render_to_string('editais/partials/resumo_edital.html', {
-            'resumo': dados.get('resumo', ''),
-        })
-
+    html = _render_edital_result(dados)
     return HttpResponse(html, content_type='text/html; charset=utf-8')
