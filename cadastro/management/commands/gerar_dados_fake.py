@@ -100,15 +100,27 @@ class Command(BaseCommand):
                             help='Senha padrão para todos os usuários (default: senha123)')
         parser.add_argument('--limpar', action='store_true',
                             help='Remove todos os dados antes de gerar')
+        parser.add_argument('--seed', type=int, default=None,
+                            help='Seed para reproducibilidade (default: aleatorio)')
+        parser.add_argument('--datas-espalhadas', action='store_true', default=True,
+                            help='Espalha created_at/updated_at nos ultimos 12 meses (default: True)')
+        parser.add_argument('--sem-datas-espalhadas', action='store_true',
+                            help='Desativa o espalhamento de datas')
 
     def handle(self, *args, **opcoes):
         if opcoes['limpar']:
             self._limpar_dados()
 
+        seed = opcoes['seed']
+        if seed is not None:
+            random.seed(seed)
+            fake.seed_instance(seed)
+
         self.senha = opcoes['senha']
         self.qtd_bolsistas = opcoes['bolsistas']
         self.qtd_editais = opcoes['editais']
         self.qtd_aplicacoes = opcoes['aplicacoes_por_edital']
+        self.datas_espalhadas = opcoes['datas_espalhadas'] and not opcoes['sem_datas_espalhadas']
 
         self.stdout.write(self.style.WARNING('=== GERANDO DADOS FAKE ==='))
         self.stdout.write(f'Bolsistas: {self.qtd_bolsistas} | '
@@ -129,9 +141,18 @@ class Command(BaseCommand):
 
         editais = self._criar_editais(managers)
         self._criar_aplicacoes(bolsistas, editais)
+        self._criar_solicitacoes(bolsistas, managers)
         self._criar_avaliacoes(bolsistas, editais, managers)
         self._criar_notificacoes(todos_users, bolsistas, managers)
         self._calcular_pontuacoes(bolsistas)
+
+        # Espalha datas dos registros dependentes
+        self._espalhar_datas(FormacaoAcademica.objects.all())
+        self._espalhar_datas(ExperienciaProfissional.objects.all())
+        self._espalhar_datas(AplicacaoEdital.objects.all())
+        self._espalhar_datas(AvaliacaoBolsista.objects.all())
+        self._espalhar_datas(Notificacao.objects.all())
+        self._espalhar_datas(SolicitacaoEdicao.objects.all())
 
         total = self._contar_registros()
         self.stdout.write(self.style.SUCCESS(
@@ -171,7 +192,28 @@ class Command(BaseCommand):
             + AplicacaoEdital.objects.count()
             + AvaliacaoBolsista.objects.count()
             + Notificacao.objects.count()
+            + SolicitacaoEdicao.objects.count()
         )
+
+    def _espalhar_datas(self, queryset, dias=365):
+        """Sobrescreve created_at/updated_at espalhando nos ultimos N dias."""
+        if not self.datas_espalhadas:
+            return
+        agora = timezone.now()
+        objetos = list(queryset)
+        for obj in objetos:
+            offset_criacao = timedelta(
+                days=random.randint(0, dias),
+                hours=random.randint(0, 23),
+                minutes=random.randint(0, 59),
+            )
+            offset_update = timedelta(days=random.randint(0, min(30, dias)))
+            obj.created_at = agora - offset_criacao
+            obj.updated_at = agora - offset_criacao + offset_update
+        # bulk_update em lotes para nao estourar parametros
+        for i in range(0, len(objetos), 500):
+            lote = objetos[i:i + 500]
+            type(objetos[0]).objects.bulk_update(lote, ['created_at', 'updated_at'])
 
     # ----------------------------------------------------------------
     # FASE 1: Grupos e Usuários
@@ -285,10 +327,14 @@ class Command(BaseCommand):
                 },
             )
             if created:
-                self._criar_formacoes(b)
-                self._criar_experiencias(b)
+                # ~10% dos bolsistas sem formacao/experiencia (caso-limite)
+                if random.random() > 0.1:
+                    self._criar_formacoes(b)
+                if random.random() > 0.1:
+                    self._criar_experiencias(b)
             bolsistas.append(b)
 
+        self._espalhar_datas(CadastroBolsista.objects.filter(pk__in=[b.pk for b in bolsistas]))
         self.stdout.write(f'  Bolsistas: {len(bolsistas)} criados/verificados')
         return bolsistas
 
@@ -387,18 +433,27 @@ class Command(BaseCommand):
                 criado_por=criador,
             )
 
-            self._criar_cronograma(edital)
+            self._criar_cronograma(edital, base_data=date.today())
             self._criar_distribuicao(edital, experiencia_opts, nivel_config)
             editais.append(edital)
+
+        self._espalhar_datas(EditalProvisorio.objects.filter(pk__in=[e.pk for e in editais]), dias=730)
+        self._espalhar_datas(CronogramaEvento.objects.filter(edital__in=editais), dias=730)
+        self._espalhar_datas(DistribuicaoBolsa.objects.filter(edital__in=editais), dias=730)
 
         self.stdout.write(f'  Editais: {len(editais)} criados')
         return editais
 
-    def _criar_cronograma(self, edital):
+    def _criar_cronograma(self, edital, base_data=None):
         eventos = list(EditalProvisorio.EVENTO_CHOICES)
         random.shuffle(eventos)
         selecionados = eventos[:random.randint(5, len(eventos))]
-        base = date.today()
+        base = base_data if base_data else date.today()
+        # Alguns editais com cronograma no passado, outros no futuro
+        if random.random() > 0.5:
+            base = base - timedelta(days=random.randint(60, 365))
+        else:
+            base = base + timedelta(days=random.randint(30, 180))
         for idx, (codigo, nome) in enumerate(selecionados):
             dias_offset = idx * random.randint(10, 30)
             data_ref = (base + timedelta(days=dias_offset)).strftime('%d/%m/%Y')
@@ -436,13 +491,14 @@ class Command(BaseCommand):
         count = 0
         editais_abertos = [e for e in editais if e.status == 'aberto']
         status_app = ['pendente', 'em_analise', 'aprovado', 'rejeitado']
-        pesos_status = [0.3, 0.3, 0.3, 0.1]
+        pesos_status = [0.35, 0.3, 0.25, 0.1]
 
         for edital in editais_abertos:
-            candidatos = random.sample(
-                bolsistas,
-                min(self.qtd_aplicacoes, len(bolsistas)),
-            )
+            # ~15% dos editais abertos ficam sem aplicações (caso-limite)
+            if random.random() < 0.15:
+                continue
+            qtd = random.randint(1, min(self.qtd_aplicacoes, len(bolsistas)))
+            candidatos = random.sample(bolsistas, qtd)
             for bolsista in candidatos:
                 _, created = AplicacaoEdital.objects.get_or_create(
                     bolsista=bolsista,
@@ -455,6 +511,34 @@ class Command(BaseCommand):
                     count += 1
 
         self.stdout.write(f'  Aplicações: {count} criadas')
+
+    # ----------------------------------------------------------------
+    # FASE 6b: Solicitações de Edição
+    # ----------------------------------------------------------------
+    def _criar_solicitacoes(self, bolsistas, managers):
+        count = 0
+        campos = ['telefone', 'cidade', 'rua', 'bairro', 'numero', 'estado']
+        status_pool = ['pendente', 'aprovado', 'rejeitado']
+        pesos = [0.5, 0.3, 0.2]
+        if not bolsistas or not managers:
+            self.stdout.write('  Solicitações: 0 criadas')
+            return
+        for _ in range(random.randint(3, max(3, len(bolsistas) // 2))):
+            b = random.choice(bolsistas)
+            m = random.choice(managers)
+            s, created = SolicitacaoEdicao.objects.get_or_create(
+                bolsista=b,
+                campo=random.choice(campos),
+                defaults={
+                    'valor_original': getattr(b, random.choice(campos), '') or fake.word(),
+                    'valor_novo': fake.sentence(nb_words=4),
+                    'status': random.choices(status_pool, weights=pesos)[0],
+                    'revisado_por': m if random.random() > 0.5 else None,
+                },
+            )
+            if created:
+                count += 1
+        self.stdout.write(f'  Solicitações: {count} criadas')
 
     # ----------------------------------------------------------------
     # FASE 7: Avaliações
@@ -475,11 +559,19 @@ class Command(BaseCommand):
             )
             for criterio in criterios_para_avaliar:
                 if criterio.peso_maximo > 0:
-                    pontos = Decimal(str(
-                        round(random.uniform(0, float(criterio.peso_maximo)), 2)
-                    ))
+                    # ~10% das avaliações cumulativas com 0 pontos
+                    if random.random() < 0.1:
+                        pontos = Decimal('0')
+                    else:
+                        pontos = Decimal(str(
+                            round(random.uniform(0.5, float(criterio.peso_maximo)), 2)
+                        ))
                 else:
-                    pontos = criterio.peso
+                    # ~20% dos critérios binários não atendidos (0 pontos)
+                    if random.random() < 0.2:
+                        pontos = Decimal('0')
+                    else:
+                        pontos = criterio.peso
                 _, created = AvaliacaoBolsista.objects.get_or_create(
                     bolsista=app.bolsista,
                     criterio=criterio,
