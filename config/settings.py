@@ -130,10 +130,20 @@ CACHES = {
 }
 
 # Celery
-CELERY_BROKER_URL = env(
-    'CELERY_BROKER_URL',
-    default='amqp://guest:guest@rabbitmq:5672//',
-)
+if env('CELERY_BROKER_URL', default=None):
+    CELERY_BROKER_URL = env('CELERY_BROKER_URL')
+else:
+    _rabbitmq_user = env('RABBITMQ_USER', default='bolsas')
+    _rabbitmq_password = read_secret('RABBITMQ_PASSWORD')
+    _rabbitmq_host = env('RABBITMQ_HOST', default='rabbitmq')
+    _rabbitmq_vhost = env('RABBITMQ_VHOST', default='bolsas')
+    if _rabbitmq_password:
+        CELERY_BROKER_URL = (
+            f'amqp://{_rabbitmq_user}:{_rabbitmq_password}@{_rabbitmq_host}:5672/{_rabbitmq_vhost}'
+        )
+    else:
+        CELERY_BROKER_URL = f'amqp://{_rabbitmq_user}@{_rabbitmq_host}:5672/{_rabbitmq_vhost}'
+
 CELERY_RESULT_BACKEND = env(
     'CELERY_RESULT_BACKEND',
     default='redis://redis:6379/0',
