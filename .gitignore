@@ -3,5 +3,21 @@
 __pycache__/
 db.sqlite3
 .env
+.env.prod
 media/
 staticfiles/
+
+# Docker / deploy
+.secrets/
+letsencrypt/
+acme.json
+
+# Graphify (knowledge graph)
+graphify-out/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
