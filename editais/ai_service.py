@@ -3,16 +3,30 @@ import logging
 from decimal import Decimal
 
 from django.conf import settings
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
 
 def _client():
-    api_key = getattr(settings, "OPENAI_API_KEY", None)
+    api_key = getattr(settings, "GOOGLE_API_KEY", None)
     if not api_key:
         return None
-    return OpenAI(api_key=api_key)
+    return genai.Client(api_key=api_key)
+
+
+def _gerar_json(client, prompt, max_tokens):
+    response = client.models.generate_content(
+        model=getattr(settings, "GOOGLE_MODEL", "gemini-1.5-flash"),
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.4,
+            max_output_tokens=max_tokens,
+        ),
+    )
+    return _parse_json(response.text)
 
 
 def _edital_texto(edital):
@@ -111,17 +125,7 @@ def resumir_edital(edital):
         return {"resumo": _resumo_fallback(edital)}
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Você é um assistente útil que responde apenas em JSON válido."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.4,
-            max_tokens=250,
-        )
-        conteudo = response.choices[0].message.content
-        dados = _parse_json(conteudo)
+        dados = _gerar_json(client, prompt, max_tokens=250)
         return {"resumo": dados.get("resumo", _resumo_fallback(edital))}
     except Exception as e:
         logger.exception("Erro ao gerar resumo de edital com IA: %s", e)
@@ -170,17 +174,7 @@ def analisar_edital(edital, bolsistas):
         return _analise_fallback(edital, bolsistas)
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Você é um assistente útil que responde apenas em JSON válido."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.4,
-            max_tokens=1500,
-        )
-        conteudo = response.choices[0].message.content
-        dados = _parse_json(conteudo)
+        dados = _gerar_json(client, prompt, max_tokens=1500)
         return {
             "resumo": dados.get("resumo", _resumo_fallback(edital)),
             "analise": dados.get("analise", "Não foi possível gerar a análise comparativa."),

@@ -8,10 +8,7 @@ django-celery-beat
 dj-celery-panel
 django-storages
 gunicorn
-langchain
-langchain-openai
-langgraph
-openai
+google-genai
 psycopg2-binary
 faker
 xhtml2pdf

@@ -217,7 +217,6 @@ LOGGING = {
     },
 }
 
-# Integracao com IA (OpenAI)
-OPENAI_API_KEY = read_secret('OPENAI_API_KEY')
-OPENAI_MODEL = env('OPENAI_MODEL', default='gpt-5.5-mini')
-OPENAI_BASE_URL = env('OPENAI_BASE_URL', default='')
+# Integracao com IA (Google Gemini - modelo gratuito)
+GOOGLE_API_KEY = read_secret('GOOGLE_API_KEY')
+GOOGLE_MODEL = env('GOOGLE_MODEL', default='gemini-1.5-flash')
