@@ -5,6 +5,7 @@ from base.views import media_protegida
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('admin/tasks/', include('dj_celery_panel.urls')),
     path('', include('accounts.urls')),
     path('cadastro/', include('cadastro.urls')),
     path('editais/', include('editais.urls')),
