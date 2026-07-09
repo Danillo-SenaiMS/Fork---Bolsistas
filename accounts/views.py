@@ -64,7 +64,7 @@ class CustomLoginView(LoginView):
 class RegistroView(FormView):
     template_name = 'accounts/registro.html'
     form_class = RegistroForm
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('landing')
 
     def form_valid(self, form):
         user = User.objects.create_user(
