@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.core.cache import cache
+from django.db.models import Count, Q
 from celery.result import AsyncResult
 import json
 
@@ -37,11 +38,15 @@ class EditalProvisorioListView(LoginRequiredMixin, ContextMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        qs = EditalProvisorio.objects.all().select_related('criado_por')
+        qs = EditalProvisorio.objects.all().select_related('criado_por')\
+            .prefetch_related('cronograma')\
+            .annotate(num_inscritos=Count('aplicacoes'))
         busca = self.request.GET.get('busca', '')
         status = self.request.GET.get('status', '')
         if busca:
-            qs = qs.filter(nome_instituto__icontains=busca)
+            qs = qs.filter(
+                Q(nome_instituto__icontains=busca) | Q(numero_serie__icontains=busca)
+            )
         if status:
             qs = qs.filter(status=status)
         return qs

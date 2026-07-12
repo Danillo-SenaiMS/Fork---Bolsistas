@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from base.models import DataModel
+from base.utils import gerar_numero_serie
 from accounts.models import User
 
 
@@ -32,6 +33,7 @@ class CadastroBolsista(DataModel):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cadastro')
 
+    numero_serie = models.CharField('Número de Série', max_length=4, unique=True, blank=True)
     telefone = models.CharField('Telefone', max_length=20, blank=True)
     data_nascimento = models.DateField('Data de nascimento', validators=[validar_maioridade])
 
@@ -58,6 +60,11 @@ class CadastroBolsista(DataModel):
     class Meta:
         verbose_name = 'Cadastro de Bolsista'
         verbose_name_plural = 'Cadastros de Bolsistas'
+
+    def save(self, *args, **kwargs):
+        if not self.numero_serie:
+            self.numero_serie = gerar_numero_serie(CadastroBolsista)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'Cadastro de {self.user.nome_completo}'

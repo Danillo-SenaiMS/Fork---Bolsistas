@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseForbidden
 from django.template.loader import render_to_string
+from django.db.models import Q
 from django import forms
 
 from base.mixins import (
@@ -328,7 +329,19 @@ class CadastroListView(ManagerRequiredMixin, ListView):
     context_object_name = 'cadastros'
 
     def get_queryset(self):
-        return CadastroBolsista.objects.all().select_related('user')
+        qs = CadastroBolsista.objects.all().select_related('user')
+        busca = self.request.GET.get('busca', '')
+        if busca:
+            qs = qs.filter(
+                Q(user__nome_completo__icontains=busca) |
+                Q(numero_serie__icontains=busca)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['busca'] = self.request.GET.get('busca', '')
+        return context
 
 
 class BolsistaCreateForm(forms.ModelForm):

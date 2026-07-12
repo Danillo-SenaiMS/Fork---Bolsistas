@@ -249,11 +249,34 @@ class BaseCronogramaFormSet(BaseInlineFormSet):
             obj.save()
         return obj
 
+    def clean(self):
+        if any(self.errors):
+            return
+        tem_outorga_com_data = False
+        for form in self.forms:
+            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                if form.cleaned_data.get('evento') == 'outorga' and form.cleaned_data.get('data_evento'):
+                    tem_outorga_com_data = True
+        if not tem_outorga_com_data:
+            raise forms.ValidationError(
+                'Informe o evento "Outorga das bolsas" com a data do evento preenchida '
+                'para definir a data final do edital.'
+            )
+
 
 class CronogramaEventoForm(forms.ModelForm):
+    data_evento = forms.DateField(
+        label='Data do Evento',
+        required=False,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'form-control form-control-sm',
+        }),
+    )
+
     class Meta:
         model = CronogramaEvento
-        fields = ['evento', 'data_referencia', 'observacao', 'ordem']
+        fields = ['evento', 'data_referencia', 'data_evento', 'observacao', 'ordem']
         widgets = {
             'evento': forms.Select(attrs={'class': 'form-select form-select-sm'}),
             'data_referencia': forms.TextInput(attrs={
@@ -278,11 +301,14 @@ class CronogramaEventoForm(forms.ModelForm):
         if not cleaned_data or cleaned_data.get('DELETE'):
             return cleaned_data
         evento = cleaned_data.get('evento')
-        data = cleaned_data.get('data_referencia')
-        if not evento and data:
-            raise forms.ValidationError('Selecione o evento quando a data de referência estiver preenchida.')
-        if evento and not data:
+        data_ref = cleaned_data.get('data_referencia')
+        data_evento = cleaned_data.get('data_evento')
+        if not evento and (data_ref or data_evento):
+            raise forms.ValidationError('Selecione o evento quando a data de referência ou data do evento estiver preenchida.')
+        if evento and not data_ref:
             raise forms.ValidationError('Informe a data de referência para o evento selecionado.')
+        if evento and not data_evento:
+            raise forms.ValidationError('Informe a data do evento para o evento selecionado.')
         return cleaned_data
 
 

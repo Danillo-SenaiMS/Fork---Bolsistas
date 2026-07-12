@@ -250,3 +250,7 @@ IA_PROVIDER = env(
 
 # Modo de execucao das tarefas de IA: True = Celery (async), False = sincrono
 IA_ASYNC = env.bool('IA_ASYNC', default=True)
+
+# Feriados nacionais para calculo de dias uteis (formato 'YYYY-MM-DD').
+# Se vazia, feriados nao serao descontados dos dias uteis.
+FERIADOS_NACIONAIS = []

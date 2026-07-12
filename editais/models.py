@@ -1,5 +1,7 @@
 from django.db import models
+from django.utils import timezone
 from base.models import DataModel
+from base.utils import gerar_numero_serie, dias_uteis_entre
 from accounts.models import User
 from cadastro.models import CadastroBolsista
 
@@ -135,6 +137,7 @@ class EditalProvisorio(DataModel):
     entrevista                      = models.TextField('Entrevista')
     criterios_desempate             = models.TextField('Critérios de Desempate')
 
+    numero_serie                    = models.CharField('Número de Série', max_length=4, unique=True, blank=True)
     status                          = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='em_analise')
     criado_por                      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='editais_criados')
 
@@ -146,9 +149,46 @@ class EditalProvisorio(DataModel):
     def __str__(self):
         return f'{self.nome_instituto} - {self.get_modalidade_bolsa_display()}'
 
+    def save(self, *args, **kwargs):
+        if not self.numero_serie:
+            self.numero_serie = gerar_numero_serie(EditalProvisorio)
+        super().save(*args, **kwargs)
+
     @property
     def total_eventos(self):
         return self.cronograma.count()
+
+    @property
+    def total_inscritos(self):
+        return self.aplicacoes.count()
+
+    @property
+    def data_final(self):
+        evento = self.cronograma.filter(
+            evento='outorga', data_evento__isnull=False
+        ).order_by('data_evento').last()
+        return evento.data_evento if evento else None
+
+    @property
+    def proxima_etapa(self):
+        hoje = timezone.now().date()
+        evento = self.cronograma.filter(
+            data_evento__gte=hoje
+        ).order_by('data_evento').first()
+        return evento if evento else None
+
+    @property
+    def dias_para_proxima_etapa(self):
+        prox = self.proxima_etapa
+        if not prox or not prox.data_evento:
+            return None
+        hoje = timezone.now().date()
+        return dias_uteis_entre(hoje, prox.data_evento)
+
+    @property
+    def nome_proxima_etapa(self):
+        prox = self.proxima_etapa
+        return prox.get_evento_display() if prox else None
 
     @property
     def total_distribuido(self):
@@ -163,6 +203,7 @@ class CronogramaEvento(DataModel):
     edital = models.ForeignKey(EditalProvisorio, on_delete=models.CASCADE, related_name='cronograma')
     evento = models.CharField('Evento', max_length=50, choices=EditalProvisorio.EVENTO_CHOICES)
     data_referencia = models.CharField('Data de Referência', max_length=255)
+    data_evento = models.DateField('Data do Evento', null=True, blank=True)
     observacao = models.TextField('Observação', blank=True, default='')
     ordem = models.PositiveIntegerField('Ordem', default=0)
 
@@ -203,6 +244,7 @@ class AplicacaoEdital(DataModel):
 
     bolsista = models.ForeignKey(CadastroBolsista, on_delete=models.CASCADE, related_name='aplicacoes')
     edital = models.ForeignKey(EditalProvisorio, on_delete=models.CASCADE, related_name='aplicacoes')
+    numero_inscricao = models.CharField('Número de Inscrição', max_length=10, unique=True, blank=True)
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='pendente')
     nota = models.DecimalField('Nota do avaliador', max_digits=5, decimal_places=2, blank=True, null=True)
     data_aplicacao = models.DateTimeField('Data de aplicação', auto_now_add=True)
@@ -214,3 +256,9 @@ class AplicacaoEdital(DataModel):
 
     def __str__(self):
         return f'{self.bolsista.user.nome_completo} - {self.edital.nome_edital}'
+
+    def save(self, *args, **kwargs):
+        if not self.numero_inscricao and self.bolsista_id and self.edital_id:
+            if self.bolsista.numero_serie and self.edital.numero_serie:
+                self.numero_inscricao = f'{self.bolsista.numero_serie}-{self.edital.numero_serie}'
+        super().save(*args, **kwargs)
