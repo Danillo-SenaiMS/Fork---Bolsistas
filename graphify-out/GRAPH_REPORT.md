@@ -1,16 +1,16 @@
 # Graph Report - Bolsistas  (2026-07-12)
 
 ## Corpus Check
-- 103 files · ~37,964 words
+- 103 files · ~38,415 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 741 nodes · 1465 edges · 76 communities (53 shown, 23 thin omitted)
-- Extraction: 76% EXTRACTED · 24% INFERRED · 0% AMBIGUOUS · INFERRED: 352 edges (avg confidence: 0.5)
+- 745 nodes · 1478 edges · 75 communities (54 shown, 21 thin omitted)
+- Extraction: 76% EXTRACTED · 24% INFERRED · 0% AMBIGUOUS · INFERRED: 358 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8a30f70c`
+- Built from commit: `0bfcd417`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -55,7 +55,6 @@
 - [[_COMMUNITY_Community 37|Community 37]]
 - [[_COMMUNITY_Community 38|Community 38]]
 - [[_COMMUNITY_Community 39|Community 39]]
-- [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 41|Community 41]]
 - [[_COMMUNITY_Community 42|Community 42]]
 - [[_COMMUNITY_Community 43|Community 43]]
@@ -74,12 +73,12 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `User` - 59 edges
-2. `EditalProvisorio` - 45 edges
-3. `ManagerRequiredMixin` - 43 edges
+2. `EditalProvisorio` - 46 edges
+3. `ManagerRequiredMixin` - 44 edges
 4. `CadastroBolsista` - 41 edges
-5. `ManagerOrExecuteRequiredMixin` - 38 edges
+5. `ManagerOrExecuteRequiredMixin` - 39 edges
 6. `Perfil` - 32 edges
-7. `ViewUserRequiredMixin` - 29 edges
+7. `ViewUserRequiredMixin` - 30 edges
 8. `FormacaoAcademica` - 29 edges
 9. `SolicitacaoEdicao` - 29 edges
 10. `ExperienciaProfissional` - 28 edges
@@ -99,15 +98,15 @@
 ## Import Cycles
 - 1-file cycle: `config/celery.py -> config/celery.py`
 
-## Communities (76 total, 23 thin omitted)
+## Communities (75 total, 21 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.12
-Nodes (10): DeleteView, AplicacaoListView, ContextMixin, EditalProvisorioCreateView, EditalProvisorioDeleteView, EditalProvisorioDetailView, EditalProvisorioListView, EditalProvisorioUpdateView (+2 more)
+Cohesion: 0.21
+Nodes (4): ContextMixin, EditalProvisorioCreateView, EditalProvisorioDetailView, EditalProvisorioUpdateView
 
 ### Community 1 - "Community 1"
-Cohesion: 0.07
-Nodes (60): AbstractUser, PerfilInline, UserAdmin, Perfil, User, AprovarUsuarioView, CustomLoginView, HomeView (+52 more)
+Cohesion: 0.09
+Nodes (48): AbstractUser, PerfilInline, UserAdmin, Perfil, User, AprovarUsuarioView, CustomLoginView, LandingPageView (+40 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.12
@@ -118,8 +117,8 @@ Cohesion: 0.04
 Nodes (48): accounts/models.py — User + Perfil + DocumentoExterno, Atividades, Atividades, Atividades, Atividades, Atividades, Atividades, Atividades (+40 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.16
-Nodes (12): BaseInlineFormSet, AplicacaoEditalAdmin, CronogramaEventoInline, DistribuicaoBolsaInline, EditalProvisorioAdmin, BaseCronogramaFormSet, BaseDistribuicaoFormSet, CronogramaEventoForm (+4 more)
+Cohesion: 0.14
+Nodes (5): BaseInlineFormSet, BaseCronogramaFormSet, BaseDistribuicaoFormSet, Meta, EditalProvisorio
 
 ### Community 5 - "Community 5"
 Cohesion: 0.07
@@ -150,20 +149,20 @@ Cohesion: 0.14
 Nodes (13): Arquivos Principais, `MarcarLidaView`, `MarcarTodasLidasView`, Modelos, `Notificacao`, `NotificacaoListView`, `notificar_cadastro`, `notificar_classificacao` (+5 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.08
-Nodes (6): DiasUteisTests, dias_uteis_entre(), gerar_numero_serie(), CadastroSerieTests, CronogramaTests, TestCase
+Cohesion: 0.06
+Nodes (8): DiasUteisTests, dias_uteis_entre(), gerar_numero_serie(), CadastroSerieTests, CronogramaTests, InscricaoTests, NumeroSerieTests, TestCase
 
 ### Community 13 - "Community 13"
-Cohesion: 0.19
-Nodes (10): DocumentoExterno, Meta, DataModel, Meta, Migration, Meta, validar_maioridade(), Meta (+2 more)
+Cohesion: 0.05
+Nodes (36): DocumentoExterno, Meta, DataModel, Meta, Migration, Meta, validar_maioridade(), CriterioClassificacaoAdmin (+28 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.14
 Nodes (5): BaseCommand, Command, _faixa_valores_nivel(), Sobrescreve created_at/updated_at espalhando nos ultimos N dias., Extrai os valores minimo e maximo de um nivel, considerando experiencia_valores.
 
 ### Community 15 - "Community 15"
-Cohesion: 0.14
-Nodes (5): Notificacao, MarcarLidaView, MarcarTodasLidasView, NotificacaoListView, View
+Cohesion: 0.16
+Nodes (7): HomeView, AplicacaoEditalListView, AplicacaoListView, EditalProvisorioListView, ListView, LoginRequiredMixin, NotificacaoListView
 
 ### Community 16 - "Community 16"
 Cohesion: 0.29
@@ -214,20 +213,24 @@ Cohesion: 0.40
 Nodes (5): Atividades, Funcionalidades, Objetivo, 🟦 SPRINT 8 — DASHBOARD, UI
 
 ### Community 31 - "Community 31"
-Cohesion: 0.23
-Nodes (9): analisar_edital_task(), _notificar_conclusao(), resumir_edital_task(), AlterarStatusAplicacaoView, analisar_edital(), edital_task_status(), _render_edital_result(), resumir_edital() (+1 more)
+Cohesion: 0.42
+Nodes (5): analisar_edital(), edital_task_status(), _render_edital_result(), resumir_edital(), _task_running_partial()
 
-### Community 32 - "Community 32"
+### Community 34 - "Community 34"
 Cohesion: 0.21
-Nodes (3): DistribuicaoBolsaForm, EditalProvisorioForm, CancelarAplicacaoView
+Nodes (6): EditalProvisorioForm, AlterarStatusAplicacaoView, AplicarEditalView, CancelarAplicacaoView, MarcarLidaView, TemplateView
 
 ### Community 35 - "Community 35"
 Cohesion: 0.47
 Nodes (10): applyState(), closeMobileSidebar(), getOverlay(), getSidebar(), getToggleBtn(), getWrapper(), init(), isCollapsed() (+2 more)
 
+### Community 39 - "Community 39"
+Cohesion: 0.29
+Nodes (3): DeleteView, AplicacaoEdital, EditalProvisorioDeleteView
+
 ### Community 43 - "Community 43"
-Cohesion: 0.14
-Nodes (14): DetailView, analisar_bolsista_task(), _notificar_conclusao(), resumir_bolsista_task(), sugerir_avaliacao_task(), analisar_bolsista(), painel_task_status(), PainelBolsistaDetailView (+6 more)
+Cohesion: 0.19
+Nodes (10): DetailView, analisar_bolsista(), painel_task_status(), PainelBolsistaDetailView, PainelBolsistasListView, _pode_usar_ia(), _render_bolsista_result(), resumir_bolsista() (+2 more)
 
 ### Community 64 - "Community 64"
 Cohesion: 0.07
@@ -236,22 +239,22 @@ Nodes (31): health_check(), media_protegida(), Endpoint simples para health chec
 ## Knowledge Gaps
 - **176 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `Migration`, `Migration` (+171 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **23 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `Community 1` to `Community 2`, `Community 34`, `Community 4`, `Community 39`, `Community 40`, `Community 12`, `Community 13`, `Community 14`, `Community 15`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
-- **Why does `EditalProvisorio` connect `Community 34` to `Community 32`, `Community 1`, `Community 0`, `Community 4`, `Community 39`, `Community 40`, `Community 43`, `Community 12`, `Community 13`, `Community 31`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
-- **Why does `CadastroBolsista` connect `Community 1` to `Community 64`, `Community 2`, `Community 43`, `Community 12`, `Community 13`, `Community 15`, `Community 31`?**
+- **Why does `User` connect `Community 1` to `Community 2`, `Community 4`, `Community 39`, `Community 12`, `Community 13`, `Community 14`, `Community 15`?**
+  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+- **Why does `EditalProvisorio` connect `Community 4` to `Community 32`, `Community 1`, `Community 34`, `Community 0`, `Community 39`, `Community 43`, `Community 12`, `Community 13`, `Community 15`, `Community 31`?**
+  _High betweenness centrality (0.060) - this node is a cross-community bridge._
+- **Why does `CadastroBolsista` connect `Community 1` to `Community 64`, `Community 2`, `Community 43`, `Community 12`, `Community 13`, `Community 31`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Are the 45 inferred relationships involving `User` (e.g. with `PerfilInline` and `UserAdmin`) actually correct?**
   _`User` has 45 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 24 inferred relationships involving `EditalProvisorio` (e.g. with `AplicacaoEditalAdmin` and `CronogramaEventoInline`) actually correct?**
-  _`EditalProvisorio` has 24 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 37 inferred relationships involving `ManagerRequiredMixin` (e.g. with `AprovarUsuarioView` and `CustomLoginView`) actually correct?**
-  _`ManagerRequiredMixin` has 37 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 25 inferred relationships involving `EditalProvisorio` (e.g. with `AplicacaoEditalAdmin` and `CronogramaEventoInline`) actually correct?**
+  _`EditalProvisorio` has 25 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 38 inferred relationships involving `ManagerRequiredMixin` (e.g. with `AprovarUsuarioView` and `CustomLoginView`) actually correct?**
+  _`ManagerRequiredMixin` has 38 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 22 inferred relationships involving `CadastroBolsista` (e.g. with `AnexoComprobatorioInline` and `CadastroBolsistaAdmin`) actually correct?**
   _`CadastroBolsista` has 22 INFERRED edges - model-reasoned connections that need verification._

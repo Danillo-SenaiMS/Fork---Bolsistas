@@ -263,6 +263,50 @@ class AplicacaoListView(LoginRequiredMixin, ListView):
         return context
 
 
+class AplicacaoEditalListView(LoginRequiredMixin, ListView):
+    model = AplicacaoEdital
+    template_name = 'editais/aplicacao_edital_list.html'
+    context_object_name = 'aplicacoes'
+    paginate_by = 20
+
+    def dispatch(self, request, *args, **kwargs):
+        self.edital = get_object_or_404(EditalProvisorio, pk=kwargs['edital_pk'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = AplicacaoEdital.objects.filter(edital=self.edital).select_related(
+            'bolsista', 'bolsista__user', 'edital'
+        ).order_by('-data_aplicacao')
+
+        user = self.request.user
+        is_manager = user.is_superuser or user.groups.filter(
+            name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]
+        ).exists()
+
+        if not is_manager:
+            if hasattr(user, 'cadastro'):
+                qs = qs.filter(bolsista=user.cadastro)
+            else:
+                qs = qs.none()
+
+        status = self.request.GET.get('status', '')
+        if status:
+            qs = qs.filter(status=status)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['edital'] = self.edital
+        context['status_choices'] = AplicacaoEdital.STATUS_CHOICES
+        context['status_atual'] = self.request.GET.get('status', '')
+        user = self.request.user
+        context['is_manager'] = user.is_superuser or user.groups.filter(
+            name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]
+        ).exists()
+        return context
+
+
 class CancelarAplicacaoView(ViewUserRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         if hasattr(request.user, 'cadastro'):

@@ -275,13 +275,13 @@
     "semantic_hash": ""
   },
   "editais/urls.py": {
-    "mtime": 1783896328.8363907,
-    "ast_hash": "da31e551497a14836f3ddb4518e116d5",
+    "mtime": 1783900004.259648,
+    "ast_hash": "915a13a66fe9e22939cef6926b79f451",
     "semantic_hash": ""
   },
   "editais/views.py": {
-    "mtime": 1783897720.4464867,
-    "ast_hash": "83719fcd4ea508d03cbda17579698c62",
+    "mtime": 1783899996.4149404,
+    "ast_hash": "14b5b4bab25db5bdf1d37221eabfbf51",
     "semantic_hash": ""
   },
   "manage.py": {
@@ -545,8 +545,8 @@
     "semantic_hash": ""
   },
   "templates/editais/edital_detail.html": {
-    "mtime": 1783899408.546892,
-    "ast_hash": "9d24fe1f5e23654cb6f3aa116fef6613",
+    "mtime": 1783900030.590172,
+    "ast_hash": "71b725f0d564f5997811c12d44ca9dc1",
     "semantic_hash": ""
   },
   "templates/editais/edital_form.html": {
@@ -742,6 +742,11 @@
   "README.md": {
     "mtime": 1783896328.7570076,
     "ast_hash": "03619dc671ed7756392cf86e46f0fc05",
+    "semantic_hash": ""
+  },
+  "templates/editais/aplicacao_edital_list.html": {
+    "mtime": 1783900021.2203982,
+    "ast_hash": "44844cd8edb6c28e57d05a30cc8efd0a",
     "semantic_hash": ""
   }
 }
