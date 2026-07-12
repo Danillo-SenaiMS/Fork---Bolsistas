@@ -240,9 +240,10 @@
                             <table class="table table-bordered" id="cronograma-table">
                                 <thead class="table-light">
                                     <tr>
-                                        <th style="width:35%">Evento</th>
-                                        <th style="width:35%">Data de Referência</th>
-                                        <th style="width:20%">Observação</th>
+                                        <th style="width:20%">Evento</th>
+                                        <th style="width:25%">Data de Referência</th>
+                                        <th style="width:15%">Data do Evento</th>
+                                        <th style="width:15%">Observação</th>
                                         <th style="width:5%">Ordem</th>
                                         <th style="width:5%"></th>
                                     </tr>
@@ -260,6 +261,12 @@
                                             {{ form.data_referencia }}
                                             {% if form.data_referencia.errors %}
                                             <div class="text-danger small">{{ form.data_referencia.errors|join:', ' }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.data_evento }}
+                                            {% if form.data_evento.errors %}
+                                            <div class="text-danger small">{{ form.data_evento.errors|join:', ' }}</div>
                                             {% endif %}
                                         </td>
                                         <td>

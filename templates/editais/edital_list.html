@@ -21,7 +21,7 @@
                 <div class="col-md-8">
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" name="busca" class="form-control" placeholder="Buscar por instituto..." value="{{ busca }}">
+                        <input type="text" name="busca" class="form-control" placeholder="Buscar por instituto ou nº de série..." value="{{ busca }}">
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -44,7 +44,11 @@
                             <th>Edital</th>
                             <th>Instituto</th>
                             <th>Vagas</th>
+                            <th>Inscritos</th>
                             <th>Status</th>
+                            <th>Data Final</th>
+                            <th>Dias p/ Próx. Etapa</th>
+                            <th>Próxima Etapa</th>
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
@@ -54,11 +58,21 @@
                             <td class="fw-medium">{{ edital.nome_edital|default:'-' }}</td>
                             <td class="fw-medium">{{ edital.get_nome_instituto_display }}</td>
                             <td>{{ edital.numero_vagas }}</td>
+                            <td>{{ edital.num_inscritos }}</td>
                             <td>
                                 <span class="badge {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'cancelado' %}bg-danger{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
                                     {{ edital.get_status_display }}
                                 </span>
                             </td>
+                            <td class="small">{{ edital.data_final|date:'d/m/Y'|default:'-' }}</td>
+                            <td class="small">
+                                {% if edital.dias_para_proxima_etapa is not None %}
+                                    {{ edital.dias_para_proxima_etapa }} dia{{ edital.dias_para_proxima_etapa|pluralize:'s' }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ edital.nome_proxima_etapa|default:'—' }}</td>
                             <td class="text-end">
                                 <button class="btn btn-outline-success btn-sm me-1"
                                         title="Resumir com IA"
@@ -84,7 +98,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="5" class="p-0 border-0">
+                            <td colspan="9" class="p-0 border-0">
                                 <div id="resumo-ia-{{ edital.pk }}" class="collapse">
                                     <div class="bg-light border-start border-4 border-success p-3 m-2 rounded">
                                         <div id="resumo-ia-spinner-{{ edital.pk }}" class="htmx-indicator text-center py-2">
@@ -100,7 +114,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-muted py-4">
                                 <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                                 Nenhum edital encontrado.
                             </td>

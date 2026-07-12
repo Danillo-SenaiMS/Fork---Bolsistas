@@ -69,9 +69,13 @@
                         <label class="form-label small text-muted mb-0">Nome do Edital</label>
                         <p class="fw-medium fs-6">{{ edital.nome_edital }}</p>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label small text-muted mb-0">Área de Estudo</label>
                         <p class="fw-medium">{{ edital.area_estudo }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-0">Nº de Série</label>
+                        <p class="fw-medium"><span class="badge bg-dark">{{ edital.numero_serie }}</span></p>
                     </div>
                     {% if edital.detalhes_edital %}
                     <div class="col-12">
@@ -247,6 +251,11 @@
                 <div class="card p-4 mb-4 text-center bg-success bg-opacity-10">
                     <i class="bi bi-check-circle text-success fs-3 mb-2"></i>
                     <p class="fw-medium text-success mb-0">Você já se candidatou a este edital</p>
+                    {% with aplicacao=edital.aplicacoes.all.0 %}
+                    {% if aplicacao.numero_inscricao %}
+                    <p class="text-muted small mb-0 mt-1">Nº de Inscrição: <span class="badge bg-dark">{{ aplicacao.numero_inscricao }}</span></p>
+                    {% endif %}
+                    {% endwith %}
                 </div>
                 {% elif not tem_cadastro %}
                 <div class="card p-4 mb-4 text-center bg-warning bg-opacity-10">
@@ -300,6 +309,9 @@
                         <div class="flex-grow-1 pb-2">
                             <p class="fw-semibold mb-0 small">{{ evento.get_evento_display }}</p>
                             <p class="text-muted mb-0" style="font-size:0.85rem">{{ evento.data_referencia }}</p>
+                            {% if evento.data_evento %}
+                            <p class="text-primary mb-0" style="font-size:0.8rem"><i class="bi bi-calendar-check me-1"></i>{{ evento.data_evento|date:'d/m/Y' }}</p>
+                            {% endif %}
                             {% if evento.observacao %}
                             <p class="text-warning mb-0" style="font-size:0.8rem"><i class="bi bi-info-circle me-1"></i>{{ evento.observacao }}</p>
                             {% endif %}

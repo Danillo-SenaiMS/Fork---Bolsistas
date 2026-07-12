@@ -149,6 +149,7 @@
         <span class="badge {% if edital.status == 'aberto' %}badge-success{% elif edital.status == 'cancelado' %}badge-danger{% elif edital.status == 'encerrado' %}badge-secondary{% else %}badge-warning{% endif %}">
             {{ edital.get_status_display }}
         </span>
+        {% if edital.numero_serie %}| Nº Serie: {{ edital.numero_serie }}{% endif %}
     </p>
 </div>
 
@@ -292,6 +293,9 @@
     <div class="cronograma-item">
         <p class="evento-title">{{ evento.get_evento_display }}</p>
         <p class="evento-data">{{ evento.data_referencia }}</p>
+        {% if evento.data_evento %}
+        <p class="evento-data" style="color:#1a73e8;">Data: {{ evento.data_evento|date:'d/m/Y' }}</p>
+        {% endif %}
         {% if evento.observacao %}
         <p class="evento-obs">Obs.: {{ evento.observacao }}</p>
         {% endif %}

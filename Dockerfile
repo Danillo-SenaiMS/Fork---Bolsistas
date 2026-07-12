@@ -18,6 +18,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN chmod +x /app/docker/entrypoint.sh
+
 RUN useradd -m -u 1000 app && chown -R app:app /app
 USER app
 
