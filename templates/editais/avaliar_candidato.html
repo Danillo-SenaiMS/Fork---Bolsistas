@@ -1,14 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}Avaliar Candidato - Bolsas SENAI - MS{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/bootstrap5.css">
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     .status-apto { color: #198754; }
     .status-inapto { color: #dc3545; }
     .status-preview { font-size: 1.2rem; font-weight: 700; }
     input.nota-lg { font-size: 1.4rem; font-weight: 700; text-align: center; }
-    #entrevista-group { transition: all 0.3s ease; }
 </style>
 {% endblock %}
 
@@ -105,9 +104,8 @@
                                    id="id_data_entrevista"
                                    name="data_entrevista"
                                    class="form-control"
-                                   placeholder="Selecione uma data útil"
-                                   value="{{ aplicacao.data_entrevista|date:'Y-m-d'|default:'' }}"
-                                   readonly>
+                                   placeholder="Selecione uma data útil..."
+                                   value="{{ aplicacao.data_entrevista|date:'Y-m-d'|default:'' }}">
                             {% if aplicacao.data_entrevista %}
                             <div class="form-text">Data atual: <strong>{{ aplicacao.data_entrevista|date:'d/m/Y' }}</strong></div>
                             {% endif %}
@@ -134,6 +132,31 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script>
+var fp;
+
+function atualizarStatus() {
+    var input = document.getElementById('id_nota');
+    var notaStr = input.value.replace(',', '.');
+    var nota = parseFloat(notaStr);
+    var preview = document.getElementById('status-preview');
+    var entrevistaGroup = document.getElementById('entrevista-group');
+
+    if (isNaN(nota)) {
+        preview.innerHTML = '<span class="text-muted">—</span>';
+        entrevistaGroup.style.display = 'none';
+    } else if (nota > 6) {
+        preview.innerHTML = '<span class="status-apto"><i class="bi bi-check-circle-fill me-1"></i>APTO</span>';
+        entrevistaGroup.style.display = 'block';
+        if (fp) { setTimeout(function() { fp.redraw(); }, 150); }
+    } else {
+        preview.innerHTML = '<span class="status-inapto"><i class="bi bi-x-circle-fill me-1"></i>INAPTO</span>';
+        entrevistaGroup.style.display = 'none';
+        if (fp) { fp.clear(); }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+
 var FERIADOS = JSON.parse('{{ feriados_json|safe }}' || '[]');
 
 var feriadosDates = FERIADOS.map(function(s) {
@@ -149,28 +172,7 @@ function isFeriado(date) {
     });
 }
 
-function atualizarStatus() {
-    var input = document.getElementById('id_nota');
-    var notaStr = input.value.replace(',', '.');
-    var nota = parseFloat(notaStr);
-    var preview = document.getElementById('status-preview');
-    var entrevistaGroup = document.getElementById('entrevista-group');
-    var btnSubmit = document.getElementById('btn-submit');
-
-    if (isNaN(nota)) {
-        preview.innerHTML = '<span class="text-muted">—</span>';
-        entrevistaGroup.style.display = 'none';
-    } else if (nota > 6) {
-        preview.innerHTML = '<span class="status-apto"><i class="bi bi-check-circle-fill me-1"></i>APTO</span>';
-        entrevistaGroup.style.display = 'block';
-    } else {
-        preview.innerHTML = '<span class="status-inapto"><i class="bi bi-x-circle-fill me-1"></i>INAPTO</span>';
-        entrevistaGroup.style.display = 'none';
-        document.getElementById('id_data_entrevista').value = '';
-    }
-}
-
-flatpickr('#id_data_entrevista', {
+fp = flatpickr('#id_data_entrevista', {
     locale: 'pt',
     dateFormat: 'Y-m-d',
     minDate: 'today',
@@ -179,6 +181,8 @@ flatpickr('#id_data_entrevista', {
             return (date.getDay() === 0 || date.getDay() === 6) || isFeriado(date);
         }
     ]
+});
+
 });
 </script>
 {% endblock %}
