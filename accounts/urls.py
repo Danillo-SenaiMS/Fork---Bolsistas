@@ -1,6 +1,8 @@
 from django.urls import path
 from django.contrib.auth.views import (
     LogoutView,
+    PasswordChangeView,
+    PasswordChangeDoneView,
     PasswordResetView,
     PasswordResetDoneView,
     PasswordResetConfirmView,
@@ -15,6 +17,21 @@ urlpatterns = [
     path('sair/', LogoutView.as_view(next_page='landing'), name='logout'),
     path('home/', views.HomeView.as_view(), name='home'),
     path('usuarios/<int:pk>/aprovar/', views.AprovarUsuarioView.as_view(), name='aprovar_usuario'),
+
+    # Alteracao de senha (usuario logado)
+    path(
+        'alterar-senha/',
+        PasswordChangeView.as_view(
+            template_name='accounts/password_change.html',
+            success_url='/alterar-senha/concluido/',
+        ),
+        name='password_change',
+    ),
+    path(
+        'alterar-senha/concluido/',
+        PasswordChangeDoneView.as_view(template_name='accounts/password_change_done.html'),
+        name='password_change_done',
+    ),
 
     # Recuperacao de senha (Django built-in auth views)
     path(

@@ -47,6 +47,9 @@
                             <i class="bi bi-gear-fill me-2"></i>Admin Django
                         </a></li>
                         {% endif %}
+                        <li><a href="{% url 'password_change' %}" class="dropdown-item">
+                            <i class="bi bi-lock-fill me-2"></i>Alterar Senha
+                        </a></li>
                         <li>
                             <form method="post" action="{% url 'logout' %}">
                                 {% csrf_token %}
