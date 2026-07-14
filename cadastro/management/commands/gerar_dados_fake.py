@@ -236,10 +236,15 @@ class Command(BaseCommand):
                 'is_active': True,
             },
         )
-        if created:
-            u.set_password(self.senha)
-            u.save()
-        self.stdout.write(f'  Superuser: {u.email}')
+        # Sempre redefinir senha/flags: garante credencial documentada mesmo em reexecuções
+        u.set_password(self.senha)
+        u.is_active = True
+        u.is_staff = True
+        u.is_superuser = True
+        u.save()
+        self.stdout.write(
+            f'  Superuser: {u.email} ({"criado" if created else "senha redefinida"})'
+        )
         return u
 
     def _criar_usuarios(self, prefixo, qtd, grupos_nomes):

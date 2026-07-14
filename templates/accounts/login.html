@@ -33,6 +33,11 @@
                         <label for="id_password" class="form-label">Senha</label>
                         {{ form.password }}
                     </div>
+                    <div class="text-end mb-3">
+                        <a href="{% url 'password_reset' %}" class="small text-decoration-none">
+                            Esqueci minha senha
+                        </a>
+                    </div>
                     <button type="submit" class="btn btn-primary w-100 py-2">
                         <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
                     </button>

@@ -24,8 +24,7 @@ New-Item -ItemType Directory -Force -Path $SecretsDir | Out-Null
 $RequiredSecrets = @(
     "secret_key",
     "db_password",
-    "openai_api_key",
-    "google_api_key",
+    "groq_api_key",
     "rabbitmq_password",
     "cf_dns_api_token"
 )

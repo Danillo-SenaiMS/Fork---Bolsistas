@@ -8,6 +8,8 @@ PATHS_LIVRES = [
     'static',
     'media',
     'health',
+    'recuperar-senha',
+    'redefinir-senha',
 ]
 
 PATHS_EXATOS = [

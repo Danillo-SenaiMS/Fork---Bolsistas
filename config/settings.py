@@ -178,6 +178,20 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
+# Email (recuperacao de senha e notificacoes).
+# Em dev usamos o backend de console: o link de reset aparece nos logs do
+# container `web` (docker compose logs web) — nao precisa de SMTP.
+# Em producao, defina EMAIL_BACKEND=smtp via env + credenciais SMTP.
+EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = read_secret('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Bolsas SENAI-MS <no-reply@bolsas.localhost>')
+EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX', default='[Bolsas SENAI-MS] ')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Seguranca em producao
@@ -236,17 +250,14 @@ LOGGING = {
     },
 }
 
-# Integracao com IA (OpenAI / Google Gemini)
-OPENAI_API_KEY = read_secret('OPENAI_API_KEY')
-OPENAI_MODEL = env('OPENAI_MODEL', default='gpt-4o-mini')
-GOOGLE_API_KEY = read_secret('GOOGLE_API_KEY')
-GOOGLE_MODEL = env('GOOGLE_MODEL', default='gemini-2.0-flash')
+# Integracao com IA (GROQ - Llama 3.3 70B)
+# A GROQ expoe uma API compativel com o SDK openai, reaproveitado aqui via base_url.
+GROQ_API_KEY = read_secret('GROQ_API_KEY')
+GROQ_MODEL = env('GROQ_MODEL', default='llama-3.3-70b-versatile')
+GROQ_BASE_URL = env('GROQ_BASE_URL', default='https://api.groq.com/openai/v1')
 
-# Provedor de IA: 'openai' ou 'google'. Por padrao, usa openai se a chave existir.
-IA_PROVIDER = env(
-    'IA_PROVIDER',
-    default='openai' if OPENAI_API_KEY else ('google' if GOOGLE_API_KEY else ''),
-)
+# Provedor de IA: 'groq' (unico suportado). Por padrao, ativa se a chave existir.
+IA_PROVIDER = env('IA_PROVIDER', default='groq' if GROQ_API_KEY else '')
 
 # Modo de execucao das tarefas de IA: True = Celery (async), False = sincrono
 IA_ASYNC = env.bool('IA_ASYNC', default=True)
