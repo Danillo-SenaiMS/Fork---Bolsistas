@@ -82,6 +82,16 @@
                 <a href="{% if has_cadastro %}{% url 'cadastro_detail' %}{% else %}{% url 'cadastro_create' %}{% endif %}" class="btn btn-outline-secondary btn-sm mt-auto">Acessar</a>
             </div>
         </div>
+        {% if has_cadastro %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card p-4 text-center h-100 border-success">
+                <div class="fs-1 text-success mb-2"><i class="bi bi-clipboard-check"></i></div>
+                <h5 class="fw-semibold">Minhas Candidaturas</h5>
+                <p class="text-muted small mb-3">Acompanhe suas inscrições, avaliações e resultados.</p>
+                <a href="{% url 'minhas_candidaturas' %}" class="btn btn-outline-success btn-sm mt-auto">Acessar</a>
+            </div>
+        </div>
+        {% endif %}
         {% endif %}
 
         {% if is_execute_user %}

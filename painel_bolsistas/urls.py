@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.PainelBolsistasListView.as_view(), name='painel_lista'),
+    path('trilha/', views.TrilhaBolsistaView.as_view(), name='painel_trilha'),
     path('<int:pk>/', views.PainelBolsistaDetailView.as_view(), name='painel_detalhe'),
     path('<int:pk>/resumir/', views.resumir_bolsista, name='painel_resumir_bolsista'),
     path('<int:pk>/analisar/', views.analisar_bolsista, name='painel_analisar_bolsista'),

@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% block title %}Minhas Candidaturas - Bolsas SENAI - MS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="bi bi-clipboard-check me-2"></i>Minhas Candidaturas
+            </h2>
+            <p class="text-muted mb-0">
+                {{ bolsista.user.nome_completo }} &mdash;
+                {{ total_aplicacoes }} candidatura{{ total_aplicacoes|pluralize }}
+            </p>
+        </div>
+        <a href="{% url 'edital_list' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-search me-1"></i>Buscar editais
+        </a>
+    </div>
+
+    {% if not total_aplicacoes %}
+    {# ---- Estado vazio ---- #}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+        <h5 class="text-muted mt-3">Nenhuma candidatura encontrada</h5>
+        <p class="text-muted">Você ainda não se candidatou a nenhum edital.</p>
+        <a href="{% url 'edital_list' %}" class="btn btn-primary mt-2">
+            <i class="bi bi-journal-text me-1"></i>Ver editais disponíveis
+        </a>
+    </div>
+    {% else %}
+
+    <div class="row g-4">
+        {# ---- Coluna esquerda: Trilha de candidaturas ---- #}
+        <div class="col-lg-8">
+            <h5 class="fw-semibold text-secondary mb-3">
+                <i class="bi bi-arrow-repeat me-1"></i>Trilha das candidaturas
+            </h5>
+
+            {% for app in aplicacoes %}
+            {% with status=app.status %}
+            <div class="card mb-3 border-start border-4
+                {% if status == 'aprovado' %}border-success
+                {% elif status == 'rejeitado' %}border-danger
+                {% elif status == 'em_analise' %}border-info
+                {% elif status == 'cancelado' %}border-secondary
+                {% else %}border-warning{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-1">
+                                <a href="{% url 'edital_detail' app.edital.pk %}" class="text-decoration-none">
+                                    {{ app.edital.nome_edital|truncatechars:70 }}
+                                </a>
+                            </h6>
+                            <div class="text-muted small">
+                                <i class="bi bi-building me-1"></i>{{ app.edital.get_nome_instituto_display }}
+                                &bull;
+                                <i class="bi bi-book me-1"></i>{{ app.edital.area_estudo|default:"Não informada" }}
+                            </div>
+                        </div>
+                        <span class="badge rounded-pill
+                            {% if status == 'aprovado' %}bg-success
+                            {% elif status == 'rejeitado' %}bg-danger
+                            {% elif status == 'em_analise' %}bg-info text-dark
+                            {% elif status == 'cancelado' %}bg-secondary
+                            {% else %}bg-warning text-dark{% endif %} fs-6 px-3 py-2">
+                            {% if status == 'pendente' %}
+                                <i class="bi bi-hourglass-split me-1"></i>Pendente
+                            {% elif status == 'em_analise' %}
+                                <i class="bi bi-search me-1"></i>Em Análise
+                            {% elif status == 'aprovado' %}
+                                <i class="bi bi-check-circle me-1"></i>Aprovado
+                            {% elif status == 'rejeitado' %}
+                                <i class="bi bi-x-circle me-1"></i>Rejeitado
+                            {% elif status == 'cancelado' %}
+                                <i class="bi bi-slash-circle me-1"></i>Cancelado
+                            {% else %}
+                                {{ app.get_status_display }}
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    {# Detalhes adicionais #}
+                    <div class="row mt-3 g-2">
+                        <div class="col-sm-4">
+                            <small class="text-muted d-block">Data da candidatura</small>
+                            <span class="fw-medium small">
+                                {% if app.data_aplicacao %}
+                                    {{ app.data_aplicacao|date:"d/m/Y" }}
+                                {% else %}
+                                    {{ app.created_at|date:"d/m/Y" }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="col-sm-4">
+                            <small class="text-muted d-block">Inscrição nº</small>
+                            <span class="fw-medium small font-monospace">{{ app.numero_inscricao|default:"—" }}</span>
+                        </div>
+                        <div class="col-sm-4">
+                            <small class="text-muted d-block">Vagas</small>
+                            <span class="fw-medium small">{{ app.edital.numero_vagas }} vaga{{ app.edital.numero_vagas|pluralize }}</span>
+                        </div>
+                    </div>
+
+                    {% if app.data_entrevista %}
+                    <div class="mt-2">
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            Entrevista: {{ app.data_entrevista|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+
+        {# ---- Coluna direita: Resumo e Avaliações ---- #}
+        <div class="col-lg-4">
+            {# Card de pontuação #}
+            <div class="card mb-3">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-3">Pontuação Geral</h6>
+                    <div class="display-5 fw-bold text-primary mb-2">
+                        {{ pontuacao_avaliacoes }}
+                    </div>
+                    <small class="text-muted">pontos em {{ total_avaliacoes }} avaliaç{{ total_avaliacoes|pluralize:"ão,ões" }}</small>
+                    {% if pontuacao_previa %}
+                    <div class="mt-2">
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-calculator me-1"></i>Prévia: {{ pontuacao_previa }} pts
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Card de avaliações detalhadas #}
+            {% if total_avaliacoes %}
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-clipboard-data me-1"></i>Avaliações por critério
+                    </h6>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for av in avaliacoes %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="me-2">
+                                <span class="fw-medium small">{{ av.criterio.nome }}</span>
+                                {% if av.observacao %}
+                                <p class="text-muted small mb-0 mt-1">{{ av.observacao|truncatechars:80 }}</p>
+                                {% endif %}
+                                {% if av.avaliado_por %}
+                                <small class="text-muted d-block mt-1">
+                                    Avaliador: {{ av.avaliado_por.nome_completo }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-primary rounded-pill flex-shrink-0">
+                                {{ av.pontos }} pts
+                            </span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center text-muted py-4">
+                    <i class="bi bi-clipboard-x fs-3 mb-2 d-block"></i>
+                    <small>Nenhuma avaliação registrada ainda.</small>
+                    <p class="small mt-1 mb-0">Suas candidaturas serão avaliadas pelos gestores.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {# Status do cadastro #}
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted d-block">Status do cadastro</small>
+                            <span class="fw-medium small">
+                                {% if bolsista.pontuacao_previa %}
+                                    <i class="bi bi-check-circle text-success me-1"></i>Completo
+                                {% else %}
+                                    <i class="bi bi-exclamation-circle text-warning me-1"></i>Incompleto
+                                {% endif %}
+                            </span>
+                        </div>
+                        <a href="{% url 'cadastro_detail' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-pencil me-1"></i>Editar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

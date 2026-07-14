@@ -62,7 +62,8 @@ function preencherSugestaoIA() {
     sugestoes.forEach(function(s) {
         const input = document.querySelector('input[name="criterio_' + s.criterio_id + '"]');
         if (input) {
-            input.value = s.pontos.toString().replace('.', ',');
+            // HTML number input usa ponto como separador decimal (independente de locale)
+            input.value = parseFloat(s.pontos).toString();
             input.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
             setTimeout(function() {
                 input.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');

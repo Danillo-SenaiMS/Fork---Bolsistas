@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('criar/', views.CadastroCreateView.as_view(), name='cadastro_create'),
     path('novo/', views.BolsistaCreateView.as_view(), name='bolsista_create'),
+    path('minhas-candidaturas/', views.MinhasCandidaturasView.as_view(), name='minhas_candidaturas'),
     path('', views.CadastroDetailView.as_view(), name='cadastro_detail'),
     path('<int:pk>/', views.CadastroDetailView.as_view(), name='cadastro_detail_pk'),
     path('<int:pk>/editar/', views.CadastroUpdateView.as_view(), name='cadastro_update_pk'),

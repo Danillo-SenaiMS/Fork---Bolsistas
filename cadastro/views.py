@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.views.generic import CreateView, DetailView, UpdateView, ListView, TemplateView, FormView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -647,6 +648,59 @@ class SolicitacaoRevisarView(ManagerRequiredMixin, TemplateView):
             )
             return HttpResponse(html)
         return redirect('solicitacao_list')
+
+
+class MinhasCandidaturasView(ViewUserRequiredMixin, TemplateView):
+    """Pagina 'Minhas Candidaturas' — trilha completa do candidato:
+    aplicacoes, status, avaliacoes e pontuacao."""
+    template_name = 'cadastro/minhas_candidaturas.html'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.bolsista = CadastroBolsista.objects.get(user=request.user)
+        except CadastroBolsista.DoesNotExist:
+            return redirect('cadastro_create')
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        bolsista = self.bolsista
+
+        # Aplicacoes com edital relacionado (ordenadas por data mais recente)
+        aplicacoes = (
+            bolsista.aplicacoes
+            .select_related('edital')
+            .order_by('-created_at')
+        )
+
+        # Avaliacoes com criterio e avaliador (ordenadas por criterio)
+        avaliacoes = (
+            bolsista.avaliacoes
+            .select_related('criterio', 'avaliado_por')
+            .order_by('criterio__nome')
+        )
+
+        # Totais
+        total_avaliacoes = avaliacoes.count()
+        pontuacao_avaliacoes = sum(a.pontos for a in avaliacoes)
+
+        context.update({
+            'bolsista': bolsista,
+            'aplicacoes': aplicacoes,
+            'avaliacoes': avaliacoes,
+            'total_aplicacoes': aplicacoes.count(),
+            'total_avaliacoes': total_avaliacoes,
+            'pontuacao_avaliacoes': pontuacao_avaliacoes,
+            'pontuacao_previa': bolsista.pontuacao_previa,
+            'status_labels': {
+                'pendente': ('warning', 'Pendente'),
+                'em_analise': ('info', 'Em Análise'),
+                'aprovado': ('success', 'Aprovado'),
+                'rejeitado': ('danger', 'Rejeitado'),
+                'cancelado': ('secondary', 'Cancelado'),
+            },
+        })
+        return context
 
 
 def _recalcular_pontuacao(cadastro):

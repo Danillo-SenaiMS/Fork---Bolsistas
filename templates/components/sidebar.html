@@ -11,9 +11,15 @@
         </a>
 
         {% if is_view_user %}
+        <div class="sidebar-section">Candidato</div>
         <a href="{% if has_cadastro %}{% url 'cadastro_detail' %}{% else %}{% url 'cadastro_create' %}{% endif %}" class="sidebar-link">
             <i class="bi bi-person-lines-fill"></i> Meu Cadastro
         </a>
+        {% if has_cadastro %}
+        <a href="{% url 'minhas_candidaturas' %}" class="sidebar-link {% if request.resolver_match.url_name == 'minhas_candidaturas' %}active{% endif %}">
+            <i class="bi bi-clipboard-check"></i> Minhas Candidaturas
+        </a>
+        {% endif %}
         {% endif %}
 
         <div class="sidebar-section">Bolsas</div>
@@ -25,6 +31,9 @@
         <div class="sidebar-section">Gestão</div>
         <a href="{% url 'painel_lista' %}" class="sidebar-link">
             <i class="bi bi-people-fill"></i> Lista de Bolsistas
+        </a>
+        <a href="{% url 'painel_trilha' %}" class="sidebar-link {% if request.resolver_match.url_name == 'painel_trilha' %}active{% endif %}">
+            <i class="bi bi-signpost-2"></i> Trilha do Bolsista
         </a>
         {% endif %}
 

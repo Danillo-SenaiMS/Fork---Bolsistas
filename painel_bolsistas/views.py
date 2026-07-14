@@ -1,4 +1,4 @@
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -118,6 +118,46 @@ def _task_running_partial(request, task_id):
     return render_to_string('painel/partials/task_running.html', {
         'task_id': task_id,
     })
+
+
+class TrilhaBolsistaView(ManagerOrExecuteRequiredMixin, ListView):
+    """Pagina 'Trilha do Bolsista' — historico completo de cada candidato:
+    aplicacoes, status, notas, avaliacoes, pontuacoes."""
+    model = CadastroBolsista
+    template_name = 'painel/trilha_bolsistas.html'
+    context_object_name = 'bolsistas'
+    paginate_by = 15
+
+    def get_queryset(self):
+        return (
+            CadastroBolsista.objects
+            .select_related('user')
+            .prefetch_related(
+                'aplicacoes__edital',
+                'avaliacoes__criterio',
+                'avaliacoes__avaliado_por',
+                'formacoes',
+            )
+            .order_by('user__nome_completo')
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        # Para cada bolsista, anexa dados agregados
+        for bolsista in ctx['bolsistas']:
+            apps = list(bolsista.aplicacoes.all())
+            bolsista.total_aplicacoes = len(apps)
+            bolsista.total_aprovado = sum(1 for a in apps if a.status == 'aprovado')
+            bolsista.total_rejeitado = sum(1 for a in apps if a.status == 'rejeitado')
+            bolsista.total_em_analise = sum(1 for a in apps if a.status == 'em_analise')
+            bolsista.total_pendente = sum(1 for a in apps if a.status == 'pendente')
+            avals = list(bolsista.avaliacoes.all())
+            bolsista.total_avaliacoes = len(avals)
+            bolsista.pontuacao_total = sum(a.pontos for a in avals)
+            bolsista.formacao_principal = (
+                bolsista.formacoes.order_by('-ano_conclusao').first()
+            )
+        return ctx
 
 
 def _render_bolsista_result(dados, bolsista_id=None):

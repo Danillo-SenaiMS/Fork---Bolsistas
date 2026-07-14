@@ -23,6 +23,7 @@ from cadastro.models import CadastroBolsista
 from .models import EditalProvisorio, AplicacaoEdital, NIVEL_BOLSA_CONFIG
 from .forms import EditalProvisorioForm, CronogramaEventoFormSet, DistribuicaoBolsaFormSet
 from . import tasks as ia_tasks
+from .ai_service import _score_heuristico
 
 
 class ContextMixin:
@@ -466,6 +467,50 @@ def analisar_edital(request, pk):
     cache.set(f'task_owner:{task.id}', request.user.id, timeout=3600)
     cache.set(f'task_context:{task.id}', {'edital_id': pk}, timeout=3600)
     return _task_running_partial(request, task.id)
+
+
+@require_POST
+def minha_compatibilidade(request, pk):
+    """Retorna resumo IA do edital + % de compatibilidade do ViewUser logado."""
+    if not request.user.is_authenticated:
+        return HttpResponse('Não autorizado', status=401)
+
+    edital = get_object_or_404(EditalProvisorio, pk=pk)
+
+    # Apenas ViewUser com cadastro
+    is_view = request.user.groups.filter(name=GROUP_VIEW_USER).exists()
+    if not is_view or not hasattr(request.user, 'cadastro'):
+        return HttpResponse('Acesso restrito a candidatos com cadastro', status=403)
+
+    bolsista = request.user.cadastro
+
+    # Gera resumo do edital via IA
+    from . import ai_service
+    dados_resumo = ai_service.resumir_edital(edital)
+    resumo = dados_resumo.get('resumo', 'Resumo não disponível.')
+
+    # Calcula compatibilidade heurística (0-100)
+    score = _score_heuristico(bolsista, edital)
+
+    # Define cor e label com base no score
+    if score >= 70:
+        cor_barra = 'success'
+        label_nivel = 'Alta compatibilidade'
+    elif score >= 40:
+        cor_barra = 'warning'
+        label_nivel = 'Média compatibilidade'
+    else:
+        cor_barra = 'danger'
+        label_nivel = 'Baixa compatibilidade'
+
+    html = render_to_string('editais/partials/compatibilidade_viewuser.html', {
+        'resumo': resumo,
+        'score': score,
+        'cor_barra': cor_barra,
+        'label_nivel': label_nivel,
+        'edital': edital,
+    })
+    return HttpResponse(html, content_type='text/html; charset=utf-8')
 
 
 def edital_task_status(request, task_id):

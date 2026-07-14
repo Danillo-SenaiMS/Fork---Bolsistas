@@ -74,16 +74,6 @@
                             </td>
                             <td class="small">{{ edital.nome_proxima_etapa|default:'—' }}</td>
                             <td class="text-end">
-                                <button class="btn btn-outline-success btn-sm me-1"
-                                        title="Resumir com IA"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#resumo-ia-{{ edital.pk }}"
-                                        hx-post="{% url 'edital_resumir' edital.pk %}"
-                                        hx-target="#resumo-ia-{{ edital.pk }}"
-                                        hx-indicator="#resumo-ia-spinner-{{ edital.pk }}"
-                                        hx-swap="innerHTML">
-                                    <i class="bi bi-magic"></i>
-                                </button>
                                 <a href="{% url 'edital_detail' edital.pk %}" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
                                     <i class="bi bi-eye"></i>
                                 </a>
@@ -95,21 +85,6 @@
                                     <i class="bi bi-trash"></i>
                                 </a>
                                 {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="9" class="p-0 border-0">
-                                <div id="resumo-ia-{{ edital.pk }}" class="collapse">
-                                    <div class="bg-light border-start border-4 border-success p-3 m-2 rounded">
-                                        <div id="resumo-ia-spinner-{{ edital.pk }}" class="htmx-indicator text-center py-2">
-                                            <div class="spinner-border spinner-border-sm text-success" role="status">
-                                                <span class="visually-hidden">Gerando resumo...</span>
-                                            </div>
-                                            <span class="text-muted small ms-2">Gerando resumo com IA...</span>
-                                        </div>
-                                        <p class="text-muted small mb-0">Clique no botão <i class="bi bi-magic"></i> para gerar um resumo objetivo do edital.</p>
-                                    </div>
-                                </div>
                             </td>
                         </tr>
                         {% empty %}

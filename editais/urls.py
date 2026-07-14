@@ -12,6 +12,7 @@ urlpatterns = [
     path('<int:pk>/aplicar/', views.AplicarEditalView.as_view(), name='aplicar_edital'),
     path('<int:pk>/resumir/', views.resumir_edital, name='edital_resumir'),
     path('<int:pk>/analisar/', views.analisar_edital, name='edital_analisar'),
+    path('<int:pk>/minha-compatibilidade/', views.minha_compatibilidade, name='edital_compatibilidade'),
     path('tarefa/<str:task_id>/status/', views.edital_task_status, name='edital_task_status'),
     path('aplicacoes/', views.AplicacaoListView.as_view(), name='aplicacao_list'),
     path('aplicacoes/<int:pk>/cancelar/', views.CancelarAplicacaoView.as_view(), name='cancelar_aplicacao'),

@@ -44,6 +44,30 @@
                 </button>
                 <div class="collapse" id="analise-ia-collapse">
                     <div class="card-body">
+
+                        {% if is_view_user and tem_cadastro %}
+                        {# ---- ViewUser: compatibilidade do próprio perfil ---- #}
+                        <div class="text-center mb-3">
+                            <button class="btn btn-primary btn-sm"
+                                    hx-post="{% url 'edital_compatibilidade' edital.pk %}"
+                                    hx-target="#compatibilidade-resultado"
+                                    hx-indicator="#compatibilidade-spinner"
+                                    hx-swap="innerHTML">
+                                <i class="bi bi-person-check me-1"></i>Ver minha compatibilidade
+                            </button>
+                        </div>
+                        <div id="compatibilidade-spinner" class="htmx-indicator text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Calculando...</span>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0">A IA está analisando o edital e seu perfil...</p>
+                        </div>
+                        <div id="compatibilidade-resultado">
+                            <p class="text-muted mb-0">Clique em <strong>Ver minha compatibilidade</strong> para descobrir o quanto seu perfil se adequa a este edital.</p>
+                        </div>
+
+                        {% else %}
+                        {# ---- Manager / Execute / Superuser: análise completa com radar ---- #}
                         <div class="text-center mb-3">
                             <button class="btn btn-primary btn-sm"
                                     hx-post="{% url 'edital_analisar' edital.pk %}"
@@ -53,17 +77,17 @@
                                 <i class="bi bi-magic me-1"></i>Resumir por IA
                             </button>
                         </div>
-
                         <div id="analise-ia-spinner" class="htmx-indicator text-center py-3">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Analisando...</span>
                             </div>
                             <p class="text-muted small mt-2 mb-0">A IA está analisando o edital e comparando com os bolsistas...</p>
                         </div>
-
                         <div id="analise-ia-resultado">
                             <p class="text-muted mb-0">Clique em <strong>Resumir por IA</strong> para gerar um resumo do edital e uma análise comparativa com os bolsistas disponíveis.</p>
                         </div>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>

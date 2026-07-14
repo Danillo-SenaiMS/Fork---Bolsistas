@@ -1,0 +1,26 @@
+<div class="p-3">
+    <h6 class="fw-semibold text-primary mb-2">
+        <i class="bi bi-stars me-2"></i>Resumo do Edital
+    </h6>
+    <p class="mb-4">{{ resumo }}</p>
+
+    <h6 class="fw-semibold text-primary mb-3">
+        <i class="bi bi-person-check me-2"></i>Sua Compatibilidade
+    </h6>
+
+    <div class="text-center mb-2">
+        <div class="display-4 fw-bold text-{{ cor_barra }} mb-1">{{ score }}%</div>
+        <span class="badge bg-{{ cor_barra }} fs-6 px-3 py-2">{{ label_nivel }}</span>
+    </div>
+
+    <div class="progress" style="height: 12px;">
+        <div class="progress-bar bg-{{ cor_barra }}" role="progressbar"
+             style="width: {{ score }}%;" aria-valuenow="{{ score }}" aria-valuemin="0" aria-valuemax="100">
+        </div>
+    </div>
+
+    <p class="text-muted small text-center mt-3 mb-0">
+        <i class="bi bi-info-circle me-1"></i>
+        Compatibilidade calculada com base no seu perfil cadastral frente aos requisitos do edital.
+    </p>
+</div>

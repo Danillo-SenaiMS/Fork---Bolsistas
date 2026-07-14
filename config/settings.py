@@ -15,13 +15,15 @@ env.read_env(str(BASE_DIR / '.env'))
 
 
 def read_secret(name):
-    """Retorna valor de segredo: _FILE (Docker Secret) tem prioridade sobre env."""
+    """Retorna valor de segredo: _FILE (Docker Secret) tem prioridade sobre env.
+    Sempre faz strip() para evitar erros de whitespace no .env ou Docker Secrets."""
     file_key = f'{name}_FILE'
     file_path = env(file_key, default=None)
     if file_path and os.path.exists(file_path):
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.read().strip()
-    return env(name, default=None)
+    value = env(name, default=None)
+    return value.strip() if value else value
 
 
 SECRET_KEY = read_secret('SECRET_KEY')

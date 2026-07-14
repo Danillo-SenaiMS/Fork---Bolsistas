@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Trilha do Bolsista - Bolsas SENAI - MS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="bi bi-signpost-2 me-2"></i>Trilha do Bolsista
+            </h2>
+            <p class="text-muted mb-0">Histórico completo de candidaturas, avaliações e pontuações.</p>
+        </div>
+        <a href="{% url 'painel_lista' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-people me-1"></i>Lista de Bolsistas
+        </a>
+    </div>
+
+    {% if not bolsistas %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+        <h5 class="text-muted mt-3">Nenhum bolsista cadastrado</h5>
+    </div>
+    {% else %}
+
+    <div class="accordion" id="trilha-accordion">
+        {% for bolsista in bolsistas %}
+        <div class="accordion-item mb-2 border">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-white py-3" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#trilha-{{ bolsista.pk }}"
+                        aria-expanded="false">
+                    <div class="d-flex justify-content-between align-items-center w-100 me-3 flex-wrap gap-2">
+                        <div>
+                            <span class="fw-semibold">{{ bolsista.user.nome_completo }}</span>
+                            <small class="text-muted ms-2">{{ bolsista.user.email }}</small>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            {% if bolsista.total_aplicacoes %}
+                            <span class="badge bg-primary rounded-pill">{{ bolsista.total_aplicacoes }} candidatura{{ bolsista.total_aplicacoes|pluralize }}</span>
+                            {% endif %}
+                            {% if bolsista.total_aprovado %}
+                            <span class="badge bg-success rounded-pill">{{ bolsista.total_aprovado }} aprovada{{ bolsista.total_aprovado|pluralize }}</span>
+                            {% endif %}
+                            {% if bolsista.total_rejeitado %}
+                            <span class="badge bg-danger rounded-pill">{{ bolsista.total_rejeitado }} rejeitada{{ bolsista.total_rejeitado|pluralize }}</span>
+                            {% endif %}
+                            {% if bolsista.pontuacao_total > 0 %}
+                            <span class="badge bg-info rounded-pill text-dark">{{ bolsista.pontuacao_total }} pts</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </button>
+            </h2>
+            <div id="trilha-{{ bolsista.pk }}" class="accordion-collapse collapse"
+                 data-bs-parent="#trilha-accordion">
+                <div class="accordion-body bg-light">
+
+                    {# Resumo do bolsista #}
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="bg-white rounded p-3 text-center border">
+                                <small class="text-muted d-block">Total de candidaturas</small>
+                                <span class="fw-bold fs-4 text-primary">{{ bolsista.total_aplicacoes }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-white rounded p-3 text-center border">
+                                <small class="text-muted d-block">Última formação</small>
+                                <span class="fw-bold fs-6">
+                                    {{ bolsista.formacao_principal.get_tipo_display|default:'Não informada' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-white rounded p-3 text-center border">
+                                <small class="text-muted d-block">Pontuação total</small>
+                                <span class="fw-bold fs-4 {% if bolsista.pontuacao_total >= 50 %}text-success{% else %}text-warning{% endif %}">
+                                    {{ bolsista.pontuacao_total }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Candidaturas (aplicações) #}
+                    {% if bolsista.aplicacoes.exists %}
+                    <h6 class="fw-semibold mb-3">
+                        <i class="bi bi-journal-text me-2 text-primary"></i>Candidaturas
+                    </h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-hover bg-white align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Edital</th>
+                                    <th>Instituto</th>
+                                    <th>Status</th>
+                                    <th>Nota</th>
+                                    <th>Data</th>
+                                    <th>Entrevista</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in bolsista.aplicacoes.all %}
+                                <tr>
+                                    <td class="fw-medium small">
+                                        <a href="{% url 'edital_detail' app.edital.pk %}" class="text-decoration-none">
+                                            {{ app.edital.nome_edital|truncatechars:50 }}
+                                        </a>
+                                    </td>
+                                    <td class="small">{{ app.edital.get_nome_instituto_display }}</td>
+                                    <td>
+                                        {% if app.status == 'aprovado' %}
+                                        <span class="badge bg-success">Aprovado</span>
+                                        {% elif app.status == 'rejeitado' %}
+                                        <span class="badge bg-danger">Rejeitado</span>
+                                        {% elif app.status == 'em_analise' %}
+                                        <span class="badge bg-info text-dark">Em Análise</span>
+                                        {% elif app.status == 'cancelado' %}
+                                        <span class="badge bg-secondary">Cancelado</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">Pendente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small fw-bold">
+                                        {{ app.nota|default:'—' }}
+                                    </td>
+                                    <td class="text-muted small">
+                                        {{ app.created_at|date:'d/m/Y' }}
+                                    </td>
+                                    <td class="text-muted small">
+                                        {{ app.data_entrevista|date:'d/m/Y'|default:'—' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3 mb-3">
+                        <i class="bi bi-clipboard-x d-block mb-1"></i>
+                        <small>Nenhuma candidatura registrada.</small>
+                    </div>
+                    {% endif %}
+
+                    {# Avaliações por critério #}
+                    {% if bolsista.avaliacoes.exists %}
+                    <h6 class="fw-semibold mb-3">
+                        <i class="bi bi-clipboard-data me-2 text-primary"></i>Avaliações por critério
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover bg-white align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Critério</th>
+                                    <th>Pontos</th>
+                                    <th>Avaliador</th>
+                                    <th>Observação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for av in bolsista.avaliacoes.all %}
+                                <tr>
+                                    <td class="fw-medium small">{{ av.criterio.nome }}</td>
+                                    <td>
+                                        <span class="badge bg-primary rounded-pill">{{ av.pontos }}</span>
+                                    </td>
+                                    <td class="small">{{ av.avaliado_por.nome_completo|default:'—' }}</td>
+                                    <td class="text-muted small">{{ av.observacao|default:'—'|truncatechars:60 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th>Total</th>
+                                    <th><span class="badge bg-dark fs-6">{{ bolsista.pontuacao_total }}</span></th>
+                                    <th colspan="2"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    {% include 'components/pagination.html' %}
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}
