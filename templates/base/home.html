@@ -1,117 +1,434 @@
 {% extends 'base.html' %}
-{% block title %}Inicio - Bolsas SENAI - MS{% endblock %}
+{% block title %}Dashboard - Bolsas SENAI - MS{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-3">
-    <h2 class="fw-bold text-primary mb-1">
-        <i class="bi bi-grid-fill me-2"></i>Dashboard
-    </h2>
-    <p class="text-muted mb-4">
-        Bem-vindo, {{ user.nome_completo }}
-    </p>
 
+    {# ===== CABEÇALHO ===== #}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="bi bi-grid-fill me-2"></i>Dashboard
+            </h2>
+            <p class="text-muted mb-0">Bem-vindo, {{ user.nome_completo }}</p>
+        </div>
+    </div>
+
+    {# ======================================================================== #}
+    {#  GESTÃO: Superuser / Manager / ExecuteUser                              #}
+    {# ======================================================================== #}
+    {% if is_superuser or is_manager or is_execute_user %}
+
+    {# --- Cards de estatísticas (linha 1) --- #}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card border-primary border-start border-4 h-100">
+                <div class="card-body text-center py-3">
+                    <div class="text-primary mb-1"><i class="bi bi-people-fill fs-3"></i></div>
+                    <div class="fw-bold fs-4 text-primary">{{ total_bolsistas }}</div>
+                    <small class="text-muted">Bolsistas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card border-success border-start border-4 h-100">
+                <div class="card-body text-center py-3">
+                    <div class="text-success mb-1"><i class="bi bi-journal-check fs-3"></i></div>
+                    <div class="fw-bold fs-4 text-success">{{ editais_abertos }}</div>
+                    <small class="text-muted">Editais Abertos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card border-secondary border-start border-4 h-100">
+                <div class="card-body text-center py-3">
+                    <div class="text-secondary mb-1"><i class="bi bi-journal-x fs-3"></i></div>
+                    <div class="fw-bold fs-4 text-secondary">{{ editais_encerrados|add:editais_cancelados }}</div>
+                    <small class="text-muted">Encerrados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card border-info border-start border-4 h-100">
+                <div class="card-body text-center py-3">
+                    <div class="text-info mb-1"><i class="bi bi-search fs-3"></i></div>
+                    <div class="fw-bold fs-4 text-info">{{ editais_em_analise }}</div>
+                    <small class="text-muted">Em Análise</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card border-warning border-start border-4 h-100">
+                <div class="card-body text-center py-3">
+                    <div class="text-warning mb-1"><i class="bi bi-list-check fs-3"></i></div>
+                    <div class="fw-bold fs-4 text-warning">{{ solicitacoes_pendentes }}</div>
+                    <small class="text-muted">Solicitações</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card border-danger border-start border-4 h-100">
+                <div class="card-body text-center py-3">
+                    <div class="text-danger mb-1"><i class="bi bi-send fs-3"></i></div>
+                    <div class="fw-bold fs-4 text-danger">{{ total_candidaturas }}</div>
+                    <small class="text-muted">Candidaturas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Linha 2: Gráficos e detalhes --- #}
     <div class="row g-4">
+        {# Coluna esquerda: Editais por status #}
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-pie-chart me-2 text-primary"></i>Editais por Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if total_editais %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-success me-1" style="font-size:0.6rem;"></i>Abertos</span>
+                            <span class="fw-medium">{{ editais_abertos }}</span>
+                        </div>
+                        <div class="progress mb-2" style="height:8px;">
+                            <div class="progress-bar bg-success" style="width:{% widthratio editais_abertos total_editais 100 %}%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-info me-1" style="font-size:0.6rem;"></i>Em Análise</span>
+                            <span class="fw-medium">{{ editais_em_analise }}</span>
+                        </div>
+                        <div class="progress mb-2" style="height:8px;">
+                            <div class="progress-bar bg-info" style="width:{% widthratio editais_em_analise total_editais 100 %}%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-secondary me-1" style="font-size:0.6rem;"></i>Encerrados</span>
+                            <span class="fw-medium">{{ editais_encerrados }}</span>
+                        </div>
+                        <div class="progress mb-2" style="height:8px;">
+                            <div class="progress-bar bg-secondary" style="width:{% widthratio editais_encerrados total_editais 100 %}%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-danger me-1" style="font-size:0.6rem;"></i>Cancelados</span>
+                            <span class="fw-medium">{{ editais_cancelados }}</span>
+                        </div>
+                        <div class="progress mb-0" style="height:8px;">
+                            <div class="progress-bar bg-danger" style="width:{% widthratio editais_cancelados total_editais 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0">Nenhum edital cadastrado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Coluna centro: Candidaturas #}
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-bar-chart me-2 text-primary"></i>Candidaturas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if total_candidaturas %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-warning me-1" style="font-size:0.6rem;"></i>Pendentes</span>
+                            <span class="fw-medium">{{ candidaturas_pendentes }}</span>
+                        </div>
+                        <div class="progress mb-2" style="height:8px;">
+                            <div class="progress-bar bg-warning" style="width:{% widthratio candidaturas_pendentes total_candidaturas 100 %}%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-success me-1" style="font-size:0.6rem;"></i>Aprovadas</span>
+                            <span class="fw-medium">{{ candidaturas_aprovadas }}</span>
+                        </div>
+                        <div class="progress mb-2" style="height:8px;">
+                            <div class="progress-bar bg-success" style="width:{% widthratio candidaturas_aprovadas total_candidaturas 100 %}%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-danger me-1" style="font-size:0.6rem;"></i>Rejeitadas</span>
+                            <span class="fw-medium">{{ candidaturas_rejeitadas }}</span>
+                        </div>
+                        <div class="progress mb-0" style="height:8px;">
+                            <div class="progress-bar bg-danger" style="width:{% widthratio candidaturas_rejeitadas total_candidaturas 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0">Nenhuma candidatura registrada.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Coluna direita: Últimos editais + links #}
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-clock-history me-2 text-primary"></i>Últimos Editais
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if ultimos_editais %}
+                    <div class="list-group list-group-flush">
+                        {% for edital in ultimos_editais %}
+                        <a href="{% url 'edital_detail' edital.pk %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3">
+                            <div class="text-truncate me-2 small">{{ edital.nome_edital|truncatechars:35 }}</div>
+                            <span class="badge {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'encerrado' %}bg-secondary{% elif edital.status == 'cancelado' %}bg-danger{% else %}bg-warning text-dark{% endif %} flex-shrink-0">
+                                {{ edital.get_status_display }}
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0">Nenhum edital cadastrado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Linha 3: Links rápidos --- #}
+    <div class="row g-3 mt-3">
+        <div class="col-6 col-md-3">
+            <a href="{% url 'edital_list' %}" class="text-decoration-none">
+                <div class="card bg-primary bg-opacity-10 border-primary h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-journal-plus fs-4 text-primary"></i>
+                        <div class="fw-medium small mt-1">Gerenciar Editais</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{% url 'painel_trilha' %}" class="text-decoration-none">
+                <div class="card bg-success bg-opacity-10 border-success h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-signpost-2 fs-4 text-success"></i>
+                        <div class="fw-medium small mt-1">Trilha dos Bolsistas</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{% url 'solicitacao_list' %}" class="text-decoration-none">
+                <div class="card bg-warning bg-opacity-10 border-warning h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-list-check fs-4 text-warning"></i>
+                        <div class="fw-medium small mt-1">Solicitações
+                            {% if solicitacoes_pendentes %}
+                            <span class="badge bg-warning text-dark ms-1">{{ solicitacoes_pendentes }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
         {% if is_superuser %}
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-warning">
-                <div class="fs-1 text-warning mb-2"><i class="bi bi-speedometer2"></i></div>
-                <h5 class="fw-semibold">Painel Admin</h5>
-                <p class="text-muted small mb-3">Acesse o painel administrativo do Django.</p>
-                <a href="{% url 'admin:index' %}" class="btn btn-warning btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-success">
-                <div class="fs-1 text-success mb-2"><i class="bi bi-list-check"></i></div>
-                <h5 class="fw-semibold">Solicitações</h5>
-                <p class="text-muted small mb-3">Revise solicitações de edição pendentes.</p>
-                <a href="{% url 'solicitacao_list' %}" class="btn btn-outline-success btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-primary">
-                <div class="fs-1 text-primary mb-2"><i class="bi bi-journal-text"></i></div>
-                <h5 class="fw-semibold">Editais</h5>
-                <p class="text-muted small mb-3">Consulte e gerencie editais.</p>
-                <a href="{% url 'edital_list' %}" class="btn btn-outline-primary btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-info">
-                <div class="fs-1 text-info mb-2"><i class="bi bi-people-fill"></i></div>
-                <h5 class="fw-semibold">Lista de Bolsistas</h5>
-                <p class="text-muted small mb-3">Visualize a lista de candidatos/bolsistas.</p>
-                <a href="{% url 'painel_lista' %}" class="btn btn-outline-info btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if is_manager %}
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-primary">
-                <div class="fs-1 text-primary mb-2"><i class="bi bi-journal-text"></i></div>
-                <h5 class="fw-semibold">Editais</h5>
-                <p class="text-muted small mb-3">Consulte e gerencie editais.</p>
-                <a href="{% url 'edital_list' %}" class="btn btn-outline-primary btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-info">
-                <div class="fs-1 text-info mb-2"><i class="bi bi-people-fill"></i></div>
-                <h5 class="fw-semibold">Lista de Bolsistas</h5>
-                <p class="text-muted small mb-3">Visualize a lista de candidatos/bolsistas.</p>
-                <a href="{% url 'painel_lista' %}" class="btn btn-outline-info btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if is_view_user %}
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-primary">
-                <div class="fs-1 text-primary mb-2"><i class="bi bi-journal-text"></i></div>
-                <h5 class="fw-semibold">Editais</h5>
-                <p class="text-muted small mb-3">Consulte editais abertos e candidate-se.</p>
-                <a href="{% url 'edital_list' %}" class="btn btn-outline-primary btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-secondary">
-                <div class="fs-1 text-secondary mb-2"><i class="bi bi-person-lines-fill"></i></div>
-                <h5 class="fw-semibold">Meu Cadastro</h5>
-                <p class="text-muted small mb-3">Gerencie seus dados pessoais e currículo.</p>
-                <a href="{% if has_cadastro %}{% url 'cadastro_detail' %}{% else %}{% url 'cadastro_create' %}{% endif %}" class="btn btn-outline-secondary btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        {% if has_cadastro %}
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-success">
-                <div class="fs-1 text-success mb-2"><i class="bi bi-clipboard-check"></i></div>
-                <h5 class="fw-semibold">Minhas Candidaturas</h5>
-                <p class="text-muted small mb-3">Acompanhe suas inscrições, avaliações e resultados.</p>
-                <a href="{% url 'minhas_candidaturas' %}" class="btn btn-outline-success btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        {% endif %}
-        {% endif %}
-
-        {% if is_execute_user %}
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-primary">
-                <div class="fs-1 text-primary mb-2"><i class="bi bi-journal-text"></i></div>
-                <h5 class="fw-semibold">Editais</h5>
-                <p class="text-muted small mb-3">Consulte e cadastre novos editais.</p>
-                <a href="{% url 'edital_list' %}" class="btn btn-outline-primary btn-sm mt-auto">Acessar</a>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card p-4 text-center h-100 border-info">
-                <div class="fs-1 text-info mb-2"><i class="bi bi-people-fill"></i></div>
-                <h5 class="fw-semibold">Lista de Bolsistas</h5>
-                <p class="text-muted small mb-3">Visualize a lista de candidatos/bolsistas.</p>
-                <a href="{% url 'painel_lista' %}" class="btn btn-outline-info btn-sm mt-auto">Acessar</a>
-            </div>
+        <div class="col-6 col-md-3">
+            <a href="{% url 'admin:index' %}" class="text-decoration-none">
+                <div class="card bg-dark bg-opacity-10 border-dark h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-speedometer2 fs-4 text-dark"></i>
+                        <div class="fw-medium small mt-1">Admin Django</div>
+                    </div>
+                </div>
+            </a>
         </div>
         {% endif %}
     </div>
+
+    {% endif %}
+    {# ======================== FIM GESTÃO ======================== #}
+
+
+    {# ======================================================================== #}
+    {#  CANDIDATO: ViewUser                                                    #}
+    {# ======================================================================== #}
+    {% if is_view_user %}
+
+    {# --- Card de resumo pessoal --- #}
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>Meu Perfil
+                    </h6>
+                    <a href="{% if has_cadastro %}{% url 'cadastro_detail' %}{% else %}{% url 'cadastro_create' %}{% endif %}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Editar
+                    </a>
+                </div>
+                <div class="card-body">
+                    <p class="fw-medium mb-1">{{ user.nome_completo }}</p>
+                    <p class="text-muted small mb-3">{{ user.email }}</p>
+
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="text-muted small me-2">Cadastro:</span>
+                        {% if cadastro_completo %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Completo</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle me-1"></i>Pendente</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# --- Card de estatísticas pessoais --- #}
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-clipboard-check me-2 text-primary"></i>Minhas Candidaturas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if cadastro_completo and total_aplicacoes > 0 %}
+                    <div class="row g-3 text-center">
+                        <div class="col-6 col-md-3">
+                            <div class="fw-bold fs-4 text-primary">{{ total_aplicacoes }}</div>
+                            <small class="text-muted">Total</small>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="fw-bold fs-4 text-warning">{{ aplicacoes_pendentes }}</div>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="fw-bold fs-4 text-success">{{ aplicacoes_aprovadas }}</div>
+                            <small class="text-muted">Aprovadas</small>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="fw-bold fs-4 text-danger">{{ aplicacoes_rejeitadas }}</div>
+                            <small class="text-muted">Rejeitadas</small>
+                        </div>
+                    </div>
+
+                    {% if taxa_aprovacao > 0 %}
+                    <hr>
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Taxa de aprovação</span>
+                        <span class="fw-medium {% if taxa_aprovacao >= 50 %}text-success{% else %}text-warning{% endif %}">{{ taxa_aprovacao }}%</span>
+                    </div>
+                    <div class="progress" style="height:10px;">
+                        <div class="progress-bar {% if taxa_aprovacao >= 50 %}bg-success{% else %}bg-warning{% endif %}"
+                             style="width:{{ taxa_aprovacao }}%"></div>
+                    </div>
+                    {% endif %}
+
+                    {% elif cadastro_completo %}
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-inbox d-block mb-1" style="font-size:2rem;"></i>
+                        <small>Você ainda não se candidatou a nenhum edital.</small>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-exclamation-triangle text-warning d-block mb-2" style="font-size:2rem;"></i>
+                        <p class="text-muted small mb-2">Complete seu cadastro para começar a se candidatar.</p>
+                        <a href="{% url 'cadastro_create' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-person-plus me-1"></i>Criar Cadastro
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Editais abertos + Últimas aplicações --- #}
+    <div class="row g-4">
+        {# Editais abertos #}
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-journal-text me-2 text-primary"></i>Editais Abertos
+                        <span class="badge bg-success ms-2">{{ editais_abertos_count }}</span>
+                    </h6>
+                    <a href="{% url 'edital_list' %}" class="btn btn-outline-primary btn-sm">Ver todos</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if ultimos_editais_abertos %}
+                    <div class="list-group list-group-flush">
+                        {% for edital in ultimos_editais_abertos %}
+                        <a href="{% url 'edital_detail' edital.pk %}"
+                           class="list-group-item list-group-item-action py-3 px-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-medium small">{{ edital.nome_edital|truncatechars:50 }}</div>
+                                    <small class="text-muted">{{ edital.get_nome_instituto_display }} &bull; {{ edital.area_estudo|default:'—' }}</small>
+                                </div>
+                                <span class="badge bg-success flex-shrink-0 ms-2">{{ edital.numero_vagas }} vaga{{ edital.numero_vagas|pluralize }}</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-4 mb-0">Nenhum edital aberto no momento.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Últimas aplicações #}
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-send me-2 text-primary"></i>Últimas Candidaturas
+                    </h6>
+                    {% if cadastro_completo %}
+                    <a href="{% url 'minhas_candidaturas' %}" class="btn btn-outline-primary btn-sm">Ver trilha</a>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if cadastro_completo and ultimas_aplicacoes %}
+                    <div class="list-group list-group-flush">
+                        {% for app in ultimas_aplicacoes %}
+                        <div class="list-group-item py-2 px-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="small">
+                                    <a href="{% url 'edital_detail' app.edital.pk %}" class="text-decoration-none fw-medium">
+                                        {{ app.edital.nome_edital|truncatechars:40 }}
+                                    </a>
+                                    <div class="text-muted" style="font-size:0.75rem">{{ app.created_at|date:'d/m/Y' }}</div>
+                                </div>
+                                <span class="badge flex-shrink-0
+                                    {% if app.status == 'aprovado' %}bg-success
+                                    {% elif app.status == 'rejeitado' %}bg-danger
+                                    {% elif app.status == 'em_analise' %}bg-info text-dark
+                                    {% else %}bg-warning text-dark{% endif %}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% elif cadastro_completo %}
+                    <p class="text-muted text-center py-4 mb-0">Nenhuma candidatura ainda.</p>
+                    {% else %}
+                    <p class="text-muted text-center py-4 mb-0">Complete seu cadastro para ver suas candidaturas.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+    {# ======================== FIM CANDIDATO ======================== #}
+
 </div>
 {% endblock %}

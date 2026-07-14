@@ -16,7 +16,7 @@ from base.mixins import (
 
 from .models import User, Perfil
 from editais.models import EditalProvisorio, AplicacaoEdital
-from cadastro.models import SolicitacaoEdicao
+from cadastro.models import SolicitacaoEdicao, CadastroBolsista
 
 
 class RegistroForm(forms.ModelForm):
@@ -91,22 +91,57 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context['is_execute_user'] = user.groups.filter(name=GROUP_EXECUTE_USER).exists()
         context['has_cadastro'] = hasattr(user, 'cadastro')
 
-        if user.is_superuser or context['is_manager']:
+        # Dados comuns para Superuser / Manager / ExecuteUser
+        if user.is_superuser or context['is_manager'] or context['is_execute_user']:
+            editais = EditalProvisorio.objects.all()
+            context['total_bolsistas'] = CadastroBolsista.objects.count()
+            context['total_editais'] = editais.count()
+            context['editais_abertos'] = editais.filter(status='aberto').count()
+            context['editais_encerrados'] = editais.filter(status='encerrado').count()
+            context['editais_em_analise'] = editais.filter(status='em_analise').count()
+            context['editais_cancelados'] = editais.filter(status='cancelado').count()
+            context['total_candidaturas'] = AplicacaoEdital.objects.count()
+            context['candidaturas_pendentes'] = AplicacaoEdital.objects.filter(status='pendente').count()
+            context['candidaturas_aprovadas'] = AplicacaoEdital.objects.filter(status='aprovado').count()
+            context['candidaturas_rejeitadas'] = AplicacaoEdital.objects.filter(status='rejeitado').count()
+            context['solicitacoes_pendentes'] = SolicitacaoEdicao.objects.filter(status='pendente').count()
+            context['solicitacoes_total'] = SolicitacaoEdicao.objects.count()
+            context['ultimos_editais'] = editais.select_related('criado_por').order_by('-created_at')[:5]
             context['total_usuarios'] = User.objects.filter(is_active=True).count()
-            context['total_pendentes'] = User.objects.filter(is_active=False).count()
-            context['total_editais'] = EditalProvisorio.objects.count()
-            context['total_editais_abertos'] = EditalProvisorio.objects.filter(status='aberto').count()
-            context['total_aplicacoes'] = AplicacaoEdital.objects.count()
-            context['total_pendentes_solicitacao'] = SolicitacaoEdicao.objects.filter(status='pendente').count()
+            context['total_usuarios_inativos'] = User.objects.filter(is_active=False).count()
 
-        elif context['is_view_user']:
-            context['total_editais_abertos'] = EditalProvisorio.objects.filter(status='aberto').count()
-            if hasattr(user, 'cadastro'):
-                context['total_aplicacoes'] = AplicacaoEdital.objects.filter(
-                    bolsista=user.cadastro
-                ).count()
+        # Dados especificos para ViewUser
+        if context['is_view_user']:
+            open_editais = EditalProvisorio.objects.filter(status='aberto').order_by('-created_at')
+            context['editais_abertos_count'] = open_editais.count()
+            context['ultimos_editais_abertos'] = open_editais[:5]
+
+            if context['has_cadastro']:
+                bolsista = user.cadastro
+                apps = AplicacaoEdital.objects.filter(bolsista=bolsista).select_related('edital')
+                context['total_aplicacoes'] = apps.count()
+                context['aplicacoes_pendentes'] = apps.filter(status='pendente').count()
+                context['aplicacoes_em_analise'] = apps.filter(status='em_analise').count()
+                context['aplicacoes_aprovadas'] = apps.filter(status='aprovado').count()
+                context['aplicacoes_rejeitadas'] = apps.filter(status='rejeitado').count()
+                context['ultimas_aplicacoes'] = apps.order_by('-created_at')[:5]
+                # Taxa de aprovação
+                if context['total_aplicacoes'] > 0:
+                    context['taxa_aprovacao'] = round(
+                        context['aplicacoes_aprovadas'] / context['total_aplicacoes'] * 100
+                    )
+                else:
+                    context['taxa_aprovacao'] = 0
+                context['cadastro_completo'] = True
             else:
                 context['total_aplicacoes'] = 0
+                context['aplicacoes_pendentes'] = 0
+                context['aplicacoes_em_analise'] = 0
+                context['aplicacoes_aprovadas'] = 0
+                context['aplicacoes_rejeitadas'] = 0
+                context['ultimas_aplicacoes'] = []
+                context['taxa_aprovacao'] = 0
+                context['cadastro_completo'] = False
 
         return context
 
