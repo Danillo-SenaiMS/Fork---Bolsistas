@@ -20,6 +20,11 @@
             </a>
             {% endif %}
             {% if is_superuser or is_manager %}
+            {% if edital.status == 'em_analise' %}
+            <a href="{% url 'edital_validar' edital.pk %}" class="btn btn-success">
+                <i class="bi bi-check-circle me-1"></i>Validar
+            </a>
+            {% endif %}
             <a href="{% url 'edital_update' edital.pk %}" class="btn btn-warning">
                 <i class="bi bi-pencil-square me-1"></i>Editar
             </a>

@@ -78,6 +78,11 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if is_superuser or is_manager %}
+                                {% if edital.status == 'em_analise' %}
+                                <a href="{% url 'edital_validar' edital.pk %}" class="btn btn-sm btn-outline-success" title="Validar e abrir edital">
+                                    <i class="bi bi-check-circle"></i>
+                                </a>
+                                {% endif %}
                                 <a href="{% url 'edital_update' edital.pk %}" class="btn btn-sm btn-outline-warning" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>

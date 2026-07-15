@@ -215,6 +215,9 @@ class EditalProvisorioDetailView(LoginRequiredMixin, ContextMixin, DetailView):
         context['cronograma_cores'] = self._montar_cores_cronograma(cronograma)
         context['calendarios'] = self._montar_calendarios(cronograma)
         user = self.request.user
+        context['is_superuser'] = user.is_superuser
+        context['is_manager'] = user.groups.filter(name=GROUP_MANAGER).exists()
+        context['is_execute_user'] = user.groups.filter(name=GROUP_EXECUTE_USER).exists()
         context['tem_cadastro'] = hasattr(user, 'cadastro')
         context['is_view_user'] = user.groups.filter(name=GROUP_VIEW_USER).exists()
         if hasattr(user, 'cadastro'):
@@ -235,6 +238,22 @@ class EditalProvisorioDeleteView(ManagerRequiredMixin, ContextMixin, DeleteView)
     def form_valid(self, form):
         messages.success(self.request, 'Edital removido com sucesso!')
         return super().form_valid(form)
+
+
+def validar_edital(request, pk):
+    if not request.user.is_superuser and not request.user.groups.filter(name=GROUP_MANAGER).exists():
+        messages.error(request, 'Você não tem permissão para validar editais.')
+        return redirect('edital_list')
+
+    edital = get_object_or_404(EditalProvisorio, pk=pk)
+    if edital.status != 'em_analise':
+        messages.warning(request, 'Este edital já foi validado ou não pode ser validado.')
+        return redirect('edital_detail', pk=pk)
+
+    edital.status = 'aberto'
+    edital.save()
+    messages.success(request, f'Edital "{edital}" validado e aberto com sucesso!')
+    return redirect('edital_detail', pk=pk)
 
 
 def edital_pdf_view(request, pk):
