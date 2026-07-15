@@ -1,104 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory, BaseInlineFormSet
-from .models import EditalProvisorio, CronogramaEvento, DistribuicaoBolsa, NIVEL_BOLSA_CONFIG
-
-
-class DistribuicaoBolsaForm(forms.ModelForm):
-    class Meta:
-        model = DistribuicaoBolsa
-        fields = ['experiencia', 'quantidade', 'valor_unitario']
-        widgets = {
-            'experiencia': forms.Select(attrs={'class': 'form-select form-select-sm distrib-experiencia'}),
-            'quantidade': forms.NumberInput(attrs={
-                'class': 'form-control form-control-sm distrib-quantidade',
-                'min': 0, 'step': 1,
-            }),
-            'valor_unitario': forms.NumberInput(attrs={
-                'class': 'form-control form-control-sm distrib-valor',
-                'step': '0.01', 'min': '0',
-            }),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'edital' in kwargs.get('initial', {}):
-            self._set_experiencia_choices(kwargs['initial']['edital'])
-
-    def _set_experiencia_choices(self, edital):
-        config = NIVEL_BOLSA_CONFIG.get(getattr(edital, 'modalidade_bolsa', ''), {})
-        choices = config.get('experiencia', [])
-        if choices:
-            self.fields['experiencia'].choices = [('', '--- Selecione ---')] + choices
-        else:
-            self.fields['experiencia'].choices = [('', 'N/A')]
-        self.fields['experiencia'].required = False
-
-    def clean(self):
-        cleaned_data = super().clean()
-        if not cleaned_data or cleaned_data.get('DELETE'):
-            return cleaned_data
-        experiencia = cleaned_data.get('experiencia')
-        quantidade = cleaned_data.get('quantidade') or 0
-        valor_unitario = cleaned_data.get('valor_unitario') or 0
-
-        if not experiencia and (quantidade or valor_unitario):
-            raise forms.ValidationError('Selecione a experiência quando quantidade ou valor unitário estiver preenchido.')
-
-        modalidade = self.data.get('modalidade_bolsa')
-        if not modalidade:
-            try:
-                if self.instance.edital_id:
-                    modalidade = self.instance.edital.modalidade_bolsa
-            except Exception:
-                pass
-
-        if experiencia and valor_unitario and modalidade:
-            config = NIVEL_BOLSA_CONFIG.get(modalidade)
-            if config:
-                valores = config.get('experiencia_valores', {}).get(experiencia)
-                if valores:
-                    min_v, max_v = valores
-                    if valor_unitario < min_v or valor_unitario > max_v:
-                        raise forms.ValidationError(
-                            f'O valor unitário para "{experiencia}" deve estar entre '
-                            f'R$ {min_v:.2f} e R$ {max_v:.2f}.'
-                        )
-                elif config.get('valor_minimo') is not None:
-                    min_v, max_v = config['valor_minimo'], config['valor_maximo']
-                    if valor_unitario < min_v or valor_unitario > max_v:
-                        raise forms.ValidationError(
-                            f'O valor unitário deve estar entre '
-                            f'R$ {min_v:.2f} e R$ {max_v:.2f}.'
-                        )
-        return cleaned_data
-
-
-class BaseDistribuicaoFormSet(BaseInlineFormSet):
-    def save_new(self, form, commit=True):
-        obj = super().save_new(form, commit=False)
-        if commit:
-            obj.save()
-        return obj
-
-    def clean(self):
-        if any(self.errors):
-            return
-        total = sum(
-            (form.cleaned_data.get('quantidade', 0) or 0) *
-            (form.cleaned_data.get('valor_unitario', 0) or 0)
-            for form in self.forms
-            if form.cleaned_data and not form.cleaned_data.get('DELETE', False)
-        )
-        edital_total = self.instance.valor_total_bolsa if self.instance.pk else 0
-        if self.data.get('valor_total_bolsa'):
-            try:
-                edital_total = float(self.data['valor_total_bolsa'])
-            except (ValueError, TypeError):
-                pass
-        if total > edital_total:
-            raise forms.ValidationError(
-                f'A soma da distribuição (R$ {total:.2f}) excede o valor total da bolsa (R$ {edital_total:.2f}).'
-            )
+from .models import EditalProvisorio, CronogramaEvento, NIVEL_BOLSA_CONFIG
 
 
 class EditalProvisorioForm(forms.ModelForm):
@@ -136,7 +38,7 @@ class EditalProvisorioForm(forms.ModelForm):
             'nome_instituto': forms.Select(attrs={'class': 'form-select'}),
             'email_solicitante': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'solicitante@instituto.br', 'readonly': True}),
             'documento_anexo': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
-            'numero_vagas': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'readonly': True}),
+            'numero_vagas': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'step': 1}),
             'valor_total_bolsa': forms.NumberInput(attrs={
                 'class': 'form-control', 'step': '0.01', 'min': '0',
                 'placeholder': 'Ex: 50000.00',
@@ -232,42 +134,53 @@ class EditalProvisorioForm(forms.ModelForm):
         return cleaned_data
 
 
-DistribuicaoBolsaFormSet = inlineformset_factory(
-    EditalProvisorio,
-    DistribuicaoBolsa,
-    form=DistribuicaoBolsaForm,
-    formset=BaseDistribuicaoFormSet,
-    extra=1,
-    can_delete=True,
-)
-
-
 class BaseCronogramaFormSet(BaseInlineFormSet):
-    def save_new(self, form, commit=True):
-        obj = super().save_new(form, commit=False)
-        if commit:
-            obj.save()
-        return obj
-
     def clean(self):
         if any(self.errors):
             return
+
+        datas = []
         tem_outorga_com_data = False
-        for form in self.forms:
-            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
-                if form.cleaned_data.get('evento') == 'outorga' and form.cleaned_data.get('data_evento'):
+        for idx, form in enumerate(self.forms):
+            if not form.cleaned_data or form.cleaned_data.get('DELETE', False):
+                continue
+            evento = form.cleaned_data.get('evento')
+            data_evento = form.cleaned_data.get('data_evento')
+            if evento and data_evento:
+                datas.append((idx, data_evento))
+                if evento == 'outorga':
                     tem_outorga_com_data = True
+
         if not tem_outorga_com_data:
             raise forms.ValidationError(
                 'Informe o evento "Outorga das bolsas" com a data do evento preenchida '
                 'para definir a data final do edital.'
             )
 
+        if len(datas) >= 2:
+            for i in range(1, len(datas)):
+                if datas[i][1] <= datas[i - 1][1]:
+                    raise forms.ValidationError(
+                        'As datas dos eventos devem estar estritamente crescentes '
+                        '(cada data deve ser maior que a data do evento anterior).'
+                    )
+
+    def save(self, commit=True):
+        instances = super().save(commit=False)
+        ordem = 0
+        for obj in instances:
+            if not getattr(obj, 'pk', None) or not obj.DELETE:
+                ordem += 1
+                obj.ordem = ordem
+            if commit:
+                obj.save()
+        return instances
+
 
 class CronogramaEventoForm(forms.ModelForm):
     data_evento = forms.DateField(
         label='Data do Evento',
-        required=False,
+        required=True,
         widget=forms.DateInput(attrs={
             'type': 'date',
             'class': 'form-control form-control-sm',
@@ -276,37 +189,27 @@ class CronogramaEventoForm(forms.ModelForm):
 
     class Meta:
         model = CronogramaEvento
-        fields = ['evento', 'data_referencia', 'data_evento', 'observacao', 'ordem']
+        fields = ['evento', 'data_evento', 'observacao']
         widgets = {
             'evento': forms.Select(attrs={'class': 'form-select form-select-sm'}),
-            'data_referencia': forms.TextInput(attrs={
-                'class': 'form-control form-control-sm',
-                'placeholder': 'Ex: A partir da data de publicação deste edital',
-            }),
             'observacao': forms.TextInput(attrs={
                 'class': 'form-control form-control-sm',
                 'placeholder': 'Observação (opcional)',
             }),
-            'ordem': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'min': 0}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['evento'].required = False
-        self.fields['data_referencia'].required = False
-        self.fields['ordem'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
         if not cleaned_data or cleaned_data.get('DELETE'):
             return cleaned_data
         evento = cleaned_data.get('evento')
-        data_ref = cleaned_data.get('data_referencia')
         data_evento = cleaned_data.get('data_evento')
-        if not evento and (data_ref or data_evento):
-            raise forms.ValidationError('Selecione o evento quando a data de referência ou data do evento estiver preenchida.')
-        if evento and not data_ref:
-            raise forms.ValidationError('Informe a data de referência para o evento selecionado.')
+        if not evento and data_evento:
+            raise forms.ValidationError('Selecione o evento quando a data do evento estiver preenchida.')
         if evento and not data_evento:
             raise forms.ValidationError('Informe a data do evento para o evento selecionado.')
         return cleaned_data

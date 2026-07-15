@@ -1,36 +1,6 @@
 # Usuários do Sistema
 
-> Os usuários abaixo são gerados pelo comando `python manage.py gerar_dados_fake`.
-> A senha padrão de todos é: **`senha123`**
-
----
-
-## Credenciais
-
-| Email | Nome | Tipo / Grupo |
-|---|---|---|
-| `admin@email.com` | Administrador do Sistema | **Superuser** (acesso total) |
-| `manager1@email.com` | Zoe Abreu | Manager |
-| `manager2@email.com` | Ana Cecília da Rocha | Manager |
-| `manager3@email.com` | Evelyn Farias | Manager |
-| `executor1@email.com` | Maria Liz Montenegro | ExecuteUser |
-| `executor2@email.com` | Juan Moura | ExecuteUser |
-| `executor3@email.com` | Emanuella Marques | ExecuteUser |
-| `bolsista1@email.com` | Dr. Diego da Luz | ViewUser |
-| `bolsista2@email.com` | Luan Viana | ViewUser |
-| `bolsista3@email.com` | José Pedro Araújo | ViewUser |
-| `bolsista4@email.com` | Erick da Mota | ViewUser |
-| `bolsista5@email.com` | Dr. Luigi da Rocha | ViewUser |
-| `bolsista6@email.com` | André Souza | ViewUser |
-| `bolsista7@email.com` | Elisa da Conceição | ViewUser |
-| `bolsista8@email.com` | Oliver Cardoso | ViewUser |
-| `bolsista9@email.com` | Théo Farias | ViewUser |
-| `bolsista10@email.com` | Pedro Lucas Pereira | ViewUser |
-| `bolsista11@email.com` | Samuel Teixeira | ViewUser |
-| `bolsista12@email.com` | Luiz Gustavo Almeida | ViewUser |
-| `bolsista13@email.com` | João Pedro da Mata | ViewUser |
-| `bolsista14@email.com` | Allana Rocha | ViewUser |
-| `bolsista15@email.com` | Pedro Henrique Ramos | ViewUser |
+> Os usuários devem ser criados via admin Django ou pelo comando `python manage.py createsuperuser`.
 
 ---
 
@@ -111,12 +81,6 @@ docker compose exec web python manage.py shell
 
 # Aplicar migrations
 docker compose exec web python manage.py migrate
-
-# Gerar dados fake (popula o banco)
-docker compose exec web python manage.py gerar_dados_fake
-
-# Limpar e regenerar todos os dados
-docker compose exec web python manage.py gerar_dados_fake --limpar
 
 # System check
 docker compose exec web python manage.py check

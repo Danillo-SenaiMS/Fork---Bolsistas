@@ -190,20 +190,12 @@ class EditalProvisorio(DataModel):
         prox = self.proxima_etapa
         return prox.get_evento_display() if prox else None
 
-    @property
-    def total_distribuido(self):
-        return sum(d.quantidade * d.valor_unitario for d in self.distribuicoes.all())
-
-    @property
-    def total_vagas_distribuidas(self):
-        return sum(d.quantidade for d in self.distribuicoes.all())
 
 
 class CronogramaEvento(DataModel):
     edital = models.ForeignKey(EditalProvisorio, on_delete=models.CASCADE, related_name='cronograma')
     evento = models.CharField('Evento', max_length=50, choices=EditalProvisorio.EVENTO_CHOICES)
-    data_referencia = models.CharField('Data de Referência', max_length=255)
-    data_evento = models.DateField('Data do Evento', null=True, blank=True)
+    data_evento = models.DateField('Data do Evento')
     observacao = models.TextField('Observação', blank=True, default='')
     ordem = models.PositiveIntegerField('Ordem', default=0)
 
@@ -213,25 +205,7 @@ class CronogramaEvento(DataModel):
         ordering = ['ordem']
 
     def __str__(self):
-        return f'{self.get_evento_display()} - {self.data_referencia}'
-
-
-class DistribuicaoBolsa(DataModel):
-    edital = models.ForeignKey(EditalProvisorio, on_delete=models.CASCADE, related_name='distribuicoes')
-    experiencia = models.CharField('Experiência', max_length=255)
-    quantidade = models.PositiveIntegerField('Quantidade de Bolsistas')
-    valor_unitario = models.DecimalField('Valor Unitário (R$)', max_digits=10, decimal_places=2)
-
-    class Meta:
-        verbose_name = 'Distribuição de Bolsa'
-        verbose_name_plural = 'Distribuições de Bolsa'
-
-    @property
-    def subtotal(self):
-        return self.quantidade * self.valor_unitario
-
-    def __str__(self):
-        return f'{self.quantidade}x {self.experiencia}'
+        return f'{self.get_evento_display()} - {self.data_evento}'
 
 
 class AplicacaoEdital(DataModel):

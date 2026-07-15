@@ -19,7 +19,7 @@
         </div>
 
         <div class="card p-4 mb-4">
-            {% if form.errors or distribuicao_formset.total_error_count or cronograma_formset.total_error_count %}
+            {% if form.errors or cronograma_formset.total_error_count %}
             <div class="alert alert-danger py-2 small">
                 <p class="mb-1 fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>Corrija os erros abaixo antes de salvar:</p>
                 <ul class="mb-0 ps-3">
@@ -30,14 +30,6 @@
                     {% endfor %}
                     {% for error in form.non_field_errors %}
                     <li>{{ error }}</li>
-                    {% endfor %}
-                    {% for form in distribuicao_formset %}
-                    {% for error in form.non_field_errors %}
-                    <li>Distribuição: {{ error }}</li>
-                    {% endfor %}
-                    {% endfor %}
-                    {% for error in distribuicao_formset.non_form_errors %}
-                    <li>Distribuição: {{ error }}</li>
                     {% endfor %}
                     {% for form in cronograma_formset %}
                     {% for error in form.non_field_errors %}
@@ -240,11 +232,9 @@
                             <table class="table table-bordered" id="cronograma-table">
                                 <thead class="table-light">
                                     <tr>
-                                        <th style="width:20%">Evento</th>
-                                        <th style="width:25%">Data de Referência</th>
-                                        <th style="width:15%">Data do Evento</th>
-                                        <th style="width:15%">Observação</th>
-                                        <th style="width:5%">Ordem</th>
+                                        <th style="width:30%">Evento</th>
+                                        <th style="width:20%">Data do Evento <span class="text-danger">*</span></th>
+                                        <th style="width:20%">Observação</th>
                                         <th style="width:5%"></th>
                                     </tr>
                                 </thead>
@@ -258,12 +248,6 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {{ form.data_referencia }}
-                                            {% if form.data_referencia.errors %}
-                                            <div class="text-danger small">{{ form.data_referencia.errors|join:', ' }}</div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
                                             {{ form.data_evento }}
                                             {% if form.data_evento.errors %}
                                             <div class="text-danger small">{{ form.data_evento.errors|join:', ' }}</div>
@@ -273,12 +257,6 @@
                                             {{ form.observacao }}
                                             {% if form.observacao.errors %}
                                             <div class="text-danger small">{{ form.observacao.errors|join:', ' }}</div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {{ form.ordem }}
-                                            {% if form.ordem.errors %}
-                                            <div class="text-danger small">{{ form.ordem.errors|join:', ' }}</div>
                                             {% endif %}
                                         </td>
                                         <td class="text-center align-middle">
@@ -381,15 +359,7 @@
     var totalForms = document.getElementById('id_cronograma-TOTAL_FORMS');
 
     function getNextOrdem() {
-        var rows = container.querySelectorAll('.cronograma-row');
-        var maxOrdem = 0;
-        rows.forEach(function(row) {
-            if (row.style.display === 'none') return;
-            var ordemInput = row.querySelector('input[name$="-ordem"]');
-            var val = parseInt(ordemInput ? ordemInput.value : 0) || 0;
-            if (val > maxOrdem) maxOrdem = val;
-        });
-        return maxOrdem + 1;
+        return parseInt(totalForms.value) + 1;
     }
 
     function updateRemoveButtons() {
@@ -452,11 +422,6 @@
                 }
             }
         });
-
-        var ordemInput = clone.querySelector('input[name$="-ordem"]');
-        if (ordemInput) {
-            ordemInput.value = getNextOrdem();
-        }
 
         var idInput = clone.querySelector('input[name$="-id"]');
         if (idInput) idInput.value = '';

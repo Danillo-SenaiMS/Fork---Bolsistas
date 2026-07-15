@@ -150,27 +150,15 @@ class CronogramaTests(TestCase):
         CronogramaEvento.objects.create(
             edital=self.edital,
             evento='outorga',
-            data_referencia='60 dias apos publicacao',
             data_evento=data_outorga,
             ordem=1,
         )
         self.assertEqual(self.edital.data_final, data_outorga)
 
-    def test_data_final_sem_data_evento(self):
-        CronogramaEvento.objects.create(
-            edital=self.edital,
-            evento='outorga',
-            data_referencia='A definir',
-            data_evento=None,
-            ordem=1,
-        )
-        self.assertIsNone(self.edital.data_final)
-
     def test_data_final_sem_outorga(self):
         CronogramaEvento.objects.create(
             edital=self.edital,
             evento='inicio_submissao',
-            data_referencia='Imediato',
             data_evento=timezone.now().date(),
             ordem=1,
         )
@@ -181,14 +169,12 @@ class CronogramaTests(TestCase):
         CronogramaEvento.objects.create(
             edital=self.edital,
             evento='inicio_submissao',
-            data_referencia='Hoje',
             data_evento=hoje,
             ordem=1,
         )
         CronogramaEvento.objects.create(
             edital=self.edital,
             evento='entrevista',
-            data_referencia='+15 dias',
             data_evento=hoje + timedelta(days=15),
             ordem=2,
         )
@@ -201,14 +187,12 @@ class CronogramaTests(TestCase):
         CronogramaEvento.objects.create(
             edital=self.edital,
             evento='inicio_submissao',
-            data_referencia='-30 dias',
             data_evento=hoje - timedelta(days=30),
             ordem=1,
         )
         CronogramaEvento.objects.create(
             edital=self.edital,
             evento='entrevista',
-            data_referencia='+15 dias',
             data_evento=hoje + timedelta(days=15),
             ordem=2,
         )
@@ -225,7 +209,6 @@ class CronogramaTests(TestCase):
         CronogramaEvento.objects.create(
             edital=self.edital,
             evento='resultado_final',
-            data_referencia='7 dias',
             data_evento=data_evento,
             ordem=1,
         )

@@ -21,7 +21,7 @@ from base.mixins import (
 )
 from cadastro.models import CadastroBolsista
 from .models import EditalProvisorio, AplicacaoEdital, NIVEL_BOLSA_CONFIG
-from .forms import EditalProvisorioForm, CronogramaEventoFormSet, DistribuicaoBolsaFormSet
+from .forms import EditalProvisorioForm, CronogramaEventoFormSet
 from . import tasks as ia_tasks
 from .ai_service import _score_heuristico
 
@@ -78,26 +78,19 @@ class EditalProvisorioCreateView(ManagerOrExecuteRequiredMixin, ContextMixin, Cr
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 self.request.POST, prefix='cronograma'
             )
-            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
-                self.request.POST, prefix='distribuicao'
-            )
         else:
             context['cronograma_formset'] = CronogramaEventoFormSet(prefix='cronograma')
-            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(prefix='distribuicao')
         return context
 
     def form_valid(self, form):
         context = self.get_context_data(form=form)
         cronograma_formset = context['cronograma_formset']
-        distribuicao_formset = context['distribuicao_formset']
-        if cronograma_formset.is_valid() and distribuicao_formset.is_valid():
+        if cronograma_formset.is_valid():
             self.object = form.save(commit=False)
             self.object.criado_por = self.request.user
             self.object.save()
             cronograma_formset.instance = self.object
             cronograma_formset.save()
-            distribuicao_formset.instance = self.object
-            distribuicao_formset.save()
             messages.success(self.request, 'Edital criado com sucesso!')
             return redirect(self.get_success_url())
         return self.render_to_response(context)
@@ -120,28 +113,19 @@ class EditalProvisorioUpdateView(ManagerRequiredMixin, ContextMixin, UpdateView)
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 self.request.POST, instance=self.object, prefix='cronograma'
             )
-            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
-                self.request.POST, instance=self.object, prefix='distribuicao'
-            )
         else:
             context['cronograma_formset'] = CronogramaEventoFormSet(
                 instance=self.object, prefix='cronograma'
-            )
-            context['distribuicao_formset'] = DistribuicaoBolsaFormSet(
-                instance=self.object, prefix='distribuicao'
             )
         return context
 
     def form_valid(self, form):
         context = self.get_context_data(form=form)
         cronograma_formset = context['cronograma_formset']
-        distribuicao_formset = context['distribuicao_formset']
-        if cronograma_formset.is_valid() and distribuicao_formset.is_valid():
+        if cronograma_formset.is_valid():
             self.object = form.save()
             cronograma_formset.instance = self.object
             cronograma_formset.save()
-            distribuicao_formset.instance = self.object
-            distribuicao_formset.save()
             messages.success(self.request, 'Edital atualizado com sucesso!')
             return redirect(self.get_success_url())
         return self.render_to_response(context)
@@ -185,7 +169,7 @@ def edital_pdf_view(request, pk):
         return HttpResponse('Não autorizado', status=401)
 
     edital = get_object_or_404(
-        EditalProvisorio.objects.select_related('criado_por').prefetch_related('distribuicoes', 'cronograma'),
+        EditalProvisorio.objects.select_related('criado_por').prefetch_related('cronograma'),
         pk=pk,
     )
     cronograma = edital.cronograma.all()

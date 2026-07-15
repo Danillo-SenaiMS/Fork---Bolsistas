@@ -11,5 +11,4 @@ gunicorn
 whitenoise
 openai>=1.0
 psycopg2-binary
-faker
 xhtml2pdf

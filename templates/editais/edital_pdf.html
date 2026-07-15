@@ -189,7 +189,7 @@
             <td class="label">Valor Total da Bolsa</td>
             <td class="value valor-destaque">{{ edital.valor_total_bolsa|br_money }}</td>
             <td class="label">Total de Vagas</td>
-            <td class="value">{{ edital.total_vagas_distribuidas }}</td>
+            <td class="value">{{ edital.numero_vagas }}</td>
         </tr>
         <tr>
             <td class="label">Modalidade</td>
@@ -212,42 +212,8 @@
     </table>
 </div>
 
-{% if edital.distribuicoes.exists %}
 <div class="section">
-    <div class="section-title">3. Distribuicao de Bolsistas</div>
-    <table class="distribuicao">
-        <thead>
-            <tr>
-                <th>Experiencia</th>
-                <th style="text-align:center">Quantidade</th>
-                <th style="text-align:right">Valor Unitario (R$)</th>
-                <th style="text-align:right">Subtotal (R$)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for d in edital.distribuicoes.all %}
-            <tr>
-                <td>{{ d.experiencia }}</td>
-                <td style="text-align:center">{{ d.quantidade }}</td>
-                <td style="text-align:right">{{ d.valor_unitario|br_money }}</td>
-                <td style="text-align:right">{{ d.subtotal|br_money }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="1" style="text-align:right"><strong>Total Vagas: {{ edital.total_vagas_distribuidas }}</strong></td>
-                <td></td>
-                <td style="text-align:right"><strong>Total Distribuido:</strong></td>
-                <td style="text-align:right"><strong>{{ edital.total_distribuido|br_money }}</strong></td>
-            </tr>
-        </tfoot>
-    </table>
-</div>
-{% endif %}
-
-<div class="section">
-    <div class="section-title">4. Requisitos para Bolsas</div>
+    <div class="section-title">3. Requisitos para Bolsas</div>
     <table class="info-grid">
         <tr>
             <td class="label">Qualificacao Minima</td>
@@ -269,7 +235,7 @@
 </div>
 
 <div class="section">
-    <div class="section-title">5. Detalhes Adicionais</div>
+    <div class="section-title">4. Detalhes Adicionais</div>
     <table class="info-grid">
         <tr>
             <td class="label">Conteudo da Prova Teorica</td>
@@ -288,11 +254,10 @@
 
 {% if cronograma %}
 <div class="section">
-    <div class="section-title">6. Cronograma</div>
+    <div class="section-title">5. Cronograma</div>
     {% for evento in cronograma %}
     <div class="cronograma-item">
         <p class="evento-title">{{ evento.get_evento_display }}</p>
-        <p class="evento-data">{{ evento.data_referencia }}</p>
         {% if evento.data_evento %}
         <p class="evento-data" style="color:#1a73e8;">Data: {{ evento.data_evento|date:'d/m/Y' }}</p>
         {% endif %}

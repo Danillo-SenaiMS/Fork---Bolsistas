@@ -31,7 +31,7 @@ def _notificar_conclusao(user_id, edital, descricao):
 def resumir_edital_task(self, edital_id, user_id):
     try:
         edital = EditalProvisorio.objects.prefetch_related(
-            'distribuicoes', 'cronograma'
+            'cronograma'
         ).get(pk=edital_id)
         resultado = ai_service.resumir_edital(edital)
         cache.set(f'task_result:{self.request.id}', resultado, timeout=3600)
@@ -46,7 +46,7 @@ def resumir_edital_task(self, edital_id, user_id):
 def analisar_edital_task(self, edital_id, user_id):
     try:
         edital = EditalProvisorio.objects.prefetch_related(
-            'distribuicoes', 'cronograma'
+            'cronograma'
         ).get(pk=edital_id)
         bolsistas = list(
             CadastroBolsista.objects.select_related('user').prefetch_related('formacoes')

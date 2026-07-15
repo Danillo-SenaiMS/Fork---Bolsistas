@@ -186,45 +186,6 @@
                 </div>
             </div>
 
-            {% if edital.distribuicoes.exists %}
-            <div class="card p-0 mb-4">
-                <div class="p-3 border-bottom">
-                    <h5 class="fw-semibold mb-0">
-                        <i class="bi bi-diagram-3 me-2 text-primary"></i>Distribuição de Bolsistas
-                    </h5>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0 align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Experiência</th>
-                                <th class="text-center">Quantidade</th>
-                                <th class="text-end">Valor Unitário</th>
-                                <th class="text-end">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for d in edital.distribuicoes.all %}
-                            <tr>
-                                <td>{{ d.experiencia }}</td>
-                                <td class="text-center">{{ d.quantidade }}</td>
-                                <td class="text-end">{{ d.valor_unitario|br_money }}</td>
-                                <td class="text-end">{{ d.subtotal|br_money }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot class="table-group-divider">
-                            <tr class="fw-bold">
-                                <td colspan="2" class="text-end">Total de Vagas: {{ edital.total_vagas_distribuidas }}</td>
-                                <td class="text-end">Total Distribuído:</td>
-                                <td class="text-end text-primary">{{ edital.total_distribuido|br_money }}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-            {% endif %}
-
             <div class="card p-4 mb-4">
                 <h5 class="fw-semibold mb-3">
                     <i class="bi bi-list-check me-2 text-primary"></i>Requisitos para Bolsas
@@ -340,7 +301,6 @@
                         </div>
                         <div class="flex-grow-1 pb-2">
                             <p class="fw-semibold mb-0 small">{{ evento.get_evento_display }}</p>
-                            <p class="text-muted mb-0" style="font-size:0.85rem">{{ evento.data_referencia }}</p>
                             {% if evento.data_evento %}
                             <p class="text-primary mb-0" style="font-size:0.8rem"><i class="bi bi-calendar-check me-1"></i>{{ evento.data_evento|date:'d/m/Y' }}</p>
                             {% endif %}

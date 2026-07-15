@@ -1,6 +1,6 @@
 # Editais
 
-App responsável pela criação e gestão completa de editais (antigo edital provisório), incluindo cronograma, distribuição de bolsas e candidaturas.
+App responsável pela criação e gestão completa de editais (antigo edital provisório), incluindo cronograma e candidaturas.
 
 ## Constantes
 
@@ -24,24 +24,13 @@ Modelo principal do edital com estrutura completa:
 
 Propriedades computadas:
 - `total_eventos` — Quantidade de eventos no cronograma
-- `total_distribuido` — Soma de quantidade × valor unitário de todas as distribuições
-- `total_vagas_distribuidas` — Soma de quantidades de todas as distribuições
 
 ### `CronogramaEvento`
 Eventos do cronograma do edital:
 - `edital` — FK para EditalProvisorio
 - `evento` — 9 tipos (início submissão, limite submissão, resultado aptas, prova teórica, resultado prova, envio documentação, entrevista, resultado final, outorga)
-- `data_referencia` — Descrição da data (texto livre)
+- `data_evento` — Data do evento
 - `observacao`, `ordem`
-
-### `DistribuicaoBolsa`
-Distribuição de vagas por nível de experiência:
-- `edital` — FK para EditalProvisorio
-- `experiencia` — Nível de experiência
-- `quantidade` — Número de bolsistas
-- `valor_unitario` — Valor por bolsista
-
-Propriedade computada: `subtotal` = quantidade × valor_unitario
 
 ### `AplicacaoEdital`
 Candidatura de um bolsista a um edital:
@@ -57,17 +46,16 @@ Candidatura de um bolsista a um edital:
 Listagem paginada com busca por instituto e filtro por status.
 
 ### `EditalProvisorioCreateView`
-Criação com formulário principal + formsets inline de Cronograma e Distribuição. Validações:
-- Soma da distribuição não pode exceder `valor_total_bolsa`
-- Valor unitário deve estar dentro da faixa do nível
+Criação com formulário principal + formset inline de Cronograma. Validações:
 - Vigência entre 15 e 1095 dias
 - Endereço de atuação obrigatório para modalidade remota
+- Datas dos eventos devem ser estritamente crescentes
 
 ### `EditalProvisorioUpdateView`
-Edição com os mesmos formsets e validações da criação.
+Edição com o mesmo formset e validações da criação.
 
 ### `EditalProvisorioDetailView`
-Visualização completa com todas as seções, cronograma (timeline visual) e distribuição de bolsistas (tabela com subtotais).
+Visualização completa com todas as seções, cronograma (timeline visual) e configuração da bolsa.
 
 ### `EditalProvisorioDeleteView`
 Exclusão com tela de confirmação.
@@ -92,17 +80,11 @@ Alteração de status por gestor. Suporta HTMX para atualização inline.
 ### `EditalProvisorioForm`
 Formulário principal com 19 campos. Atualiza dinamicamente as opções de `qualificacao_minima` conforme a `modalidade_bolsa` selecionada. Define `valor_minimo`/`valor_maximo` automaticamente pelo `NIVEL_BOLSA_CONFIG`.
 
-### `DistribuicaoBolsaForm`
-Valida que:
-- Experiência deve ser selecionada se quantidade/valor preenchidos
-- Valor unitário dentro da faixa do nível e experiência
-
 ### `CronogramaEventoForm`
-Valida que evento e data de referência sejam preenchidos juntos.
+Valida que evento e data sejam preenchidos juntos.
 
-### Formsets
-- `DistribuicaoBolsaFormSet` — Valida que a soma total não excede o orçamento
-- `CronogramaEventoFormSet` — Valida eventos do cronograma
+### Formset
+- `CronogramaEventoFormSet` — Valida que as datas dos eventos sejam estritamente crescentes e que exista o evento de outorga
 
 ## Template Tags
 
@@ -128,7 +110,7 @@ Valida que evento e data de referência sejam preenchidos juntos.
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `models.py` | EditalProvisorio, CronogramaEvento, DistribuicaoBolsa, AplicacaoEdital, NIVEL_BOLSA_CONFIG |
+| `models.py` | EditalProvisorio, CronogramaEvento, AplicacaoEdital, NIVEL_BOLSA_CONFIG |
 | `views.py` | Views de CRUD, PDF e candidaturas |
 | `forms.py` | Formulários e formsets inline |
 | `urls.py` | Rotas da app |

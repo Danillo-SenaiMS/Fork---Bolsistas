@@ -30,17 +30,11 @@ def _edital_texto(edital):
         f"Status: {edital.get_status_display()}",
     ]
 
-    distribuicoes = list(edital.distribuicoes.all())
-    if distribuicoes:
-        linhas.append("Distribuição de bolsas:")
-        for d in distribuicoes:
-            linhas.append(f"- {d.experiencia}: {d.quantidade} vagas a R$ {d.valor_unitario}")
-
     cronograma = list(edital.cronograma.all())
     if cronograma:
         linhas.append("Cronograma:")
         for e in cronograma:
-            linhas.append(f"- {e.get_evento_display()}: {e.data_referencia}")
+            linhas.append(f"- {e.get_evento_display()}: {e.data_evento.strftime('%d/%m/%Y')}")
 
     return "\n".join(linhas)
 
