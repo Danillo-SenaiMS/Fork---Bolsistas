@@ -32,7 +32,6 @@ class NumeroSerieTests(TestCase):
             plataforma_tecnologica='Python',
             qualificacao_minima='Ensino Médio',
             conteudo_prova_teorica='-',
-            entrevista='-',
             criterios_desempate='-',
             criado_por=self.user,
         )
@@ -46,7 +45,7 @@ class NumeroSerieTests(TestCase):
             telefone='1', endereco='R', numero_vagas=1,
             modalidade_bolsa='nivel_1', valor_total_bolsa=1000,
             plataforma_tecnologica='Z', qualificacao_minima='Ensino Médio',
-            conteudo_prova_teorica='-', entrevista='-', criterios_desempate='-',
+            conteudo_prova_teorica='-', criterios_desempate='-',
             criado_por=self.user,
         )
         edital2 = EditalProvisorio.objects.create(
@@ -55,7 +54,7 @@ class NumeroSerieTests(TestCase):
             telefone='2', endereco='S', numero_vagas=2,
             modalidade_bolsa='nivel_1', valor_total_bolsa=2000,
             plataforma_tecnologica='W', qualificacao_minima='Ensino Médio',
-            conteudo_prova_teorica='-', entrevista='-', criterios_desempate='-',
+            conteudo_prova_teorica='-', criterios_desempate='-',
             criado_por=self.user,
         )
         self.assertNotEqual(edital1.numero_serie, edital2.numero_serie)
@@ -90,7 +89,6 @@ class InscricaoTests(TestCase):
             plataforma_tecnologica='Django',
             qualificacao_minima='Graduação Completa',
             conteudo_prova_teorica='Prova objetiva',
-            entrevista='Entrevista tecnica',
             criterios_desempate='Maior nota',
             criado_por=self.user2,
         )
@@ -139,7 +137,6 @@ class CronogramaTests(TestCase):
             plataforma_tecnologica='Biotec',
             qualificacao_minima='Mestrado Concluído',
             conteudo_prova_teorica='-',
-            entrevista='-',
             criterios_desempate='-',
             criado_por=self.user,
         )

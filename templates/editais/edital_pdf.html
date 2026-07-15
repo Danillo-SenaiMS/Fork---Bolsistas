@@ -243,12 +243,18 @@
         </tr>
         <tr>
             <td class="label">Entrevista</td>
-            <td class="value">{{ edital.entrevista }}</td>
+            <td class="value">{{ edital.get_modalidade_entrevista_display }}</td>
         </tr>
         <tr>
             <td class="label">Criterios de Desempate</td>
             <td class="value">{{ edital.criterios_desempate }}</td>
         </tr>
+        {% if edital.comentarios %}
+        <tr>
+            <td class="label">Comentarios</td>
+            <td class="value">{{ edital.comentarios }}</td>
+        </tr>
+        {% endif %}
     </table>
 </div>
 

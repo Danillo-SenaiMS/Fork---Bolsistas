@@ -25,7 +25,7 @@ def _edital_texto(edital):
         f"Vigência: {edital.vigencia} dias",
         f"Endereço de Atuação: {edital.endereco_atuacao or 'Não informado'}",
         f"Conteúdo da Prova Teórica: {edital.conteudo_prova_teorica or 'Não informado'}",
-        f"Entrevista: {edital.entrevista or 'Não informado'}",
+        f"Modalidade da Entrevista: {edital.get_modalidade_entrevista_display()}",
         f"Critérios de Desempate: {edital.criterios_desempate or 'Não informado'}",
         f"Status: {edital.get_status_display()}",
     ]

@@ -17,8 +17,8 @@ Dicionário que define 4 níveis de bolsa com suas qualificações, experiência
 Modelo principal do edital com estrutura completa:
 - **Dados do Edital**: `nome_edital`, `area_estudo`, `detalhes_edital`
 - **Instituto**: `nome_instituto` (7 opções: ISI Biomassa, IST Alimentos, IST Construção, FATEC CG, DR), `email_solicitante`, `telefone`, `endereco`
-- **Configuração da Bolsa**: `numero_vagas`, `modalidade_bolsa` (4 níveis), `valor_total_bolsa`, `valor_bolsa`, `valor_minimo`, `valor_maximo`, `modalidade_atuacao` (presencial/remota), `plataforma_tecnologica`, `vigencia` (dias, 15-1095), `endereco_atuacao`
-- **Requisitos**: `qualificacao_minima`, `detalhes_qualificacao_minima`, `conhecimento_desejavel`, `conteudo_prova_teorica`, `entrevista`, `criterios_desempate`
+- **Configuração da Bolsa**: `modalidade_bolsa` (4 níveis), `qualificacao_minima`, `detalhes_qualificacao_minima`, `experiencia` (níveis de experiência que afetam o valor da bolsa), `modalidade_atuacao` (presencial/remota), `plataforma_tecnologica`, `vigencia` (dias, 15-1095), `endereco_atuacao`, `numero_vagas`, `valor_bolsa` (selecionado do range conforme nível+experiência), `valor_total_bolsa`, `valor_minimo`, `valor_maximo`
+- **Detalhes Adicionais**: `modalidade_entrevista` (Presencial/Online), `conhecimento_desejavel`, `conteudo_prova_teorica`, `criterios_desempate`
 - **Status**: Aberto, Encerrado, Em Análise, Cancelado
 - **Metadados**: `criado_por` (FK User)
 
@@ -28,7 +28,7 @@ Propriedades computadas:
 ### `CronogramaEvento`
 Eventos do cronograma do edital:
 - `edital` — FK para EditalProvisorio
-- `evento` — 9 tipos (início submissão, limite submissão, resultado aptas, prova teórica, resultado prova, envio documentação, entrevista, resultado final, outorga)
+- `evento` — 7 tipos (início submissão, limite submissão, resultado aptas, prova teórica, entrevista, resultado final, outorga)
 - `data_evento` — Data do evento
 - `observacao`, `ordem`
 
@@ -50,6 +50,7 @@ Criação com formulário principal + formset inline de Cronograma. Validações
 - Vigência entre 15 e 1095 dias
 - Endereço de atuação obrigatório para modalidade remota
 - Datas dos eventos devem ser estritamente crescentes
+- Valor da bolsa deve estar dentro do range do nível e experiência selecionados
 
 ### `EditalProvisorioUpdateView`
 Edição com o mesmo formset e validações da criação.

@@ -23,18 +23,16 @@ class EditalProvisorioAdmin(admin.ModelAdmin):
         ('Instituto', {
             'fields': ('nome_instituto', 'email_solicitante', 'telefone', 'endereco'),
         }),
-        ('Bolsas', {
-            'fields': ('modalidade_bolsa', 'modalidade_atuacao',
-                       'plataforma_tecnologica', 'vigencia', 'endereco_atuacao'),
-        }),
-        ('Distribuição', {
-            'fields': ('numero_vagas', 'valor_total_bolsa', 'valor_bolsa',
+        ('Configuração da Bolsa', {
+            'fields': ('modalidade_bolsa', 'qualificacao_minima', 'detalhes_qualificacao_minima',
+                       'experiencia', 'modalidade_atuacao',
+                       'plataforma_tecnologica', 'vigencia', 'endereco_atuacao',
+                       'numero_vagas', 'valor_bolsa',
                        'valor_minimo', 'valor_maximo'),
         }),
-        ('Requisitos', {
-            'fields': ('qualificacao_minima', 'detalhes_qualificacao_minima',
-                       'conhecimento_desejavel',
-                       'conteudo_prova_teorica', 'entrevista', 'criterios_desempate'),
+        ('Detalhes Adicionais', {
+            'fields': ('modalidade_entrevista', 'conhecimento_desejavel',
+                       'conteudo_prova_teorica', 'criterios_desempate', 'comentarios'),
         }),
         ('Metadados', {
             'fields': ('status', 'criado_por'),

@@ -119,21 +119,31 @@
 
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">{{ form.valor_total_bolsa.label }}</label>
-                    <div class="input-group">
-                        <span class="input-group-text">R$</span>
-                        {{ form.valor_total_bolsa }}
-                    </div>
-                    <div class="form-text">Orçamento total disponível para a bolsa.</div>
-                    {% if form.valor_total_bolsa.errors %}
-                    <div class="text-danger small mt-1">{{ form.valor_total_bolsa.errors|join:', ' }}</div>
-                    {% endif %}
-                </div>
-                <div class="col-md-4">
                     <label class="form-label fw-semibold">{{ form.modalidade_bolsa.label }}</label>
                     {{ form.modalidade_bolsa }}
                     {% if form.modalidade_bolsa.errors %}
                     <div class="text-danger small mt-1">{{ form.modalidade_bolsa.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">{{ form.qualificacao_minima.label }}</label>
+                    {{ form.qualificacao_minima }}
+                    {% if form.qualificacao_minima.errors %}
+                    <div class="text-danger small mt-1">{{ form.qualificacao_minima.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">{{ form.detalhes_qualificacao_minima.label }}</label>
+                    {{ form.detalhes_qualificacao_minima }}
+                    {% if form.detalhes_qualificacao_minima.errors %}
+                    <div class="text-danger small mt-1">{{ form.detalhes_qualificacao_minima.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4" id="experiencia-group">
+                    <label class="form-label fw-semibold">Experiência</label>
+                    {{ form.experiencia }}
+                    {% if form.experiencia.errors %}
+                    <div class="text-danger small mt-1">{{ form.experiencia.errors|join:', ' }}</div>
                     {% endif %}
                 </div>
                 <div class="col-md-4">
@@ -161,9 +171,16 @@
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">{{ form.numero_vagas.label }}</label>
                     {{ form.numero_vagas }}
-                    <div class="form-text">Quantidade total de vagas ofertadas.</div>
                     {% if form.numero_vagas.errors %}
                     <div class="text-danger small mt-1">{{ form.numero_vagas.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Valor da Bolsa (R$)</label>
+                    {{ form.valor_bolsa }}
+                    <div class="form-text" id="valor-bolsa-help">Selecione o nível e a experiência primeiro.</div>
+                    {% if form.valor_bolsa.errors %}
+                    <div class="text-danger small mt-1">{{ form.valor_bolsa.errors|join:', ' }}</div>
                     {% endif %}
                 </div>
             </div>
@@ -173,27 +190,20 @@
             <hr class="my-4">
 
                         <h5 class="fw-semibold mb-3">
-                            <i class="bi bi-list-check me-2 text-primary"></i>Qualificação e Experiência
-                        </h5>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">{{ form.qualificacao_minima.label }}</label>
-                                {{ form.qualificacao_minima }}
-                                {% if form.qualificacao_minima.errors %}
-                                <div class="text-danger small mt-1">{{ form.qualificacao_minima.errors|join:', ' }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <h5 class="fw-semibold mb-3">
                             <i class="bi bi-file-text me-2 text-primary"></i>Detalhes Adicionais
                         </h5>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.modalidade_entrevista.label }}</label>
+                                {{ form.modalidade_entrevista }}
+                                {% if form.modalidade_entrevista.errors %}
+                                <div class="text-danger small mt-1">{{ form.modalidade_entrevista.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.conhecimento_desejavel.label }}</label>
                                 {{ form.conhecimento_desejavel }}
+                                <div class="form-text">Campo opcional.</div>
                                 {% if form.conhecimento_desejavel.errors %}
                                 <div class="text-danger small mt-1">{{ form.conhecimento_desejavel.errors|join:', ' }}</div>
                                 {% endif %}
@@ -201,20 +211,15 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.conteudo_prova_teorica.label }}</label>
                                 {{ form.conteudo_prova_teorica }}
+                                <div class="form-text">Campo opcional.</div>
                                 {% if form.conteudo_prova_teorica.errors %}
                                 <div class="text-danger small mt-1">{{ form.conteudo_prova_teorica.errors|join:', ' }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">{{ form.entrevista.label }}</label>
-                                {{ form.entrevista }}
-                                {% if form.entrevista.errors %}
-                                <div class="text-danger small mt-1">{{ form.entrevista.errors|join:', ' }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.criterios_desempate.label }}</label>
                                 {{ form.criterios_desempate }}
+                                <div class="form-text">Campo opcional.</div>
                                 {% if form.criterios_desempate.errors %}
                                 <div class="text-danger small mt-1">{{ form.criterios_desempate.errors|join:', ' }}</div>
                                 {% endif %}
@@ -224,7 +229,7 @@
                         <h5 class="fw-semibold mb-3">
                             <i class="bi bi-calendar-event me-2 text-primary"></i>Cronograma
                         </h5>
-                        <p class="text-muted small mb-3">Adicione os eventos do cronograma com suas respectivas datas de referência.</p>
+                        <p class="text-muted small mb-3">Preencha as etapas e datas do cronograma. Ao final, clique em <i class="bi bi-magic"></i> <strong>Calcular</strong> para verificar e ajustar as datas conforme as regras de dias úteis.</p>
 
                         {{ cronograma_formset.management_form }}
 
@@ -232,17 +237,19 @@
                             <table class="table table-bordered" id="cronograma-table">
                                 <thead class="table-light">
                                     <tr>
-                                        <th style="width:30%">Evento</th>
-                                        <th style="width:20%">Data do Evento <span class="text-danger">*</span></th>
-                                        <th style="width:20%">Observação</th>
-                                        <th style="width:5%"></th>
+                                        <th style="width:32%">Evento</th>
+                                        <th style="width:22%">Data do Evento</th>
+                                        <th style="width:28%">Observação</th>
+                                        <th style="width:10%">Regra</th>
+                                        <th style="width:8%">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="cronograma-rows">
                                     {% for form in cronograma_formset %}
-                                    <tr class="cronograma-row">
+                                    <tr class="cronograma-row" data-evento="{{ form.evento.value }}">
                                         <td>
                                             {{ form.evento }}
+                                            {{ form.id }}
                                             {% if form.evento.errors %}
                                             <div class="text-danger small">{{ form.evento.errors|join:', ' }}</div>
                                             {% endif %}
@@ -260,9 +267,13 @@
                                             {% endif %}
                                         </td>
                                         <td class="text-center align-middle">
-                                            {{ form.id }}
-                                            <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Remover">
-                                                <i class="bi bi-x-lg"></i>
+                                            <button type="button" class="btn btn-outline-info btn-sm regra-btn" data-bs-toggle="tooltip" title="">
+                                                <i class="bi bi-info-circle"></i>
+                                            </button>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <button type="button" class="btn btn-outline-danger btn-sm remover-etapa" title="Remover etapa">
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -271,9 +282,30 @@
                             </table>
                         </div>
 
-                        <button type="button" class="btn btn-outline-primary btn-sm mb-4" id="add-cronograma-row">
-                            <i class="bi bi-plus-lg me-1"></i>Adicionar Evento
-                        </button>
+                        <div class="d-flex flex-wrap gap-2 align-items-start mb-3">
+                            <button type="button" class="btn btn-outline-success btn-sm" id="adicionar-etapa">
+                                <i class="bi bi-plus-circle me-1"></i>Adicionar Etapa
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="calcular-cronograma">
+                                <i class="bi bi-magic me-1"></i>Calcular
+                            </button>
+                        </div>
+                        <div id="cronograma-check-feedback" class="small mb-4" style="display:none;"></div>
+
+                        <hr class="my-4">
+
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-chat-left-text me-2 text-primary"></i>Comentários
+                        </h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                {{ form.comentarios }}
+                                <div class="form-text">Campo opcional para comentários diversos sobre o edital.</div>
+                                {% if form.comentarios.errors %}
+                                <div class="text-danger small mt-1">{{ form.comentarios.errors|join:', ' }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
 
                         <hr class="my-4">
 
@@ -319,8 +351,64 @@
 
     var modalidadeSelect = document.getElementById('id_modalidade_bolsa');
     var qualificacaoSelect = document.getElementById('id_qualificacao_minima');
+    var experienciaSelect = document.getElementById('id_experiencia');
+    var experienciaHidden = document.getElementById('id_experiencia_hidden') || document.getElementById('id_experiencia');
+    var valorBolsaSelect = document.getElementById('id_valor_bolsa');
     var valorMinimoInput = document.getElementById('id_valor_minimo');
     var valorMaximoInput = document.getElementById('id_valor_maximo');
+    var experienciaGroup = document.getElementById('experiencia-group');
+    var valorBolsaHelp = document.getElementById('valor-bolsa-help');
+
+    function gerarValores(min, max, step) {
+        var valores = [];
+        for (var v = min; v <= max; v += step) {
+            valores.push(v);
+        }
+        if (valores[valores.length - 1] < max) {
+            valores.push(max);
+        }
+        return valores;
+    }
+
+    function fmtBRL(v) {
+        return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function populateValorBolsa(minVal, maxVal) {
+        if (!valorBolsaSelect) return;
+        var currentVal = valorBolsaSelect.value;
+        valorBolsaSelect.innerHTML = '<option value="">--- Selecione ---</option>';
+        var valores = gerarValores(parseFloat(minVal), parseFloat(maxVal), 500);
+        valores.forEach(function(v) {
+            var opt = document.createElement('option');
+            opt.value = v.toFixed(2);
+            opt.textContent = 'R$ ' + fmtBRL(v);
+            if (currentVal === v.toFixed(2)) opt.selected = true;
+            valorBolsaSelect.appendChild(opt);
+        });
+        if (valorBolsaHelp) valorBolsaHelp.textContent = 'Range: R$ ' + fmtBRL(parseFloat(minVal)) + ' a R$ ' + fmtBRL(parseFloat(maxVal)) + ' (intervalos de R$ 500).';
+    }
+
+    function updateExperiencia(nivel, config) {
+        if (!experienciaSelect || !experienciaGroup) return;
+        if (nivel === 'nivel_1') {
+            experienciaSelect.innerHTML = '<option value="Sem Experiência">Sem Experiência</option>';
+            experienciaSelect.disabled = true;
+            experienciaSelect.value = 'Sem Experiência';
+            experienciaGroup.style.display = '';
+        } else {
+            experienciaSelect.innerHTML = '<option value="">--- Selecione ---</option>';
+            experienciaSelect.disabled = false;
+            experienciaGroup.style.display = '';
+            var exps = config.experiencia || [];
+            exps.forEach(function(e) {
+                var opt = document.createElement('option');
+                opt.value = e[0];
+                opt.textContent = e[1];
+                experienciaSelect.appendChild(opt);
+            });
+        }
+    }
 
     function updateFields() {
         if (!modalidadeSelect || !qualificacaoSelect) return;
@@ -331,6 +419,8 @@
 
         if (!config) {
             qualificacaoSelect.innerHTML = '<option value="">--- Selecione um nível primeiro ---</option>';
+            if (experienciaSelect) { experienciaSelect.innerHTML = '<option value="">--- Selecione um nível primeiro ---</option>'; experienciaSelect.disabled = true; }
+            if (valorBolsaSelect) { valorBolsaSelect.innerHTML = '<option value="">--- Selecione o nível primeiro ---</option>'; }
             if (valorMinimoInput) valorMinimoInput.value = '';
             if (valorMaximoInput) valorMaximoInput.value = '';
             return;
@@ -343,99 +433,317 @@
             qualificacaoSelect.appendChild(opt);
         });
 
-        if (valorMinimoInput && valorMaximoInput && config.valor_minimo !== undefined) {
-            valorMinimoInput.value = config.valor_minimo.toFixed(2);
-            valorMaximoInput.value = config.valor_maximo.toFixed(2);
+        updateExperiencia(nivel, config);
+
+        if (nivel === 'nivel_1') {
+            var minV = config.valor_minimo || 500;
+            var maxV = config.valor_maximo || 2000;
+            populateValorBolsa(minV, maxV);
+            if (valorMinimoInput) valorMinimoInput.value = minV.toFixed(2);
+            if (valorMaximoInput) valorMaximoInput.value = maxV.toFixed(2);
+        } else {
+            if (valorBolsaSelect) { valorBolsaSelect.innerHTML = '<option value="">--- Selecione a experiência ---</option>'; }
         }
     }
 
+    function updateValorBolsaFromExperiencia() {
+        var nivel = modalidadeSelect ? modalidadeSelect.value : '';
+        var expVal = experienciaSelect ? experienciaSelect.value : '';
+        if (!nivel || nivel === 'nivel_1') return;
+        var config = NIVEL_CONFIG[nivel];
+        if (!config || !config.experiencia_valores) return;
+        var faixa = config.experiencia_valores[expVal];
+        if (!faixa) {
+            if (valorBolsaSelect) { valorBolsaSelect.innerHTML = '<option value="">--- Selecione a experiência ---</option>'; }
+            return;
+        }
+        populateValorBolsa(faixa[0], faixa[1]);
+        if (valorMinimoInput) valorMinimoInput.value = faixa[0].toFixed(2);
+        if (valorMaximoInput) valorMaximoInput.value = faixa[1].toFixed(2);
+    }
+
     modalidadeSelect && modalidadeSelect.addEventListener('change', updateFields);
+    if (experienciaSelect) experienciaSelect.addEventListener('change', updateValorBolsaFromExperiencia);
     if (modalidadeSelect && modalidadeSelect.value) {
         updateFields();
     }
 
-    var container = document.getElementById('cronograma-rows');
-    var addBtn = document.getElementById('add-cronograma-row');
-    var totalForms = document.getElementById('id_cronograma-TOTAL_FORMS');
-
-    function getNextOrdem() {
-        return parseInt(totalForms.value) + 1;
+    // ---- Cronograma: cálculo automático de dias úteis ----
+    function ehFeriado(data) { return false; } // FERIADOS_NACIONAIS está vazio por padrão
+    function ehDiaUtil(data) {
+        var dia = data.getDay(); // 0=Dom, 6=Sab
+        return dia >= 1 && dia <= 5 && !ehFeriado(data);
+    }
+    function proximoDiaUtil(data) {
+        var d = new Date(data);
+        while (!ehDiaUtil(d)) d.setDate(d.getDate() + 1);
+        return d;
+    }
+    function adicionarDiasUteis(dataInicial, dias) {
+        var d = new Date(dataInicial);
+        d.setDate(d.getDate() + 1);
+        var contador = 0;
+        while (contador < dias) {
+            if (ehDiaUtil(d)) contador++;
+            if (contador < dias) d.setDate(d.getDate() + 1);
+        }
+        return d;
+    }
+    function proximoDia1ou15(data) {
+        var d = new Date(data);
+        var ano = d.getFullYear();
+        var mes = d.getMonth();
+        var dia15 = new Date(ano, mes, 15);
+        if (dia15 >= d) return proximoDiaUtil(dia15);
+        if (mes === 11) { mes = 0; ano++; } else { mes++; }
+        return proximoDiaUtil(new Date(ano, mes, 1));
+    }
+    function fmtDate(d) {
+        var y = d.getFullYear();
+        var m = ('0' + (d.getMonth() + 1)).slice(-2);
+        var dd = ('0' + d.getDate()).slice(-2);
+        return y + '-' + m + '-' + dd;
     }
 
-    function updateRemoveButtons() {
-        container.querySelectorAll('.cronograma-row').forEach(function(row) {
-            var btn = row.querySelector('.remove-row');
-            if (btn) {
-                btn.onclick = function() {
-                    var deleteInput = row.querySelector('input[name$="-DELETE"]');
-                    if (deleteInput) {
-                        deleteInput.checked = true;
-                        row.style.display = 'none';
-                    } else {
-                        row.remove();
-                        totalForms.value = parseInt(totalForms.value) - 1;
-                    }
-                    reindexRows();
-                };
-            }
-        });
+    var REGRAS_EVENTOS = {
+        'inicio_submissao': 'Início da Submissão: data atual de aprovação do edital (próximo dia útil).',
+        'limite_submissao': 'Data Limite para Submissão: 7 dias úteis após o Início da Submissão.',
+        'resultado_aptas': 'Resultado das Candidaturas Aptas: 1 dia útil após a Data Limite de Submissão.',
+        'prova_teorica': 'Data da Prova Teórica: 1 dia útil após o Resultado das Candidaturas Aptas.',
+        'entrevista': 'Entrevista: 1 dia útil após a Data da Prova Teórica.',
+        'resultado_final': 'Divulgação do Resultado Final: 1 dia útil após a Entrevista.',
+        'outorga': 'Data da Outorga: 20 dias úteis após o Início da Submissão e deve cair nos dias 1 ou 15 do mês (próximo dia útil se for fim de semana).',
+    };
+
+    function parseInputDate(input) {
+        if (!input || !input.value) return null;
+        return new Date(input.value + 'T00:00:00');
     }
 
-    function reindexRows() {
-        var rows = container.querySelectorAll('.cronograma-row');
-        var visibleIndex = 0;
+    function diaUtilAnteriorOuIgual(d) {
+        while (d.getDay() === 0 || d.getDay() === 6) {
+            d.setDate(d.getDate() - 1);
+        }
+        return d;
+    }
+
+    function dataIgual(a, b) {
+        return a.getFullYear() === b.getFullYear() &&
+               a.getMonth() === b.getMonth() &&
+               a.getDate() === b.getDate();
+    }
+
+    function obterLinhasCronograma() {
+        var rows = document.querySelectorAll('#cronograma-rows .cronograma-row');
+        var map = {};
         rows.forEach(function(row) {
-            if (row.style.display === 'none') return;
-            var inputs = row.querySelectorAll('input, select, textarea');
-            inputs.forEach(function(input) {
-                var name = input.getAttribute('name');
-                if (name && name.indexOf('cronograma-') === 0) {
-                    var newName = name.replace(/cronograma-\d+-/, 'cronograma-' + visibleIndex + '-');
-                    input.setAttribute('name', newName);
-                    input.setAttribute('id', 'id_' + newName);
-                }
-            });
-            visibleIndex++;
+            var sel = row.querySelector('select[name$="-evento"]');
+            var dt = row.querySelector('input[name$="-data_evento"]');
+            if (sel && dt && sel.value) {
+                map[sel.value] = dt;
+            }
+        });
+        return map;
+    }
+
+    function calcularCronograma() {
+        var map = obterLinhasCronograma();
+        var feedbackEl = document.getElementById('cronograma-check-feedback');
+        var ajustes = [];
+
+        // Garante Início
+        var inicioInput = map['inicio_submissao'];
+        if (!inicioInput) {
+            if (feedbackEl) {
+                feedbackEl.className = 'small mb-4 text-danger';
+                feedbackEl.textContent = 'Adicione uma etapa "Início da Submissão" para calcular o cronograma.';
+                feedbackEl.style.display = 'block';
+            }
+            return;
+        }
+
+        var hoje = proximoDiaUtil(new Date());
+        var inicio = parseInputDate(inicioInput) || hoje;
+        var inicioUtil = proximoDiaUtil(inicio);
+        if (!dataIgual(inicio, inicioUtil)) {
+            ajustes.push('Início da Submissão ajustado para ' + fmtDate(inicioUtil) + ' (próximo dia útil).');
+        }
+        inicioInput.value = fmtDate(inicioUtil);
+
+        // Calcula mínimos teóricos
+        var minLimite = adicionarDiasUteis(new Date(inicioUtil.getTime()), 7);
+        var minResultado = adicionarDiasUteis(new Date(minLimite.getTime()), 1);
+        var minProva = adicionarDiasUteis(new Date(minResultado.getTime()), 1);
+        var minEntrevista = adicionarDiasUteis(new Date(minProva.getTime()), 1);
+        var minResultadoFinal = adicionarDiasUteis(new Date(minEntrevista.getTime()), 1);
+        var baseOutorga = adicionarDiasUteis(new Date(inicioUtil.getTime()), 20);
+        var minOutorga = proximoDia1ou15(baseOutorga);
+
+        var minimos = {
+            'limite_submissao': minLimite,
+            'resultado_aptas': minResultado,
+            'prova_teorica': minProva,
+            'entrevista': minEntrevista,
+            'resultado_final': minResultadoFinal,
+            'outorga': minOutorga
+        };
+
+        // Verifica cada data preenchida
+        var etapasOrdem = ['limite_submissao', 'resultado_aptas', 'prova_teorica', 'entrevista', 'resultado_final', 'outorga'];
+        etapasOrdem.forEach(function(evento) {
+            var input = map[evento];
+            if (!input) return;
+            if (!input.value) {
+                input.value = fmtDate(minimos[evento]);
+                ajustes.push(nomeEvento(evento) + ' definida como ' + fmtDate(minimos[evento]) + '.');
+                return;
+            }
+            var data = parseInputDate(input);
+            var dataUtil = proximoDiaUtil(data);
+            if (!dataIgual(data, dataUtil)) {
+                ajustes.push(nomeEvento(evento) + ' ajustada para ' + fmtDate(dataUtil) + ' (próximo dia útil).');
+                data = dataUtil;
+            }
+            var minimo = minimos[evento];
+            if (data < minimo) {
+                ajustes.push(nomeEvento(evento) + ' ajustada para ' + fmtDate(minimo) + ' (mínimo permitido).');
+                data = minimo;
+            }
+            input.value = fmtDate(data);
+        });
+
+        if (feedbackEl) {
+            if (ajustes.length > 0) {
+                feedbackEl.className = 'small mb-4 text-success';
+                feedbackEl.innerHTML = '<i class="bi bi-check-circle me-1"></i><strong>Cronograma verificado.</strong> Ajustes realizados:<ul class="mb-0 mt-1 ps-3">' +
+                    ajustes.map(function(a) { return '<li>' + a + '</li>'; }).join('') + '</ul>';
+            } else {
+                feedbackEl.className = 'small mb-4 text-success';
+                feedbackEl.innerHTML = '<i class="bi bi-check-circle me-1"></i><strong>Cronograma verificado.</strong> Todas as datas já estão de acordo com as regras.';
+            }
+            feedbackEl.style.display = 'block';
+        }
+    }
+
+    function nomeEvento(evento) {
+        var labels = {
+            'inicio_submissao': 'Início da Submissão',
+            'limite_submissao': 'Data Limite para Submissão',
+            'resultado_aptas': 'Resultado das Candidaturas Aptas',
+            'prova_teorica': 'Data da Prova Teórica',
+            'entrevista': 'Entrevista',
+            'resultado_final': 'Divulgação do Resultado Final',
+            'outorga': 'Data da Outorga'
+        };
+        return labels[evento] || evento;
+    }
+
+    function atualizarTooltipsRegras() {
+        document.querySelectorAll('#cronograma-rows .cronograma-row').forEach(function(row) {
+            var sel = row.querySelector('select[name$="-evento"]');
+            var btn = row.querySelector('.regra-btn');
+            if (sel && btn) {
+                var regra = REGRAS_EVENTOS[sel.value] || 'Selecione um evento.';
+                btn.setAttribute('title', regra);
+                btn.setAttribute('data-bs-original-title', regra);
+            }
         });
     }
 
-    addBtn.addEventListener('click', function() {
-        var lastRow = container.querySelector('.cronograma-row:last-child');
-        if (!lastRow) return;
-        var clone = lastRow.cloneNode(true);
-
-        var inputs = clone.querySelectorAll('input, select, textarea');
-        inputs.forEach(function(input) {
-            var name = input.getAttribute('name');
-            if (name) {
-                var newName = name.replace(/cronograma-\d+-/, 'cronograma-' + totalForms.value + '-');
-                input.setAttribute('name', newName);
-                input.setAttribute('id', 'id_' + newName);
-                if (input.type !== 'hidden') {
-                    if (input.tagName === 'SELECT') {
-                        input.selectedIndex = 0;
-                    } else if (input.type === 'checkbox') {
-                        input.checked = false;
-                    } else {
-                        input.value = '';
-                    }
-                }
+    document.querySelectorAll('#cronograma-rows .cronograma-row').forEach(function(row) {
+        var sel = row.querySelector('select[name$="-evento"]');
+        var dt = row.querySelector('input[name$="-data_evento"]');
+        if (sel && dt) {
+            sel.addEventListener('change', function() { atualizarTooltipsRegras(); });
+            if (sel.value === 'inicio_submissao' && !dt.value) {
+                dt.value = fmtDate(proximoDiaUtil(new Date()));
             }
-        });
-
-        var idInput = clone.querySelector('input[name$="-id"]');
-        if (idInput) idInput.value = '';
-
-        var deleteInput = clone.querySelector('input[name$="-DELETE"]');
-        if (deleteInput) deleteInput.checked = false;
-
-        clone.style.display = '';
-        container.appendChild(clone);
-        totalForms.value = parseInt(totalForms.value) + 1;
-        updateRemoveButtons();
+        }
+    });
+    var btnCalc = document.getElementById('calcular-cronograma');
+    if (btnCalc) btnCalc.addEventListener('click', calcularCronograma);
+    atualizarTooltipsRegras();
+    document.querySelectorAll('.regra-btn').forEach(function(el) {
+        if (window.bootstrap) new bootstrap.Tooltip(el);
     });
 
-    updateRemoveButtons();
+    // Gerenciamento dinâmico de linhas do cronograma
+    function atualizarTotalForms() {
+        var totalInput = document.getElementById('id_cronograma-TOTAL_FORMS');
+        if (!totalInput) return;
+        var visiveis = 0;
+        document.querySelectorAll('#cronograma-rows .cronograma-row').forEach(function(row) {
+            if (!row.classList.contains('d-none')) visiveis++;
+        });
+        totalInput.value = visiveis;
+    }
+
+    function limparLinha(row) {
+        var sel = row.querySelector('select[name$="-evento"]');
+        var dt = row.querySelector('input[name$="-data_evento"]');
+        var obs = row.querySelector('input[name$="-observacao"], textarea[name$="-observacao"]');
+        var del = row.querySelector('input[name$="-DELETE"]');
+        if (sel) sel.value = '';
+        if (dt) dt.value = '';
+        if (obs) obs.value = '';
+        if (del) del.checked = false;
+    }
+
+    function mostrarLinhaOculta() {
+        var linhas = document.querySelectorAll('#cronograma-rows .cronograma-row');
+        for (var i = 0; i < linhas.length; i++) {
+            if (linhas[i].classList.contains('d-none')) {
+                linhas[i].classList.remove('d-none');
+                atualizarTotalForms();
+                atualizarTooltipsRegras();
+                var btn = linhas[i].querySelector('.regra-btn');
+                if (btn && window.bootstrap) new bootstrap.Tooltip(btn);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function ocultarLinha(row) {
+        row.classList.add('d-none');
+        limparLinha(row);
+        atualizarTotalForms();
+    }
+
+    document.querySelectorAll('#cronograma-rows .remover-etapa').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var row = btn.closest('.cronograma-row');
+            if (row) ocultarLinha(row);
+        });
+    });
+
+    var btnAdicionar = document.getElementById('adicionar-etapa');
+    if (btnAdicionar) {
+        btnAdicionar.addEventListener('click', function() {
+            if (!mostrarLinhaOculta()) {
+                alert('Limite de etapas atingido.');
+            }
+        });
+    }
+
+    // Inicialmente mostra linhas preenchidas + uma vazia; oculta demais reservas
+    (function inicializarLinhas() {
+        var linhas = document.querySelectorAll('#cronograma-rows .cronograma-row');
+        var ultimaPreenchida = -1;
+        linhas.forEach(function(row, idx) {
+            var sel = row.querySelector('select[name$="-evento"]');
+            var dt = row.querySelector('input[name$="-data_evento"]');
+            var idInput = row.querySelector('input[name$="-id"]');
+            var temDado = (sel && sel.value) || (dt && dt.value) || (idInput && idInput.value);
+            if (temDado) ultimaPreenchida = idx;
+        });
+        var limiteVisivel = Math.min(ultimaPreenchida + 2, linhas.length);
+        linhas.forEach(function(row, idx) {
+            if (idx >= limiteVisivel) row.classList.add('d-none');
+        });
+        atualizarTotalForms();
+    })();
+
     } catch(e) { /* silencioso */ }
 })();
 </script>

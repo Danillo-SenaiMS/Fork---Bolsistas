@@ -136,12 +136,84 @@ class EditalProvisorioDetailView(LoginRequiredMixin, ContextMixin, DetailView):
     template_name = 'editais/edital_detail.html'
     context_object_name = 'edital'
 
+    CORES_EVENTOS = [
+        '#0d6efd',  # azul
+        '#198754',  # verde
+        '#dc3545',  # vermelho
+        '#fd7e14',  # laranja
+        '#6f42c1',  # roxo
+        '#0dcaf0',  # ciano
+        '#d63384',  # rosa
+    ]
+
     def get_queryset(self):
         return EditalProvisorio.objects.all().select_related('criado_por')
 
+    def _montar_cores_cronograma(self, cronograma):
+        cores = {}
+        idx = 0
+        for evento in cronograma:
+            if evento.evento not in cores:
+                cores[evento.evento] = self.CORES_EVENTOS[idx % len(self.CORES_EVENTOS)]
+                idx += 1
+        return cores
+
+    def _montar_calendarios(self, cronograma):
+        if not cronograma:
+            return []
+        datas = [e.data_evento for e in cronograma if e.data_evento]
+        if not datas:
+            return []
+        data_inicio = min(datas).replace(day=1)
+        data_fim = max(datas)
+        calendarios = []
+        atual = data_inicio
+        while atual <= data_fim:
+            calendarios.append(self._montar_mes(atual, cronograma))
+            if atual.month == 12:
+                atual = atual.replace(year=atual.year + 1, month=1, day=1)
+            else:
+                atual = atual.replace(month=atual.month + 1, day=1)
+        return calendarios
+
+    def _montar_mes(self, data_referencia, cronograma):
+        import calendar
+        cal = calendar.Calendar(firstweekday=6)  # domingo como primeiro dia
+        dias_mes = cal.monthdayscalendar(data_referencia.year, data_referencia.month)
+
+        eventos_por_dia = {}
+        for evento in cronograma:
+            if evento.data_evento and evento.data_evento.year == data_referencia.year and evento.data_evento.month == data_referencia.month:
+                eventos_por_dia.setdefault(evento.data_evento.day, []).append(evento)
+
+        semanas = []
+        for semana in dias_mes:
+            dias = []
+            for dia in semana:
+                if dia == 0:
+                    dias.append(None)
+                else:
+                    dias.append({
+                        'dia': dia,
+                        'eventos': eventos_por_dia.get(dia, []),
+                    })
+            semanas.append(dias)
+
+        meses = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ]
+        return {
+            'nome_mes': f"{meses[data_referencia.month - 1]} {data_referencia.year}",
+            'semanas': semanas,
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['cronograma'] = self.object.cronograma.all()
+        cronograma = list(self.object.cronograma.all())
+        context['cronograma'] = cronograma
+        context['cronograma_cores'] = self._montar_cores_cronograma(cronograma)
+        context['calendarios'] = self._montar_calendarios(cronograma)
         user = self.request.user
         context['tem_cadastro'] = hasattr(user, 'cadastro')
         context['is_view_user'] = user.groups.filter(name=GROUP_VIEW_USER).exists()
@@ -157,6 +229,7 @@ class EditalProvisorioDetailView(LoginRequiredMixin, ContextMixin, DetailView):
 class EditalProvisorioDeleteView(ManagerRequiredMixin, ContextMixin, DeleteView):
     model = EditalProvisorio
     template_name = 'editais/edital_confirm_delete.html'
+    context_object_name = 'edital'
     success_url = reverse_lazy('edital_list')
 
     def form_valid(self, form):

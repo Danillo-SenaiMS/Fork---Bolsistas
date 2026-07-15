@@ -1,5 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory, BaseInlineFormSet
+from decimal import Decimal, InvalidOperation
 from .models import EditalProvisorio, CronogramaEvento, NIVEL_BOLSA_CONFIG
 
 
@@ -22,41 +23,38 @@ class EditalProvisorioForm(forms.ModelForm):
             'nome_edital', 'area_estudo', 'detalhes_edital',
             'nome_instituto', 'email_solicitante',
             'documento_anexo',
-            'numero_vagas', 'valor_total_bolsa',
-            'modalidade_bolsa', 'modalidade_atuacao',
-            'plataforma_tecnologica', 'vigencia', 'endereco_atuacao',
-            'qualificacao_minima', 'detalhes_qualificacao_minima',
-            'conhecimento_desejavel',
-            'conteudo_prova_teorica', 'entrevista', 'criterios_desempate',
+            'modalidade_bolsa', 'qualificacao_minima', 'detalhes_qualificacao_minima',
+            'experiencia',
+            'modalidade_atuacao', 'plataforma_tecnologica', 'vigencia',
+            'numero_vagas', 'valor_bolsa',
+            'endereco_atuacao',
+            'modalidade_entrevista', 'conhecimento_desejavel',
+            'conteudo_prova_teorica', 'criterios_desempate',
+            'comentarios',
             'valor_minimo', 'valor_maximo',
             'status',
         ]
         widgets = {
-            'nome_edital': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Edital de Inovação Tecnológica 2026'}),
-            'area_estudo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Ciência da Computação, Biotecnologia'}),
-            'detalhes_edital': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Detalhes adicionais sobre o edital (opcional)'}),
-            'nome_instituto': forms.Select(attrs={'class': 'form-select'}),
-            'email_solicitante': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'solicitante@instituto.br', 'readonly': True}),
-            'documento_anexo': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
-            'numero_vagas': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'step': 1}),
-            'valor_total_bolsa': forms.NumberInput(attrs={
-                'class': 'form-control', 'step': '0.01', 'min': '0',
-                'placeholder': 'Ex: 50000.00',
-            }),
-            'modalidade_bolsa': forms.Select(attrs={'class': 'form-select'}),
-            'modalidade_atuacao': forms.Select(attrs={'class': 'form-select'}),
-            'plataforma_tecnologica': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Python, Django, React'}),
-            'vigencia': forms.NumberInput(attrs={
-                'class': 'form-control', 'min': 15, 'max': 1095,
-                'placeholder': 'Ex: 180',
-            }),
+            'nome_edital':                  forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Edital de Inovação Tecnológica 2026'}),
+            'area_estudo':                  forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Biotecnologia'}),
+            'detalhes_edital':              forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Detalhes adicionais sobre o edital (opcional)'}),
+            'nome_instituto':               forms.Select(attrs={'class': 'form-select'}),
+            'email_solicitante':            forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'solicitante@instituto.br', 'readonly': True}),
+            'documento_anexo':              forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
+            'modalidade_bolsa':             forms.Select(attrs={'class': 'form-select'}),
+            'qualificacao_minima':          forms.Select(attrs={'class': 'form-select'}),
+            'detalhes_qualificacao_minima': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Engenharia, ...'}),
+            'modalidade_atuacao':           forms.Select(attrs={'class': 'form-select'}),
+            'plataforma_tecnologica':       forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Insira a plataforma tecnológica utilizada'}),
+            'vigencia':                     forms.NumberInput(attrs={'class': 'form-control', 'min': 15, 'max': 1095,'placeholder': 'Ex: 180',}),
+            'numero_vagas':                 forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'step': 1}),
+            'valor_bolsa': forms.Select(attrs={'class': 'form-select'}),
             'endereco_atuacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Local onde as atividades serão realizadas'}),
-            'qualificacao_minima': forms.Select(attrs={'class': 'form-select'}),
-            'detalhes_qualificacao_minima': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Ciência da Computação, Engenharia, ...'}),
+            'modalidade_entrevista': forms.Select(attrs={'class': 'form-select'}),
             'conhecimento_desejavel': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'conteudo_prova_teorica': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'entrevista': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'criterios_desempate': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'comentarios': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Comentários diversos (opcional)'}),
             'valor_minimo': forms.HiddenInput(),
             'valor_maximo': forms.HiddenInput(),
             'status': forms.Select(attrs={'class': 'form-select'}),
@@ -71,6 +69,11 @@ class EditalProvisorioForm(forms.ModelForm):
         self.fields['status'].required = False
         self.fields['vigencia'].required = False
         self.fields['vigencia'].widget = forms.HiddenInput()
+        self.fields['conteudo_prova_teorica'].required = False
+        self.fields['criterios_desempate'].required = False
+        self.fields['experiencia'].required = False
+        self.fields['experiencia'].widget = forms.Select(attrs={'class': 'form-select'})
+        self.fields['modalidade_entrevista'].required = False
 
         if self._user:
             if not self.is_bound and not self.initial.get('email_solicitante'):
@@ -106,6 +109,31 @@ class EditalProvisorioForm(forms.ModelForm):
             cleaned_data['valor_minimo'] = config.get('valor_minimo', 0)
             cleaned_data['valor_maximo'] = config.get('valor_maximo', 0)
 
+        experiencia = cleaned_data.get('experiencia') or ''
+        valor_bolsa_str = cleaned_data.get('valor_bolsa') or ''
+        if isinstance(valor_bolsa_str, str) and valor_bolsa_str:
+            try:
+                cleaned_data['valor_bolsa'] = Decimal(valor_bolsa_str)
+            except (ValueError, InvalidOperation):
+                self.add_error('valor_bolsa', 'Valor da bolsa inválido.')
+
+        if nivel == 'nivel_1':
+            cleaned_data['experiencia'] = 'Sem Experiência'
+        elif nivel and experiencia not in dict(self._experiencia_choices_for_nivel(nivel)):
+            self.add_error('experiencia', 'Selecione uma experiência válida para o nível escolhido.')
+
+        if nivel and config and cleaned_data.get('valor_bolsa'):
+            valor = cleaned_data['valor_bolsa']
+            if nivel == 'nivel_1':
+                min_v = config.get('valor_minimo', 0)
+                max_v = config.get('valor_maximo', 0)
+            else:
+                exp_valores = config.get('experiencia_valores', {})
+                faixa = exp_valores.get(experiencia or 'Sem Experiência', (0, 0))
+                min_v, max_v = faixa
+            if valor < Decimal(str(min_v)) or valor > Decimal(str(max_v)):
+                self.add_error('valor_bolsa', f'Valor da bolsa fora do range permitido: R$ {min_v:.2f} a R$ {max_v:.2f}.')
+
         modalidade_atuacao = cleaned_data.get('modalidade_atuacao')
         endereco_atuacao = cleaned_data.get('endereco_atuacao')
         if modalidade_atuacao == 'remota' and not endereco_atuacao:
@@ -132,6 +160,10 @@ class EditalProvisorioForm(forms.ModelForm):
                 cleaned_data['status'] = 'em_analise'
 
         return cleaned_data
+
+    def _experiencia_choices_for_nivel(self, nivel):
+        config = NIVEL_BOLSA_CONFIG.get(nivel, {})
+        return config.get('experiencia', [('Sem Experiência', 'Sem Experiência')])
 
 
 class BaseCronogramaFormSet(BaseInlineFormSet):
@@ -220,6 +252,6 @@ CronogramaEventoFormSet = inlineformset_factory(
     CronogramaEvento,
     form=CronogramaEventoForm,
     formset=BaseCronogramaFormSet,
-    extra=1,
+    extra=7,
     can_delete=True,
 )

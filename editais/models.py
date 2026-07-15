@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from base.models import DataModel
-from base.utils import gerar_numero_serie, dias_uteis_entre
+from base.utils import gerar_numero_serie, dias_uteis_entre, adicionar_dias_uteis, proximo_dia_util, proximo_dia_1_ou_15
 from accounts.models import User
 from cadastro.models import CadastroBolsista
 
@@ -90,12 +90,22 @@ class EditalProvisorio(DataModel):
         ('remota', 'Remota'),
     ]
 
+    EXPERIENCIA_CHOICES = [
+        ('Sem Experiência', 'Sem Experiência'),
+        ('1 Ano de Experiência', '1 Ano de Experiência'),
+        ('2 Anos ou mais', '2 Anos ou mais'),
+    ]
+
+    MODALIDADE_ENTREVISTA_CHOICES = [
+        ('presencial', 'Presencial'),
+        ('online', 'Online'),
+    ]
+
     INSTITUTOS_CHOICES = [
-        ('isi_biomassa',            'ISI Biomassa'),
-        ('ist_alimentos',           'IST Alimentos e Bebidas'),
-        ('ist_construcao',          'Faculdade da Construção'),
-        ('fatec_cg',                'FATEC - Campo Grande'),
-        ('departamento_regional',   'DR'),
+        ('isi_biomassa',            'ISI Biomassa - Três Lagoas'),
+        ('ist_alimentos',           'IST Alimentos e Bebidas - Dourados'),
+        ('ist_eficiencia',          'IST Eficiência Operacional - Campo Grande'),
+        ('ist_construcao',          'Faculdade da Construção - Campo Grande'),
     ]
 
     EVENTO_CHOICES = [
@@ -103,8 +113,6 @@ class EditalProvisorio(DataModel):
         ('limite_submissao',        'Data limite para submissão das candidaturas'),
         ('resultado_aptas',         'Resultado das candidaturas aptas (análise documental/curricular)'),
         ('prova_teorica',           'Prova teórica'),
-        ('resultado_prova',         'Resultado da prova teórica'),
-        ('envio_documentacao',      'Envio da Documentação Comprobatória'),
         ('entrevista',              'Entrevista'),
         ('resultado_final',         'Divulgação do Resultado Final'),
         ('outorga',                 'Outorga das bolsas'),
@@ -121,8 +129,9 @@ class EditalProvisorio(DataModel):
 
     numero_vagas                    = models.PositiveIntegerField('Número de Vagas')
     modalidade_bolsa                = models.CharField('Modalidade da Bolsa', max_length=50, choices=MODALIDADE_CHOICES)
-    valor_total_bolsa               = models.DecimalField('Valor Total da Bolsa (R$)', max_digits=12, decimal_places=2, default=0)
+    experiencia                     = models.CharField('Experiência', max_length=50, choices=EXPERIENCIA_CHOICES, blank=True, default='')
     valor_bolsa                     = models.DecimalField('Valor da Bolsa (R$)', max_digits=10, decimal_places=2, default=0)
+    valor_total_bolsa               = models.DecimalField('Valor Total da Bolsa (R$)', max_digits=12, decimal_places=2, default=0)
     valor_minimo                    = models.DecimalField('Valor Mínimo (R$)', max_digits=10, decimal_places=2, default=0)
     valor_maximo                    = models.DecimalField('Valor Máximo (R$)', max_digits=10, decimal_places=2, default=0)
     modalidade_atuacao              = models.CharField('Modalidade de Atuação', max_length=50, choices=MODALIDADE_ATUACAO_CHOICES, default='presencial')
@@ -133,9 +142,10 @@ class EditalProvisorio(DataModel):
     qualificacao_minima             = models.CharField('Qualificação Mínima', max_length=255)
     detalhes_qualificacao_minima    = models.CharField('Qualificação Mínima em:', max_length=255, blank=True, default='')
     conhecimento_desejavel          = models.TextField('Conhecimento Desejável', blank=True, default='')
-    conteudo_prova_teorica          = models.TextField('Conteúdo da Prova Teórica')
-    entrevista                      = models.TextField('Entrevista')
-    criterios_desempate             = models.TextField('Critérios de Desempate')
+    conteudo_prova_teorica          = models.TextField('Conteúdo da Prova Teórica', blank=True, default='')
+    modalidade_entrevista           = models.CharField('Modalidade da Entrevista', max_length=20, choices=MODALIDADE_ENTREVISTA_CHOICES, default='presencial')
+    criterios_desempate             = models.TextField('Critérios de Desempate', blank=True, default='')
+    comentarios                     = models.TextField('Comentários', blank=True, default='')
 
     numero_serie                    = models.CharField('Número de Série', max_length=4, unique=True, blank=True)
     status                          = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='em_analise')
@@ -152,7 +162,59 @@ class EditalProvisorio(DataModel):
     def save(self, *args, **kwargs):
         if not self.numero_serie:
             self.numero_serie = gerar_numero_serie(EditalProvisorio)
+        status_anterior = None
+        if self.pk:
+            try:
+                anterior = EditalProvisorio.objects.get(pk=self.pk)
+                status_anterior = anterior.status
+            except EditalProvisorio.DoesNotExist:
+                pass
         super().save(*args, **kwargs)
+        if status_anterior == 'em_analise' and self.status == 'aberto':
+            self.calcular_cronograma()
+
+    EVENTOS_ORDEM = {
+        'inicio_submissao': 0,
+        'limite_submissao': 1,
+        'resultado_aptas': 2,
+        'prova_teorica': 3,
+        'entrevista': 4,
+        'resultado_final': 5,
+        'outorga': 6,
+    }
+
+    def calcular_cronograma(self):
+        data_inicio = proximo_dia_util(timezone.now().date())
+        limite = adicionar_dias_uteis(data_inicio, 7)
+        resultado_aptas = adicionar_dias_uteis(limite, 1)
+        prova_teorica = adicionar_dias_uteis(resultado_aptas, 1)
+        entrevista = adicionar_dias_uteis(prova_teorica, 1)
+        resultado_final = adicionar_dias_uteis(entrevista, 1)
+        base_outorga = adicionar_dias_uteis(data_inicio, 20)
+        outorga = proximo_dia_1_ou_15(base_outorga)
+
+        datas = {
+            'inicio_submissao': data_inicio,
+            'limite_submissao': limite,
+            'resultado_aptas': resultado_aptas,
+            'prova_teorica': prova_teorica,
+            'entrevista': entrevista,
+            'resultado_final': resultado_final,
+            'outorga': outorga,
+        }
+        for evento_codigo, data_val in datas.items():
+            CronogramaEvento.objects.update_or_create(
+                edital=self,
+                evento=evento_codigo,
+                defaults={
+                    'data_evento': data_val,
+                    'ordem': self.EVENTOS_ORDEM[evento_codigo],
+                },
+            )
+
+    @property
+    def vigencia_meses(self):
+        return max(1, self.vigencia // 30)
 
     @property
     def total_eventos(self):
@@ -189,7 +251,6 @@ class EditalProvisorio(DataModel):
     def nome_proxima_etapa(self):
         prox = self.proxima_etapa
         return prox.get_evento_display() if prox else None
-
 
 
 class CronogramaEvento(DataModel):

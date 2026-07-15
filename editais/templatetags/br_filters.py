@@ -1,5 +1,7 @@
 from django import template
 
+from editais.models import EditalProvisorio
+
 register = template.Library()
 
 
@@ -20,3 +22,18 @@ def br_money(value):
     if negative:
         result = f'-{result}'
     return result
+
+
+@register.filter
+def dict_get(d, key):
+    if not d:
+        return ''
+    return d.get(key, '')
+
+
+@register.filter
+def evento_display(codigo):
+    for c, label in EditalProvisorio.EVENTO_CHOICES:
+        if c == codigo:
+            return label
+    return codigo
