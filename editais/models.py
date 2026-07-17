@@ -72,9 +72,10 @@ NIVEL_BOLSA_CONFIG = {
 
 class EditalProvisorio(DataModel):
     STATUS_CHOICES = [
+        ('rascunho', 'Rascunho'),
+        ('em_analise', 'Em Análise'),
         ('aberto', 'Aberto'),
         ('encerrado', 'Encerrado'),
-        ('em_analise', 'Em Análise'),
         ('cancelado', 'Cancelado'),
     ]
 

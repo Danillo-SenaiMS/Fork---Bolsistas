@@ -5,13 +5,25 @@
 <div class="container-fluid py-3">
     <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="_save_draft" id="id__save_draft" value="">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <h2 class="fw-bold text-primary mb-0">
                 <i class="bi bi-journal-plus me-2"></i>
-                {% if object %}Editar Edital{% else %}Novo Edital{% endif %}
+                {% if object %}Editar{% else %}Novo{% endif %} Edital
             </h2>
-            <div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-success btn-sm px-3" onclick="salvarNormal()">
+                    <i class="bi bi-check-lg me-1"></i>{% if object %}Atualizar{% else %}Salvar{% endif %}
+                </button>
+                <button type="button" class="btn btn-warning btn-sm px-3" onclick="salvarRascunho()">
+                    <i class="bi bi-file-earmark-lock me-1"></i>Salvar Rascunho
+                </button>
+                {% if not object %}
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="limparDados()">
+                    <i class="bi bi-eraser me-1"></i>Limpar Dados
+                </button>
+                {% endif %}
                 <a href="{% url 'edital_list' %}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Voltar
                 </a>
@@ -151,6 +163,14 @@
                     {{ form.modalidade_atuacao }}
                     {% if form.modalidade_atuacao.errors %}
                     <div class="text-danger small mt-1">{{ form.modalidade_atuacao.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-12" id="endereco-atucao-group" style="display: none;">
+                    <label class="form-label fw-semibold">{{ form.endereco_atuacao.label }}</label>
+                    {{ form.endereco_atuacao }}
+                    <div class="form-text">Informe o endereço, link de reunião ou plataforma onde as atividades remotas serão realizadas.</div>
+                    {% if form.endereco_atuacao.errors %}
+                    <div class="text-danger small mt-1">{{ form.endereco_atuacao.errors|join:', ' }}</div>
                     {% endif %}
                 </div>
                 <div class="col-md-4">
@@ -328,10 +348,18 @@
 
                         <hr class="my-4">
 
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 <button type="submit" class="btn btn-success px-4">
                     <i class="bi bi-check-lg me-1"></i>{% if object %}Atualizar{% else %}Salvar{% endif %}
                 </button>
+                <button type="button" class="btn btn-warning px-4" onclick="salvarRascunho()">
+                    <i class="bi bi-file-earmark-lock me-1"></i>Salvar Rascunho
+                </button>
+                {% if not object %}
+                <button type="button" class="btn btn-outline-secondary px-4" onclick="limparDados()">
+                    <i class="bi bi-eraser me-1"></i>Limpar Dados
+                </button>
+                {% endif %}
                 <a href="{% url 'edital_list' %}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Voltar
                 </a>
@@ -466,6 +494,20 @@
     if (experienciaSelect) experienciaSelect.addEventListener('change', updateValorBolsaFromExperiencia);
     if (modalidadeSelect && modalidadeSelect.value) {
         updateFields();
+    }
+
+    // ---- Toggle campo endereco_atuacao conforme modalidade_atuacao ----
+    var modalidadeAtuacaoSelect = document.getElementById('id_modalidade_atuacao');
+    var enderecoAtuacaoGroup = document.getElementById('endereco-atucao-group');
+
+    function toggleEnderecoAtuacao() {
+        if (!enderecoAtuacaoGroup || !modalidadeAtuacaoSelect) return;
+        enderecoAtuacaoGroup.style.display = modalidadeAtuacaoSelect.value === 'remota' ? '' : 'none';
+    }
+
+    if (modalidadeAtuacaoSelect) {
+        modalidadeAtuacaoSelect.addEventListener('change', toggleEnderecoAtuacao);
+        toggleEnderecoAtuacao();
     }
 
     // ---- Cronograma: cálculo automático de dias úteis ----
@@ -743,6 +785,27 @@
         });
         atualizarTotalForms();
     })();
+
+    // ---- Salvar Rascunho ----
+    window.salvarRascunho = function() {
+        document.getElementById('id__save_draft').value = '1';
+        var form = document.querySelector('form');
+        if (form) form.submit();
+    };
+
+    // ---- Salvar normalmente (sem flag de rascunho) ----
+    window.salvarNormal = function() {
+        document.getElementById('id__save_draft').value = '';
+        var form = document.querySelector('form');
+        if (form) form.submit();
+    };
+
+    // ---- Limpar Dados (só em novo/edição, volta para URL de criação com GET fresco) ----
+    window.limparDados = function() {
+        if (confirm('Tem certeza que deseja limpar todos os campos preenchidos?')) {
+            window.location.href = '{% url "edital_create" %}';
+        }
+    };
 
     } catch(e) { /* silencioso */ }
 })();

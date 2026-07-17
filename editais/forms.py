@@ -100,8 +100,36 @@ class EditalProvisorioForm(forms.ModelForm):
         config = NIVEL_BOLSA_CONFIG[nivel]
         self.fields['qualificacao_minima'].choices = [('', '--- Selecione ---')] + config['qualificacao']
 
+    def is_valid(self):
+        if self.data.get('_save_draft') and not self._errors:
+            self._errors = {}
+        return super().is_valid()
+
+    def save_draft(self, commit=True):
+        self._errors = {}
+        self.cleaned_data = {}
+        for field in self.Meta.fields:
+            raw_value = self.data.get(field) or self.data.get(self.add_prefix(field))
+            if raw_value is not None and raw_value != '':
+                self.cleaned_data[field] = raw_value
+        self.cleaned_data['status'] = 'rascunho'
+        vigencia_meses = self.cleaned_data.get('vigencia_meses')
+        if vigencia_meses:
+            try:
+                self.cleaned_data['vigencia'] = int(vigencia_meses) * 30
+            except (ValueError, TypeError):
+                self.cleaned_data['vigencia'] = 180
+        for field, value in self.cleaned_data.items():
+            if hasattr(self.instance, field):
+                setattr(self.instance, field, value)
+        if commit:
+            self.instance.save()
+        return self.instance
+
     def clean(self):
         cleaned_data = super().clean()
+        if self.data.get('_save_draft'):
+            return cleaned_data
         nivel = cleaned_data.get('modalidade_bolsa')
         config = NIVEL_BOLSA_CONFIG.get(nivel)
 
