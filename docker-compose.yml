@@ -1,3 +1,5 @@
+name: bolsistas
+
 services:
   db:
     image: postgres:16-alpine
@@ -77,6 +79,7 @@ services:
 
   celery:
     build: .
+    entrypoint: ["./docker/entrypoint-celery.sh"]
     command: ["celery", "-A", "config", "worker", "-l", "info"]
     environment:
       DB_ENGINE: django.db.backends.postgresql
@@ -107,6 +110,7 @@ services:
 
   celery-beat:
     build: .
+    entrypoint: ["./docker/entrypoint-celery.sh"]
     command: ["celery", "-A", "config", "beat", "-l", "info"]
     environment:
       DB_ENGINE: django.db.backends.postgresql
@@ -136,7 +140,7 @@ services:
         condition: service_healthy
 
   traefik:
-    image: traefik:v3.2
+    image: traefik:v3.6
     command:
       - --api.insecure=true
       - --providers.docker=true

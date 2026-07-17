@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MaxLengthValidator
 from django.forms import inlineformset_factory, BaseInlineFormSet
 from decimal import Decimal, InvalidOperation
 from .models import EditalProvisorio, CronogramaEvento, NIVEL_BOLSA_CONFIG
@@ -37,7 +38,7 @@ class EditalProvisorioForm(forms.ModelForm):
         widgets = {
             'nome_edital':                  forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Edital de Inovação Tecnológica 2026'}),
             'area_estudo':                  forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Biotecnologia'}),
-            'detalhes_edital':              forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Detalhes adicionais sobre o edital (opcional)'}),
+            'detalhes_edital':              forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': 1500, 'placeholder': 'Detalhes adicionais sobre o edital (opcional)'}),
             'nome_instituto':               forms.Select(attrs={'class': 'form-select'}),
             'email_solicitante':            forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'solicitante@instituto.br', 'readonly': True}),
             'documento_anexo':              forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
@@ -49,12 +50,12 @@ class EditalProvisorioForm(forms.ModelForm):
             'vigencia':                     forms.NumberInput(attrs={'class': 'form-control', 'min': 15, 'max': 1095,'placeholder': 'Ex: 180',}),
             'numero_vagas':                 forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'step': 1}),
             'valor_bolsa': forms.Select(attrs={'class': 'form-select'}),
-            'endereco_atuacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Local onde as atividades serão realizadas'}),
+            'endereco_atuacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'maxlength': 1500, 'placeholder': 'Local onde as atividades serão realizadas'}),
             'modalidade_entrevista': forms.Select(attrs={'class': 'form-select'}),
-            'conhecimento_desejavel': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'conteudo_prova_teorica': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'criterios_desempate': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'comentarios': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Comentários diversos (opcional)'}),
+            'conhecimento_desejavel': forms.Textarea(attrs={'class': 'form-control auto-grow', 'rows': 4, 'maxlength': 1500}),
+            'conteudo_prova_teorica': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': 1500}),
+            'criterios_desempate': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': 1500}),
+            'comentarios': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': 1500, 'placeholder': 'Comentários diversos (opcional)'}),
             'valor_minimo': forms.HiddenInput(),
             'valor_maximo': forms.HiddenInput(),
             'status': forms.Select(attrs={'class': 'form-select'}),
@@ -72,8 +73,13 @@ class EditalProvisorioForm(forms.ModelForm):
         self.fields['conteudo_prova_teorica'].required = False
         self.fields['criterios_desempate'].required = False
         self.fields['experiencia'].required = False
-        self.fields['experiencia'].widget = forms.Select(attrs={'class': 'form-select'})
+        self.fields['experiencia'].widget.attrs.update({'class': 'form-select'})
         self.fields['modalidade_entrevista'].required = False
+
+        cap_fields = ['detalhes_edital', 'conhecimento_desejavel', 'conteudo_prova_teorica',
+                      'criterios_desempate', 'comentarios', 'endereco_atuacao']
+        for fname in cap_fields:
+            self.fields[fname].validators.append(MaxLengthValidator(1500))
 
         if self._user:
             if not self.is_bound and not self.initial.get('email_solicitante'):
@@ -100,8 +106,27 @@ class EditalProvisorioForm(forms.ModelForm):
         config = NIVEL_BOLSA_CONFIG[nivel]
         self.fields['qualificacao_minima'].choices = [('', '--- Selecione ---')] + config['qualificacao']
 
+        if self.instance and self.instance.pk and self.instance.valor_bolsa is not None:
+            val_str = str(self.instance.valor_bolsa)
+            val_label = 'R$ {:,.2f}'.format(self.instance.valor_bolsa).replace(',', 'X').replace('.', ',').replace('X', '.')
+            widget = self.fields['valor_bolsa'].widget
+            widget_choices = list(getattr(widget, '_choices', None) or [])
+            existing = {c[0] for c in widget_choices}
+            if val_str not in existing:
+                widget_choices.append((val_str, val_label))
+                widget.choices = widget_choices
+
     def clean(self):
         cleaned_data = super().clean()
+
+        novo_status = cleaned_data.get('status')
+
+        if novo_status in ('cancelado', 'encerrado'):
+            cleaned_data['status'] = novo_status
+            if self.instance and self.instance.pk:
+                cleaned_data['vigencia'] = getattr(self.instance, 'vigencia', None)
+            return cleaned_data
+
         nivel = cleaned_data.get('modalidade_bolsa')
         config = NIVEL_BOLSA_CONFIG.get(nivel)
 
@@ -142,15 +167,22 @@ class EditalProvisorioForm(forms.ModelForm):
         vigencia_meses = cleaned_data.get('vigencia_meses')
         if vigencia_meses is not None:
             cleaned_data['vigencia'] = vigencia_meses * 30
-        else:
-            cleaned_data['vigencia'] = 180
+        elif self.instance and self.instance.pk:
+            cleaned_data['vigencia'] = getattr(self.instance, 'vigencia', 180)
 
         vigencia = cleaned_data.get('vigencia')
         if vigencia is not None:
-            if vigencia < 15:
-                self.add_error('vigencia_meses', 'A vigência mínima é de 15 dias.')
-            elif vigencia > 1095:
-                self.add_error('vigencia_meses', 'A vigência máxima é de 36 meses (1095 dias).')
+            try:
+                vigencia_int = int(vigencia)
+                if vigencia_int < 15:
+                    self.add_error('vigencia_meses', 'A vigência mínima é de 15 dias.')
+                elif vigencia_int > 1095:
+                    self.add_error('vigencia_meses', 'A vigência máxima é de 36 meses (1095 dias).')
+            except (ValueError, TypeError):
+                if self.instance and self.instance.pk:
+                    cleaned_data['vigencia'] = getattr(self.instance, 'vigencia', 180)
+                else:
+                    cleaned_data['vigencia'] = 180
 
         if not (self._user and self._user.is_superuser):
             if cleaned_data.get('status') and cleaned_data['status'] != 'em_analise':
@@ -213,10 +245,13 @@ class CronogramaEventoForm(forms.ModelForm):
     data_evento = forms.DateField(
         label='Data do Evento',
         required=True,
-        widget=forms.DateInput(attrs={
-            'type': 'date',
-            'class': 'form-control form-control-sm',
-        }),
+        widget=forms.DateInput(
+            attrs={
+                'type': 'date',
+                'class': 'form-control form-control-sm',
+            },
+            format='%Y-%m-%d',
+        ),
     )
 
     class Meta:
@@ -224,8 +259,10 @@ class CronogramaEventoForm(forms.ModelForm):
         fields = ['evento', 'data_evento', 'observacao']
         widgets = {
             'evento': forms.Select(attrs={'class': 'form-select form-select-sm'}),
-            'observacao': forms.TextInput(attrs={
+            'observacao': forms.Textarea(attrs={
                 'class': 'form-control form-control-sm',
+                'rows': 2,
+                'maxlength': 1500,
                 'placeholder': 'Observação (opcional)',
             }),
         }
