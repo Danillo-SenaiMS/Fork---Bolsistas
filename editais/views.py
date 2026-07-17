@@ -85,18 +85,6 @@ class EditalProvisorioCreateView(ManagerOrExecuteRequiredMixin, ContextMixin, Cr
     def form_valid(self, form):
         context = self.get_context_data(form=form)
         cronograma_formset = context['cronograma_formset']
-        is_draft = self.request.POST.get('_save_draft')
-        if is_draft:
-            self.object = form.save_draft()
-            if not self.object.criado_por:
-                self.object.criado_por = self.request.user
-                self.object.save()
-            for cf_form in cronograma_formset.forms:
-                if cf_form.cleaned_data and not cf_form.cleaned_data.get('DELETE'):
-                    cf_form.instance.edital = self.object
-                    cf_form.instance.save()
-            messages.success(self.request, 'Rascunho salvo com sucesso! Você pode continuar editando depois.')
-            return redirect(self.get_success_url())
         if cronograma_formset.is_valid():
             self.object = form.save(commit=False)
             self.object.criado_por = self.request.user
@@ -134,15 +122,6 @@ class EditalProvisorioUpdateView(ManagerRequiredMixin, ContextMixin, UpdateView)
     def form_valid(self, form):
         context = self.get_context_data(form=form)
         cronograma_formset = context['cronograma_formset']
-        is_draft = self.request.POST.get('_save_draft')
-        if is_draft:
-            self.object = form.save_draft()
-            for cf_form in cronograma_formset.forms:
-                if cf_form.cleaned_data and not cf_form.cleaned_data.get('DELETE'):
-                    cf_form.instance.edital = self.object
-                    cf_form.instance.save()
-            messages.success(self.request, 'Rascunho salvo com sucesso! Você pode continuar editando depois.')
-            return redirect(self.get_success_url())
         if cronograma_formset.is_valid():
             self.object = form.save()
             cronograma_formset.instance = self.object

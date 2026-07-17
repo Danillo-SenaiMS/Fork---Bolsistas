@@ -5,7 +5,6 @@
 <div class="container-fluid py-3">
     <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
-        <input type="hidden" name="_save_draft" id="id__save_draft" value="">
 
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <h2 class="fw-bold text-primary mb-0">
@@ -13,12 +12,6 @@
                 {% if object %}Editar{% else %}Novo{% endif %} Edital
             </h2>
             <div class="d-flex gap-2 flex-wrap">
-                <button type="button" class="btn btn-success btn-sm px-3" onclick="salvarNormal()">
-                    <i class="bi bi-check-lg me-1"></i>{% if object %}Atualizar{% else %}Salvar{% endif %}
-                </button>
-                <button type="button" class="btn btn-warning btn-sm px-3" onclick="salvarRascunho()">
-                    <i class="bi bi-file-earmark-lock me-1"></i>Salvar Rascunho
-                </button>
                 {% if not object %}
                 <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="limparDados()">
                     <i class="bi bi-eraser me-1"></i>Limpar Dados
@@ -203,6 +196,17 @@
                     <div class="text-danger small mt-1">{{ form.valor_bolsa.errors|join:', ' }}</div>
                     {% endif %}
                 </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">{{ form.conhecimento_desejavel.label }}</label>
+                    {{ form.conhecimento_desejavel }}
+                    <div class="d-flex justify-content-between">
+                        <small class="form-text text-muted">Conhecimentos técnicos desejáveis para a vaga.</small>
+                        <small class="text-muted" id="contador-conhecimento">0/1500</small>
+                    </div>
+                    {% if form.conhecimento_desejavel.errors %}
+                    <div class="text-danger small mt-1">{{ form.conhecimento_desejavel.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
             </div>
 
             {{ form.vigencia }}
@@ -218,14 +222,6 @@
                                 {{ form.modalidade_entrevista }}
                                 {% if form.modalidade_entrevista.errors %}
                                 <div class="text-danger small mt-1">{{ form.modalidade_entrevista.errors|join:', ' }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">{{ form.conhecimento_desejavel.label }}</label>
-                                {{ form.conhecimento_desejavel }}
-                                <div class="form-text">Campo opcional.</div>
-                                {% if form.conhecimento_desejavel.errors %}
-                                <div class="text-danger small mt-1">{{ form.conhecimento_desejavel.errors|join:', ' }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
@@ -352,9 +348,6 @@
                 <button type="submit" class="btn btn-success px-4">
                     <i class="bi bi-check-lg me-1"></i>{% if object %}Atualizar{% else %}Salvar{% endif %}
                 </button>
-                <button type="button" class="btn btn-warning px-4" onclick="salvarRascunho()">
-                    <i class="bi bi-file-earmark-lock me-1"></i>Salvar Rascunho
-                </button>
                 {% if not object %}
                 <button type="button" class="btn btn-outline-secondary px-4" onclick="limparDados()">
                     <i class="bi bi-eraser me-1"></i>Limpar Dados
@@ -407,18 +400,27 @@
         var currentVal = valorBolsaSelect.value;
         valorBolsaSelect.innerHTML = '<option value="">--- Selecione ---</option>';
         var valores = gerarValores(parseFloat(minVal), parseFloat(maxVal), 500);
+        var encontrou = false;
         valores.forEach(function(v) {
             var opt = document.createElement('option');
             opt.value = v.toFixed(2);
             opt.textContent = 'R$ ' + fmtBRL(v);
-            if (currentVal === v.toFixed(2)) opt.selected = true;
+            if (currentVal === v.toFixed(2)) { opt.selected = true; encontrou = true; }
             valorBolsaSelect.appendChild(opt);
         });
+        if (!encontrou && currentVal) {
+            var optFora = document.createElement('option');
+            optFora.value = currentVal;
+            optFora.textContent = 'R$ ' + fmtBRL(parseFloat(currentVal));
+            optFora.selected = true;
+            valorBolsaSelect.appendChild(optFora);
+        }
         if (valorBolsaHelp) valorBolsaHelp.textContent = 'Range: R$ ' + fmtBRL(parseFloat(minVal)) + ' a R$ ' + fmtBRL(parseFloat(maxVal)) + ' (intervalos de R$ 500).';
     }
 
     function updateExperiencia(nivel, config) {
         if (!experienciaSelect || !experienciaGroup) return;
+        var currentVal = experienciaSelect.value;
         if (nivel === 'nivel_1') {
             experienciaSelect.innerHTML = '<option value="Sem Experiência">Sem Experiência</option>';
             experienciaSelect.disabled = true;
@@ -435,6 +437,14 @@
                 opt.textContent = e[1];
                 experienciaSelect.appendChild(opt);
             });
+            if (currentVal) experienciaSelect.value = currentVal;
+            if (currentVal && experienciaSelect.value !== currentVal) {
+                var optExtra = document.createElement('option');
+                optExtra.value = currentVal;
+                optExtra.textContent = currentVal;
+                optExtra.selected = true;
+                experienciaSelect.appendChild(optExtra);
+            }
         }
     }
 
@@ -443,6 +453,7 @@
         var nivel = modalidadeSelect.value;
         var config = NIVEL_CONFIG[nivel];
 
+        var currentQualVal = qualificacaoSelect.value;
         qualificacaoSelect.innerHTML = '';
 
         if (!config) {
@@ -460,6 +471,7 @@
             opt.textContent = q[1];
             qualificacaoSelect.appendChild(opt);
         });
+        if (currentQualVal) qualificacaoSelect.value = currentQualVal;
 
         updateExperiencia(nivel, config);
 
@@ -470,7 +482,7 @@
             if (valorMinimoInput) valorMinimoInput.value = minV.toFixed(2);
             if (valorMaximoInput) valorMaximoInput.value = maxV.toFixed(2);
         } else {
-            if (valorBolsaSelect) { valorBolsaSelect.innerHTML = '<option value="">--- Selecione a experiência ---</option>'; }
+            updateValorBolsaFromExperiencia();
         }
     }
 
@@ -786,26 +798,28 @@
         atualizarTotalForms();
     })();
 
-    // ---- Salvar Rascunho ----
-    window.salvarRascunho = function() {
-        document.getElementById('id__save_draft').value = '1';
-        var form = document.querySelector('form');
-        if (form) form.submit();
-    };
-
-    // ---- Salvar normalmente (sem flag de rascunho) ----
-    window.salvarNormal = function() {
-        document.getElementById('id__save_draft').value = '';
-        var form = document.querySelector('form');
-        if (form) form.submit();
-    };
-
-    // ---- Limpar Dados (só em novo/edição, volta para URL de criação com GET fresco) ----
+    // ---- Limpar Dados (volta para URL de criação com GET fresco) ----
     window.limparDados = function() {
         if (confirm('Tem certeza que deseja limpar todos os campos preenchidos?')) {
             window.location.href = '{% url "edital_create" %}';
         }
     };
+
+    // ---- Auto-grow + contador: Conhecimento Desejável ----
+    var txtConhecimento = document.getElementById('id_conhecimento_desejavel');
+    var counterConhec = document.getElementById('contador-conhecimento');
+    if (txtConhecimento) {
+        function ajustarConhecimento() {
+            txtConhecimento.style.height = 'auto';
+            txtConhecimento.style.height = Math.max(100, txtConhecimento.scrollHeight) + 'px';
+            if (counterConhec) {
+                counterConhec.textContent = (txtConhecimento.value.length) + '/1500';
+                counterConhec.className = (txtConhecimento.value.length > 1500) ? 'text-danger' : 'text-muted';
+            }
+        }
+        txtConhecimento.addEventListener('input', ajustarConhecimento);
+        ajustarConhecimento();
+    }
 
     } catch(e) { /* silencioso */ }
 })();
