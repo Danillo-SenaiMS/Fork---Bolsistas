@@ -72,7 +72,6 @@ NIVEL_BOLSA_CONFIG = {
 
 class EditalProvisorio(DataModel):
     STATUS_CHOICES = [
-        ('rascunho', 'Rascunho'),
         ('em_analise', 'Em Análise'),
         ('aberto', 'Aberto'),
         ('encerrado', 'Encerrado'),
@@ -151,6 +150,7 @@ class EditalProvisorio(DataModel):
     numero_serie                    = models.CharField('Número de Série', max_length=4, unique=True, blank=True)
     status                          = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='em_analise')
     criado_por                      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='editais_criados')
+    responsavel                     = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='editais_responsavel', verbose_name='Responsável')
 
     class Meta:
         verbose_name = 'Edital'
@@ -234,6 +234,8 @@ class EditalProvisorio(DataModel):
 
     @property
     def proxima_etapa(self):
+        if self.status != 'aberto':
+            return None
         hoje = timezone.now().date()
         evento = self.cronograma.filter(
             data_evento__gte=hoje
