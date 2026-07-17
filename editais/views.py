@@ -88,6 +88,7 @@ class EditalProvisorioCreateView(ManagerOrExecuteRequiredMixin, ContextMixin, Cr
         if cronograma_formset.is_valid():
             self.object = form.save(commit=False)
             self.object.criado_por = self.request.user
+            self.object.responsavel = self.request.user
             self.object.save()
             cronograma_formset.instance = self.object
             cronograma_formset.save()
