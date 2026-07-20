@@ -271,7 +271,7 @@ class CadastroDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cadastro = context['cadastro']
-        context['can_edit'] = cadastro.user == self.request.user or _is_manager(self.request.user)
+        context['can_edit'] = _is_manager(self.request.user)
         context['formacoes'] = cadastro.formacoes.all()
         return context
 
@@ -344,27 +344,6 @@ class CadastroUpdateView(ManagerRequiredMixin, FormView):
         return reverse_lazy('cadastro_detail_pk', kwargs={'pk': self.kwargs['pk']})
 
 
-class CadastroListView(ManagerRequiredMixin, ListView):
-    model = CadastroBolsista
-    template_name = 'cadastro/cadastro_list.html'
-    context_object_name = 'cadastros'
-
-    def get_queryset(self):
-        qs = CadastroBolsista.objects.all().select_related('user')
-        busca = self.request.GET.get('busca', '')
-        if busca:
-            qs = qs.filter(
-                Q(user__nome_completo__icontains=busca) |
-                Q(numero_serie__icontains=busca)
-            )
-        return qs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['busca'] = self.request.GET.get('busca', '')
-        return context
-
-
 class BolsistaCreateForm(forms.ModelForm):
     data_nascimento = forms.DateField(
         label='Data de nascimento',
@@ -398,7 +377,7 @@ class BolsistaCreateForm(forms.ModelForm):
 class BolsistaCreateView(ManagerOrExecuteRequiredMixin, FormView):
     template_name = 'cadastro/bolsista_form.html'
     form_class = CadastroForm
-    success_url = reverse_lazy('cadastro_list')
+    success_url = reverse_lazy('painel_lista')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -480,6 +459,49 @@ class BolsistaCreateView(ManagerOrExecuteRequiredMixin, FormView):
         return redirect('cadastro_detail_pk', pk=cadastro.pk)
 
 
+class SolicitacaoMultiplaForm(forms.ModelForm):
+    """Form usado na tela de solicitar edição (ViewUser).
+
+    Não inclui data_nascimento para não travar a edição de graduação/experiência
+    quando o usuário não deseja alterar esse campo obrigatório.
+    """
+
+    class Meta:
+        model = CadastroBolsista
+        fields = [
+            'telefone',
+            'rua', 'numero', 'bairro', 'cidade', 'estado',
+            'participacao_congressos', 'resumo_anais', 'artigo_completo_anais',
+            'artigo_cientifico_nacional', 'artigo_cientifico_internacional',
+            'livro_patente', 'participacao_minicurso', 'treinamento',
+        ]
+        widgets = {
+            'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(67) 99999-9999'}),
+            'rua': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Rua'}),
+            'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Número'}),
+            'bairro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bairro'}),
+            'cidade': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cidade'}),
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+            'participacao_congressos': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'resumo_anais': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'artigo_completo_anais': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'artigo_cientifico_nacional': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'artigo_cientifico_internacional': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'livro_patente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'participacao_minicurso': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'treinamento': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['telefone'].required = False
+        self.fields['rua'].required = False
+        self.fields['numero'].required = False
+        self.fields['bairro'].required = False
+        self.fields['cidade'].required = False
+        self.fields['estado'].required = False
+
+
 class SolicitacaoForm(forms.ModelForm):
     class Meta:
         model = SolicitacaoEdicao
@@ -528,7 +550,7 @@ class SolicitacaoListView(ManagerRequiredMixin, ListView):
 
 class SolicitacaoMultiplaView(ViewUserRequiredMixin, FormView):
     template_name = 'cadastro/solicitacao_multipla.html'
-    form_class = CadastroForm
+    form_class = SolicitacaoMultiplaForm
     success_url = reverse_lazy('cadastro_detail')
 
     def get_form_kwargs(self):
@@ -565,6 +587,9 @@ class SolicitacaoMultiplaView(ViewUserRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         cadastro = self.get_cadastro()
         context['object'] = cadastro
+        context['cursos_por_area'] = json.dumps(get_cursos_por_area(), ensure_ascii=False)
+        context['areas'] = json.dumps([a[0] for a in get_areas()], ensure_ascii=False)
+        context['instituicoes'] = json.dumps(get_instituicoes(), ensure_ascii=False)
         if 'formacao_formset' not in kwargs:
             context['formacao_formset'] = self._make_formset(cadastro=cadastro)
         if 'experiencia_formset' not in kwargs:
@@ -581,8 +606,19 @@ class SolicitacaoMultiplaView(ViewUserRequiredMixin, FormView):
         exp_formset = self._make_experiencia_formset(
             request.POST, request.FILES, cadastro=cadastro
         )
-        if form.is_valid() and formset.is_valid() and exp_formset.is_valid():
+
+        # Valida cada parte separadamente; salvamos o que estiver válido para
+        # não travar a edição de graduação quando o usuário não tocar em experiência.
+        form_valido = form.is_valid()
+        formset_valido = formset.is_valid()
+        exp_valido = exp_formset.is_valid()
+
+        if form_valido and formset_valido and exp_valido:
             return self.form_valid(form, formset, exp_formset)
+
+        if form_valido and formset_valido:
+            return self.form_valid(form, formset, None)
+
         return self.form_invalid(form, formset, exp_formset)
 
     def form_invalid(self, form, formset, exp_formset=None):
@@ -594,6 +630,10 @@ class SolicitacaoMultiplaView(ViewUserRequiredMixin, FormView):
         cadastro = self.get_cadastro()
         alteracoes = 0
 
+        # Salva telefone/endereco/criterios editados no form principal
+        cadastro = form.save()
+        alteracoes += 1
+
         for fm in formset:
             if fm.cleaned_data and fm not in formset.deleted_forms:
                 fa = fm.save(commit=False)
@@ -603,20 +643,11 @@ class SolicitacaoMultiplaView(ViewUserRequiredMixin, FormView):
 
         if exp_formset is not None and exp_formset.is_valid():
             _salvar_experiencias(exp_formset, cadastro)
+            alteracoes += 1
 
         _salvar_anexos(cadastro, self.request.FILES)
 
-        campos_auto = [
-            'participacao_projetos_anos', 'participacao_congressos', 'resumo_anais',
-            'artigo_completo_anais', 'artigo_cientifico_nacional', 'artigo_cientifico_internacional',
-            'livro_patente', 'participacao_minicurso', 'treinamento',
-        ]
-        for campo in campos_auto:
-            valor_novo = form.cleaned_data.get(campo)
-            if valor_novo is not None:
-                setattr(cadastro, campo, valor_novo)
         cadastro.sincronizar_anos_experiencia()
-        cadastro.save(update_fields=campos_auto)
 
         from classificacao.models import AvaliacaoBolsista
         if not AvaliacaoBolsista.objects.filter(bolsista=cadastro).exists():
@@ -625,13 +656,7 @@ class SolicitacaoMultiplaView(ViewUserRequiredMixin, FormView):
             cadastro.pontuacao_previa = pontuacao
             cadastro.save(update_fields=['pontuacao_previa'])
 
-        if alteracoes:
-            messages.success(
-                self.request,
-                f'Solicitação enviada para aprovação. {alteracoes} campo(s) aguardando revisão dos gestores.',
-            )
-        else:
-            messages.info(self.request, 'Nenhuma alteração detectada.')
+        messages.success(self.request, 'Alterações salvas com sucesso.')
 
         return redirect(self.success_url)
 

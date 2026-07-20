@@ -19,59 +19,49 @@
     {# ======================================================================== #}
     {% if is_superuser or is_manager or is_execute_user %}
 
-    {# --- Cards de estatísticas (linha 1) --- #}
+    {# --- Cards de estatísticas (novo layout) --- #}
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-primary border-start border-4 h-100">
-                <div class="card-body text-center py-3">
-                    <div class="text-primary mb-1"><i class="bi bi-people-fill fs-3"></i></div>
-                    <div class="fw-bold fs-4 text-primary">{{ total_bolsistas }}</div>
-                    <small class="text-muted">Bolsistas</small>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100" style="background-color: #1e3a5f; color: #fff;">
+                <div class="card-body d-flex flex-column justify-content-between p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <small class="opacity-75">Bolsistas</small>
+                        <i class="bi bi-people-fill fs-5 opacity-75"></i>
+                    </div>
+                    <div class="fw-bold fs-2 mt-2">{{ total_bolsistas }}</div>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-success border-start border-4 h-100">
-                <div class="card-body text-center py-3">
-                    <div class="text-success mb-1"><i class="bi bi-journal-check fs-3"></i></div>
-                    <div class="fw-bold fs-4 text-success">{{ editais_abertos }}</div>
-                    <small class="text-muted">Editais Abertos</small>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body d-flex flex-column justify-content-between p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <small class="text-muted">Editais Abertos</small>
+                        <i class="bi bi-journal-check fs-5 text-success"></i>
+                    </div>
+                    <div class="fw-bold fs-2 mt-2">{{ editais_abertos }}</div>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-secondary border-start border-4 h-100">
-                <div class="card-body text-center py-3">
-                    <div class="text-secondary mb-1"><i class="bi bi-journal-x fs-3"></i></div>
-                    <div class="fw-bold fs-4 text-secondary">{{ editais_encerrados|add:editais_cancelados }}</div>
-                    <small class="text-muted">Encerrados</small>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body d-flex flex-column justify-content-between p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <small class="text-muted">Candidaturas</small>
+                        <i class="bi bi-send fs-5 text-danger"></i>
+                    </div>
+                    <div class="fw-bold fs-2 mt-2">{{ total_candidaturas }}</div>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-info border-start border-4 h-100">
-                <div class="card-body text-center py-3">
-                    <div class="text-info mb-1"><i class="bi bi-search fs-3"></i></div>
-                    <div class="fw-bold fs-4 text-info">{{ editais_em_analise }}</div>
-                    <small class="text-muted">Em Análise</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-warning border-start border-4 h-100">
-                <div class="card-body text-center py-3">
-                    <div class="text-warning mb-1"><i class="bi bi-list-check fs-3"></i></div>
-                    <div class="fw-bold fs-4 text-warning">{{ solicitacoes_pendentes }}</div>
-                    <small class="text-muted">Solicitações</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-danger border-start border-4 h-100">
-                <div class="card-body text-center py-3">
-                    <div class="text-danger mb-1"><i class="bi bi-send fs-3"></i></div>
-                    <div class="fw-bold fs-4 text-danger">{{ total_candidaturas }}</div>
-                    <small class="text-muted">Candidaturas</small>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body d-flex flex-column justify-content-between p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <small class="text-muted">Solicitações</small>
+                        <i class="bi bi-list-check fs-5 text-warning"></i>
+                    </div>
+                    <div class="fw-bold fs-2 mt-2">{{ solicitacoes_pendentes }}</div>
                 </div>
             </div>
         </div>
@@ -198,56 +188,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    {# --- Linha 3: Links rápidos --- #}
-    <div class="row g-3 mt-3">
-        <div class="col-6 col-md-3">
-            <a href="{% url 'edital_list' %}" class="text-decoration-none">
-                <div class="card bg-primary bg-opacity-10 border-primary h-100">
-                    <div class="card-body text-center py-3">
-                        <i class="bi bi-journal-plus fs-4 text-primary"></i>
-                        <div class="fw-medium small mt-1">Gerenciar Editais</div>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a href="{% url 'painel_trilha' %}" class="text-decoration-none">
-                <div class="card bg-success bg-opacity-10 border-success h-100">
-                    <div class="card-body text-center py-3">
-                        <i class="bi bi-signpost-2 fs-4 text-success"></i>
-                        <div class="fw-medium small mt-1">Trilha dos Bolsistas</div>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a href="{% url 'solicitacao_list' %}" class="text-decoration-none">
-                <div class="card bg-warning bg-opacity-10 border-warning h-100">
-                    <div class="card-body text-center py-3">
-                        <i class="bi bi-list-check fs-4 text-warning"></i>
-                        <div class="fw-medium small mt-1">Solicitações
-                            {% if solicitacoes_pendentes %}
-                            <span class="badge bg-warning text-dark ms-1">{{ solicitacoes_pendentes }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-        {% if is_superuser %}
-        <div class="col-6 col-md-3">
-            <a href="{% url 'admin:index' %}" class="text-decoration-none">
-                <div class="card bg-dark bg-opacity-10 border-dark h-100">
-                    <div class="card-body text-center py-3">
-                        <i class="bi bi-speedometer2 fs-4 text-dark"></i>
-                        <div class="fw-medium small mt-1">Admin Django</div>
-                    </div>
-                </div>
-            </a>
-        </div>
-        {% endif %}
     </div>
 
     {% endif %}
