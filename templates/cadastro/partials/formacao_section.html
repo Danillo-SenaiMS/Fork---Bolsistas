@@ -47,23 +47,14 @@
                 <div class="col-md-3">
                     <label class="form-label small">Instituição</label>
                     {{ formacao_form.instituicao }}
-                    <select class="form-select form-select-sm instituicao-select" onchange="formSectionOutraSelect(this, 'instituicao')">
-                    </select>
-                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite o nome da instituição..." oninput="formSectionOutraInput(this, 'instituicao')">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small">Área</label>
                     {{ formacao_form.area }}
-                    <select class="form-select form-select-sm area-select" onchange="formSectionOutraSelect(this, 'area')">
-                    </select>
-                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite a área..." oninput="formSectionOutraInput(this, 'area')">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small">Curso</label>
                     {{ formacao_form.curso }}
-                    <select class="form-select form-select-sm curso-select" onchange="formSectionOutraSelect(this, 'curso')">
-                    </select>
-                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite o curso..." oninput="formSectionOutraInput(this, 'curso')">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small">Ano de Conclusão</label>
@@ -111,7 +102,7 @@
 
     window.formSectionOutraSelect = function (sel, fieldName) {
         var col = sel.parentElement;
-        var hidden = col.querySelector('input[type="hidden"]');
+        var hidden = col.querySelector('input[id$="-' + fieldName + '"]') || col.querySelector('input[name$="-' + fieldName + '"]');
         var outraInput = col.querySelector('.outra-input');
 
         if (sel.value === 'OUTRA') {
@@ -180,8 +171,8 @@
 
     window.formSectionOutraInput = function (inp, fieldName) {
         var col = inp.parentElement;
-        var hidden = col.querySelector('input[type="hidden"]');
-        hidden.value = inp.value;
+        var hidden = col.querySelector('input[id$="-' + fieldName + '"]') || col.querySelector('input[name$="-' + fieldName + '"]');
+        if (hidden) hidden.value = inp.value;
     };
 
     setTimeout(function () {
