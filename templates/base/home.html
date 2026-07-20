@@ -349,7 +349,7 @@
                                 <span class="badge flex-shrink-0
                                     {% if app.status == 'aprovado' %}bg-success
                                     {% elif app.status == 'rejeitado' %}bg-danger
-                                    {% elif app.status == 'em_analise' %}bg-info text-dark
+                                    {% elif app.status == 'em_analise' %}bg-info text-white
                                     {% else %}bg-warning text-dark{% endif %}">
                                     {{ app.get_status_display }}
                                 </span>

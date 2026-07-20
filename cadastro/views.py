@@ -49,15 +49,15 @@ def _is_manager_or_executor(user):
 class FormacaoAcademicaForm(forms.ModelForm):
     area = forms.CharField(
         required=False,
-        widget=forms.HiddenInput(),
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Área'}),
     )
     curso = forms.CharField(
         required=False,
-        widget=forms.HiddenInput(),
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Curso'}),
     )
     instituicao = forms.CharField(
         required=False,
-        widget=forms.HiddenInput(),
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Instituição'}),
     )
 
     class Meta:

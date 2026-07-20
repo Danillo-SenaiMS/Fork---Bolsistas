@@ -162,23 +162,14 @@
                                 <div class="col-md-3">
                                     <label class="form-label small">Instituição</label>
                                     {{ fm.instituicao }}
-                                    <select class="form-select form-select-sm instituicao-select" onchange="onOutraSelect(this, 'instituicao')">
-                                    </select>
-                                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite o nome da instituição..." oninput="onOutraInput(this, 'instituicao')">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label small">Área</label>
                                     {{ fm.area }}
-                                    <select class="form-select form-select-sm area-select" onchange="onOutraSelect(this, 'area')">
-                                    </select>
-                                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite a área..." oninput="onOutraInput(this, 'area')">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label small">Curso</label>
                                     {{ fm.curso }}
-                                    <select class="form-select form-select-sm curso-select" onchange="onOutraSelect(this, 'curso')">
-                                    </select>
-                                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite o curso..." oninput="onOutraInput(this, 'curso')">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label small">Ano de Conclusão</label>
@@ -216,23 +207,14 @@
                                 <div class="col-md-3">
                                     <label class="form-label small">Instituição</label>
                                     {{ formacao_formset.empty_form.instituicao }}
-                                    <select class="form-select form-select-sm instituicao-select" onchange="onOutraSelect(this, 'instituicao')">
-                                    </select>
-                                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite o nome da instituição..." oninput="onOutraInput(this, 'instituicao')">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label small">Área</label>
                                     {{ formacao_formset.empty_form.area }}
-                                    <select class="form-select form-select-sm area-select" onchange="onOutraSelect(this, 'area')">
-                                    </select>
-                                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite a área..." oninput="onOutraInput(this, 'area')">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label small">Curso</label>
                                     {{ formacao_formset.empty_form.curso }}
-                                    <select class="form-select form-select-sm curso-select" onchange="onOutraSelect(this, 'curso')">
-                                    </select>
-                                    <input type="text" class="form-control form-control-sm outra-input d-none mt-1" placeholder="Digite o curso..." oninput="onOutraInput(this, 'curso')">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label small">Ano de Conclusão</label>
@@ -463,7 +445,7 @@ function populateOutraSelect(select, options) {
 
 function onOutraSelect(sel, fieldName) {
     var col = sel.parentElement;
-    var hidden = col.querySelector('input[type="hidden"]');
+    var hidden = col.querySelector('input[id$="-' + fieldName + '"]') || col.querySelector('input[name$="-' + fieldName + '"]');
     var outraInput = col.querySelector('.outra-input');
 
     if (sel.value === 'OUTRA') {
@@ -532,8 +514,8 @@ function onOutraSelect(sel, fieldName) {
 
 function onOutraInput(inp, fieldName) {
     var col = inp.parentElement;
-    var hidden = col.querySelector('input[type="hidden"]');
-    hidden.value = inp.value;
+    var hidden = col.querySelector('input[id$="-' + fieldName + '"]') || col.querySelector('input[name$="-' + fieldName + '"]');
+    if (hidden) hidden.value = inp.value;
 
     if (fieldName === 'area') {
         var card = inp.closest('.card');
