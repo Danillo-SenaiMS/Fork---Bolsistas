@@ -6,18 +6,19 @@ from accounts.models import User
 
 class CriterioClassificacao(DataModel):
     TIPO_CHOICES = [
-        ('graduacao', 'Graduação'),
-        ('mestrado', 'Mestrado'),
-        ('doutorado', 'Doutorado'),
-        ('projetos_pesquisa', 'Participação em Projetos de Pesquisa/Atuação Profissional'),
-        ('congressos', 'Participação em Congressos, Feiras, Eventos e Palestras'),
-        ('resumo_anais', 'Resumo Publicado em Anais de Eventos'),
-        ('artigo_completo_anais', 'Artigo Completo Publicado em Anais de Eventos'),
-        ('artigo_nacional', 'Artigo Científico ou Capítulo de Livro Nacional Publicado'),
-        ('artigo_internacional', 'Artigo Científico ou Capítulo de Livro Internacional Publicado'),
-        ('livro_patente', 'Livro Publicado na Área de Interesse ou Patente Registrada'),
-        ('minicurso', 'Participação em Minicurso (até 4 horas) na Área de Interesse'),
-        ('treinamento', 'Treinamento (acima de 4 horas) na Área de Interesse'),
+        
+        ('graduacao'                , 'Graduação'),
+        ('mestrado'                 , 'Mestrado'),
+        ('doutorado'                , 'Doutorado'),
+        ('projetos_pesquisa'        , 'Participação em Projetos de Pesquisa/Atuação Profissional'),
+        ('congressos'               , 'Participação em Congressos, Feiras, Eventos e Palestras'),
+        ('resumo_anais'             , 'Resumo Publicado em Anais de Eventos'),
+        ('artigo_completo_anais'    , 'Artigo Completo Publicado em Anais de Eventos'),
+        ('artigo_nacional'          , 'Artigo Científico ou Capítulo de Livro Nacional Publicado'),
+        ('artigo_internacional'     , 'Artigo Científico ou Capítulo de Livro Internacional Publicado'),
+        ('livro_patente'            , 'Livro Publicado na Área de Interesse ou Patente Registrada'),
+        ('minicurso'                , 'Participação em Minicurso (até 4 horas) na Área de Interesse'),
+        ('treinamento'              , 'Treinamento (acima de 4 horas) na Área de Interesse'),
     ]
 
     nome = models.CharField('Nome', max_length=255)
