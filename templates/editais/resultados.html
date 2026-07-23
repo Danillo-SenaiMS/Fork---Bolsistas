@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load br_filters %}
+{% block title %}Resultados - Bolsas SENAI - MS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary mb-0">
+            <i class="bi bi-trophy me-2"></i>Resultados
+        </h2>
+    </div>
+
+    <div class="mb-4">
+        <div class="btn-group" role="group" aria-label="Filtro de visualização">
+            <a href="?view=todas" class="btn btn-outline-primary {% if view_atual == 'todas' %}active{% endif %}">
+                <i class="bi bi-grid me-1"></i>Todas
+            </a>
+            <a href="?view=prova" class="btn btn-outline-primary {% if view_atual == 'prova' %}active{% endif %}">
+                <i class="bi bi-pencil-square me-1"></i>Nota da Prova
+            </a>
+            <a href="?view=entrevista" class="btn btn-outline-primary {% if view_atual == 'entrevista' %}active{% endif %}">
+                <i class="bi bi-chat-dots me-1"></i>Nota da Entrevista
+            </a>
+            <a href="?view=final" class="btn btn-outline-primary {% if view_atual == 'final' %}active{% endif %}">
+                <i class="bi bi-bar-chart me-1"></i>Nota Final
+            </a>
+        </div>
+    </div>
+
+    {% for edital in editais %}
+    <div class="card p-4 mb-4">
+        <div class="row g-3 mb-4">
+            <div class="col-md-8">
+                <h5 class="fw-semibold mb-1">{{ edital.nome_edital }}</h5>
+                <p class="text-muted small mb-1">
+                    <i class="bi bi-building me-1"></i>{{ edital.get_nome_instituto_display }}
+                    <span class="mx-2">|</span>
+                    <i class="bi bi-hash me-1"></i>Edital Nº {{ edital.numero_serie }}
+                </p>
+                {% if edital.detalhes_edital %}
+                <p class="text-muted small mb-0">{{ edital.detalhes_edital|truncatechars:250 }}</p>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex flex-column gap-1">
+                    <div>
+                        <span class="text-muted small">Vagas:</span>
+                        <span class="fw-medium">{{ edital.numero_vagas }}</span>
+                    </div>
+                    <div>
+                        <span class="text-muted small">Valor da Bolsa:</span>
+                        <span class="fw-semibold text-primary">{{ edital.valor_bolsa|br_money }}</span>
+                    </div>
+                    <div>
+                        <span class="badge bg-secondary">{{ edital.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Nº Inscrição</th>
+                        {% if view_atual == 'todas' or view_atual == 'prova' %}
+                        <th>Nota da Prova</th>
+                        {% endif %}
+                        {% if view_atual == 'todas' or view_atual == 'entrevista' %}
+                        <th>Nota da Entrevista</th>
+                        {% endif %}
+                        {% if view_atual == 'todas' or view_atual == 'final' %}
+                        <th>Nota Final</th>
+                        {% endif %}
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in edital.aplicacoes.all %}
+                    <tr>
+                        <td class="fw-medium">{{ a.bolsista.user.nome_completo }}</td>
+                        <td><span class="badge bg-dark">{{ a.numero_inscricao|default:'—' }}</span></td>
+                        {% if view_atual == 'todas' or view_atual == 'prova' %}
+                        <td>
+                            <div class="form-control bg-light">{% if a.nota is not None %}{{ a.nota|floatformat:2 }}{% else %}—{% endif %}</div>
+                        </td>
+                        {% endif %}
+                        {% if view_atual == 'todas' or view_atual == 'entrevista' %}
+                        <td>
+                            <div class="form-control bg-light">{% if a.nota_entrevista is not None %}{{ a.nota_entrevista|floatformat:2 }}{% else %}—{% endif %}</div>
+                        </td>
+                        {% endif %}
+                        {% if view_atual == 'todas' or view_atual == 'final' %}
+                        <td>
+                            <div class="form-control bg-light">{{ a.nota_final_display }}</div>
+                        </td>
+                        {% endif %}
+                        <td>
+                            <span class="badge {% if a.status == 'aprovado' %}bg-success{% elif a.status == 'rejeitado' %}bg-danger{% elif a.status == 'em_analise' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ a.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">Nenhum candidato neste edital.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card p-5 text-center">
+        <i class="bi bi-trophy fs-1 text-muted mb-3"></i>
+        <p class="text-muted mb-0">Nenhum resultado disponível no momento.</p>
+    </div>
+    {% endfor %}
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    {% include 'components/pagination.html' %}
+    {% endif %}
+</div>
+{% endblock %}

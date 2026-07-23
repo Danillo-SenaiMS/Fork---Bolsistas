@@ -255,9 +255,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "editais/models.py": {
-    "mtime": 1784569764.857855,
-    "ast_hash": "fffe0e6d00593dfdaed2ad3a6826ae8c",
-    "semantic_hash": "fffe0e6d00593dfdaed2ad3a6826ae8c"
+    "mtime": 1784810767.4802084,
+    "ast_hash": "825a5c0fc85003438cc9edd3a0a6732c",
+    "semantic_hash": ""
   },
   "editais/templatetags/__init__.py": {
     "mtime": 1784221965.7394595,
@@ -275,14 +275,14 @@
     "semantic_hash": "f7821bfc1fb1b496b4f2f16ae37043f1"
   },
   "editais/urls.py": {
-    "mtime": 1784569919.742514,
-    "ast_hash": "1d324ab3f30ad0fd7aa958511d1cbd25",
-    "semantic_hash": "1d324ab3f30ad0fd7aa958511d1cbd25"
+    "mtime": 1784810768.9046426,
+    "ast_hash": "ef267ef6d0250276aa0d5d5bc6fe32c8",
+    "semantic_hash": ""
   },
   "editais/views.py": {
-    "mtime": 1784573326.18637,
-    "ast_hash": "c6186cc1aa72d8e9f71dbdeff1c23d90",
-    "semantic_hash": "c6186cc1aa72d8e9f71dbdeff1c23d90"
+    "mtime": 1784810788.3597143,
+    "ast_hash": "dcad14e0bb0a557d57069e8e805556ee",
+    "semantic_hash": ""
   },
   "manage.py": {
     "mtime": 1784221965.7801864,
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "painel_bolsistas/templates/painel/lista_bolsistas.html": {
-    "mtime": 1784575037.7816365,
-    "ast_hash": "288b076a307d74a697eb5a5480bb022c",
+    "mtime": 1784809021.978228,
+    "ast_hash": "7f8df29af0fa15c99e776931fbc3ffac",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -520,8 +520,8 @@
     "semantic_hash": ""
   },
   "templates/components/sidebar.html": {
-    "mtime": 1784221965.8070097,
-    "ast_hash": "d519b422390917a2c509b3f20178f86a",
+    "mtime": 1784810770.6284785,
+    "ast_hash": "ec97e7a6a5b600b5b1f11a783a0445f1",
     "semantic_hash": ""
   },
   "templates/editais/edital_confirm_delete.html": {
@@ -530,8 +530,8 @@
     "semantic_hash": ""
   },
   "templates/editais/edital_detail.html": {
-    "mtime": 1784559818.9994085,
-    "ast_hash": "306d8b52c22fa54768774de6b1d7f1ef",
+    "mtime": 1784808894.4087088,
+    "ast_hash": "119c7dcbad5ebde4164c99ccfd33b337",
     "semantic_hash": ""
   },
   "templates/editais/edital_form.html": {
@@ -872,6 +872,11 @@
   "templates/editais/partials/compatibilidade_viewuser.html": {
     "mtime": 1784221965.8109949,
     "ast_hash": "48d02ab7a28bee404fad326a2b0a827f",
+    "semantic_hash": ""
+  },
+  "templates/editais/resultados.html": {
+    "mtime": 1784810866.9453752,
+    "ast_hash": "7f8ff9e650c18b1e6228ca3f48a57b24",
     "semantic_hash": ""
   }
 }

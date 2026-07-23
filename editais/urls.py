@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.EditalProvisorioListView.as_view(), name='edital_list'),
     path('criar/', views.EditalProvisorioCreateView.as_view(), name='edital_create'),
+    path('resultados/', views.ResultadosListView.as_view(), name='resultados'),
     path('<int:edital_pk>/candidatos/', views.AplicacaoEditalListView.as_view(), name='edital_candidatos'),
     path('<int:pk>/', views.EditalProvisorioDetailView.as_view(), name='edital_detail'),
     path('<int:pk>/pdf/', views.edital_pdf_view, name='edital_pdf'),

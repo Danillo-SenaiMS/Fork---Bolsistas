@@ -26,6 +26,9 @@
         <a href="{% url 'edital_list' %}" class="sidebar-link">
             <i class="bi bi-journal-text"></i> Editais
         </a>
+        <a href="{% url 'resultados' %}" class="sidebar-link {% if request.resolver_match.url_name == 'resultados' %}active{% endif %}">
+            <i class="bi bi-trophy"></i> Resultados
+        </a>
 
         {% if is_superuser or is_manager or is_execute_user %}
         <div class="sidebar-section">Gestão</div>

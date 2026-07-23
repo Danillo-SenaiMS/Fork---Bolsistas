@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.core.cache import cache
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Prefetch
 from celery.result import AsyncResult
 import json
 from datetime import date, datetime
@@ -384,6 +384,53 @@ class AplicacaoEditalListView(LoginRequiredMixin, ListView):
         context['status_atual'] = self.request.GET.get('status', '')
         user = self.request.user
         context['is_manager'] = user.is_superuser or user.groups.filter(
+            name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]
+        ).exists()
+        return context
+
+
+class ResultadosListView(LoginRequiredMixin, ListView):
+    model = EditalProvisorio
+    template_name = 'editais/resultados.html'
+    context_object_name = 'editais'
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = EditalProvisorio.objects.filter(status='encerrado').order_by('-created_at')
+        user = self.request.user
+        is_gestor = user.is_superuser or user.groups.filter(
+            name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]
+        ).exists()
+
+        if not is_gestor:
+            if hasattr(user, 'cadastro'):
+                qs = qs.filter(aplicacoes__bolsista=user.cadastro).distinct()
+                qs = qs.prefetch_related(
+                    Prefetch(
+                        'aplicacoes',
+                        queryset=AplicacaoEdital.objects.filter(
+                            bolsista=user.cadastro
+                        ).select_related('bolsista', 'bolsista__user'),
+                    )
+                )
+            else:
+                qs = qs.none()
+        else:
+            qs = qs.prefetch_related(
+                Prefetch(
+                    'aplicacoes',
+                    queryset=AplicacaoEdital.objects.select_related(
+                        'bolsista', 'bolsista__user'
+                    ),
+                )
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['view_atual'] = self.request.GET.get('view', 'todas')
+        user = self.request.user
+        context['is_gestor'] = user.is_superuser or user.groups.filter(
             name__in=[GROUP_MANAGER, GROUP_EXECUTE_USER]
         ).exists()
         return context
