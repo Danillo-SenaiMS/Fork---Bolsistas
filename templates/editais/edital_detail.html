@@ -107,21 +107,21 @@
                 </h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label small text-muted mb-0">Nome do Edital</label>
-                        <p class="fw-medium fs-6">{{ edital.nome_edital }}</p>
+                        <label class="form-label small text-muted mb-1">Nome do Edital</label>
+                        <div class="form-control bg-light">{{ edital.nome_edital }}</div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small text-muted mb-0">Área de Estudo</label>
-                        <p class="fw-medium">{{ edital.area_estudo }}</p>
+                        <label class="form-label small text-muted mb-1">Área de Estudo</label>
+                        <div class="form-control bg-light">{{ edital.area_estudo }}</div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small text-muted mb-0">Nº de Série</label>
-                        <p class="fw-medium"><span class="badge bg-dark">{{ edital.numero_serie }}</span></p>
+                        <label class="form-label small text-muted mb-1">Nº de Série</label>
+                        <div class="form-control bg-light"><span>{{ edital.numero_serie }}</span></div>
                     </div>
                     {% if edital.detalhes_edital %}
                     <div class="col-12">
-                        <label class="form-label small text-muted mb-0">Detalhes do Edital</label>
-                        <p class="fw-medium">{{ edital.detalhes_edital|linebreaksbr }}</p>
+                        <label class="form-label small text-muted mb-1">Detalhes do Edital</label>
+                        <div class="form-control bg-light">{{ edital.detalhes_edital|linebreaksbr }}</div>
                     </div>
                     {% endif %}
                 </div>
@@ -133,29 +133,29 @@
                 </h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label small text-muted mb-0">Nome do Instituto</label>
-                        <p class="fw-medium fs-6">{{ edital.get_nome_instituto_display }}</p>
+                        <label class="form-label small text-muted mb-1">Nome do Instituto</label>
+                        <div class="form-control bg-light fs-6">{{ edital.get_nome_instituto_display }}</div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small text-muted mb-0">E-mail</label>
-                        <p class="fw-medium">{{ edital.email_solicitante }}</p>
+                        <label class="form-label small text-muted mb-1">E-mail</label>
+                        <div class="form-control bg-light">{{ edital.email_solicitante }}</div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small text-muted mb-0">Telefone</label>
-                        <p class="fw-medium">{{ edital.telefone }}</p>
+                        <label class="form-label small text-muted mb-1">Telefone</label>
+                        <div class="form-control bg-light">{{ edital.telefone }}</div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label small text-muted mb-0">Endereço</label>
-                        <p class="fw-medium">{{ edital.endereco|linebreaksbr }}</p>
+                        <label class="form-label small text-muted mb-1">Endereço</label>
+                        <div class="form-control bg-light">{{ edital.endereco|linebreaksbr }}</div>
                     </div>
                     {% if edital.documento_anexo %}
                     <div class="col-12">
-                        <label class="form-label small text-muted mb-0">Documentos Anexados</label>
-                        <p>
-                            <a href="{% url 'protected_media' edital.documento_anexo.name %}" class="btn btn-info btn-sm" target="_blank">
+                        <label class="form-label small text-muted mb-1">Documentos Anexados</label>
+                        <div class="form-control bg-light">
+                            <a href="{% url 'protected_media' edital.documento_anexo.name %}"  target="_blank">
                                 <i class="bi bi-file-earmark-pdf me-1"></i>Termo de Parceria e/ou Plano de Projeto
                             </a>
-                        </p>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -167,29 +167,29 @@
                 </h5>
                 <div class="row g-3">
                     <div class="col-sm-4">
-                        <label class="form-label small text-muted mb-0">Valor da Bolsa</label>
-                        <p class="fw-semibold fs-5 text-primary">{{ edital.valor_bolsa|br_money }}</p>
+                        <label class="form-label small text-muted mb-1">Valor da Bolsa</label>
+                        <div class="form-control bg-light fw-semibold fs-5 text-primary">{{ edital.valor_bolsa|br_money }}</div>
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label small text-muted mb-0">Modalidade</label>
-                        <p class="fw-medium">{{ edital.get_modalidade_bolsa_display }}</p>
+                        <label class="form-label small text-muted mb-1">Modalidade</label>
+                        <div class="form-control bg-light">{{ edital.get_modalidade_bolsa_display }}</div>
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label small text-muted mb-0">Modalidade de Atuação</label>
-                        <p class="fw-medium">{{ edital.get_modalidade_atuacao_display }}</p>
+                        <label class="form-label small text-muted mb-1">Modalidade de Atuação</label>
+                        <div class="form-control bg-light">{{ edital.get_modalidade_atuacao_display }}</div>
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label small text-muted mb-0">Plataforma Tecnológica</label>
-                        <p class="fw-medium">{{ edital.plataforma_tecnologica }}</p>
+                        <label class="form-label small text-muted mb-1">Plataforma Tecnológica</label>
+                        <div class="form-control bg-light">{{ edital.plataforma_tecnologica }}</div>
                     </div>
-                    <div class="col-sm-4">
-                        <label class="form-label small text-muted mb-0">Vigência</label>
-                        <p class="fw-medium">{{ edital.vigencia_meses }} {% if edital.vigencia_meses == 1 %}mês{% else %}meses{% endif %}</p>
+                    <div class="col-sm-8">
+                        <label class="form-label small text-muted mb-1">Vigência</label>
+                        <div class="form-control bg-light">{{ edital.vigencia_meses }} {% if edital.vigencia_meses == 1 %}mês{% else %}meses{% endif %}</div>
                     </div>
                     {% if edital.endereco_atuacao %}
                     <div class="col-sm-4">
-                        <label class="form-label small text-muted mb-0">Endereço de Atuação</label>
-                        <p class="fw-medium">{{ edital.endereco_atuacao|linebreaksbr }}</p>
+                        <label class="form-label small text-muted mb-1">Endereço de Atuação</label>
+                        <div class="form-control bg-light">{{ edital.endereco_atuacao|linebreaksbr }}</div>
                     </div>
                     {% endif %}
                 </div>
@@ -201,19 +201,19 @@
                 </h5>
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label small text-muted mb-0">Qualificação Mínima</label>
-                        <p class="fw-medium">{{ edital.qualificacao_minima }}</p>
+                        <label class="form-label small text-muted mb-1">Qualificação Mínima</label>
+                        <div class="form-control bg-light">{{ edital.qualificacao_minima }}</div>
                     </div>
                     {% if edital.detalhes_qualificacao_minima %}
                     <div class="col-md-4">
-                        <label class="form-label small text-muted mb-0">Qualificação Mínima em</label>
-                        <p class="fw-medium">{{ edital.detalhes_qualificacao_minima }}</p>
+                        <label class="form-label small text-muted mb-1">Qualificação Mínima em</label>
+                        <div class="form-control bg-light">{{ edital.detalhes_qualificacao_minima }}</div>
                     </div>
                     {% endif %}
                     {% if edital.conhecimento_desejavel %}
                     <div class="col-md-12">
-                        <label class="form-label small text-muted mb-0">Conhecimento Desejável</label>
-                        <p class="fw-medium">{{ edital.conhecimento_desejavel|linebreaksbr }}</p>
+                        <label class="form-label small text-muted mb-1">Conhecimento Desejável</label>
+                        <div class="form-control bg-light">{{ edital.conhecimento_desejavel|linebreaksbr }}</div>
                     </div>
                     {% endif %}
                 </div>
@@ -225,22 +225,22 @@
                 </h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label small text-muted mb-0">Conteúdo da Prova Teórica</label>
-                        <p class="fw-medium">{{ edital.conteudo_prova_teorica|linebreaksbr }}</p>
+                        <label class="form-label small text-muted mb-1">Conteúdo da Prova Teórica</label>
+                        <div class="form-control bg-light">{{ edital.conteudo_prova_teorica|linebreaksbr }}</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small text-muted mb-0">Entrevista</label>
-                        <p class="fw-medium">{{ edital.get_modalidade_entrevista_display }}</p>
+                        <label class="form-label small text-muted mb-1">Entrevista</label>
+                        <div class="form-control bg-light">{{ edital.get_modalidade_entrevista_display }}</div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label small text-muted mb-0">Critérios de Desempate</label>
-                        <p class="fw-medium">{{ edital.criterios_desempate|linebreaksbr }}</p>
+                        <label class="form-label small text-muted mb-1">Critérios de Desempate</label>
+                        <div class="form-control bg-light">{{ edital.criterios_desempate|linebreaksbr }}</div>
                     </div>
                     {% if is_superuser or is_manager or is_execute_user %}
                     {% if edital.comentarios %}
                     <div class="col-12">
-                        <label class="form-label small text-muted mb-0">Comentários</label>
-                        <p class="fw-medium">{{ edital.comentarios|linebreaksbr }}</p>
+                        <label class="form-label small text-muted mb-1">Comentários</label>
+                        <div class="form-control bg-light">{{ edital.comentarios|linebreaksbr }}</div>
                     </div>
                     {% endif %}
                     {% endif %}
@@ -281,28 +281,24 @@
                 <h5 class="fw-semibold mb-3">
                     <i class="bi bi-info-circle me-2 text-primary"></i>Informações
                 </h5>
-                <div class="text-center mb-3">
+                <div class="text-right mb-3">
                     <span class="badge fs-6 {% if edital.status == 'aberto' %}bg-success{% elif edital.status == 'cancelado' %}bg-danger{% elif edital.status == 'encerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
                         {{ edital.get_status_display }}
                     </span>
                 </div>
                 <hr>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted mb-0">Criado por</label>
-                        <p class="fw-medium">{{ edital.criado_por.nome_completo }}</p>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">Criado por</label>
+                        <div class="form-control bg-light">{{ edital.criado_por.nome_completo }}</div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted mb-0">Responsável</label>
-                        <p class="fw-medium">{{ edital.responsavel.nome_completo|default:'—' }}</p>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">Criado em</label>
+                        <div class="form-control bg-light">{{ edital.created_at|date:'d/m/Y H:i' }}</div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted mb-0">Criado em</label>
-                        <p class="fw-medium">{{ edital.created_at|date:'d/m/Y H:i' }}</p>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted mb-0">Atualizado em</label>
-                        <p class="fw-medium">{{ edital.updated_at|date:'d/m/Y H:i' }}</p>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-1">Atualizado em</label>
+                        <div class="form-control bg-light">{{ edital.updated_at|date:'d/m/Y H:i' }}</div>
                     </div>
                 </div>
             </div>

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.utils import timezone
 from base.models import DataModel
@@ -308,6 +310,18 @@ class AplicacaoEdital(DataModel):
     @property
     def status_entrevista_display(self):
         return 'Apto' if self.status_entrevista == 'aprovado' else 'Inapto' if self.status_entrevista == 'rejeitado' else '—'
+
+    @property
+    def nota_final(self):
+        notas = [n for n in (self.nota, self.nota_entrevista) if n is not None]
+        if not notas:
+            return None
+        return sum(notas) / Decimal(len(notas))
+
+    @property
+    def nota_final_display(self):
+        nf = self.nota_final
+        return f'{nf:.2f}'.replace('.', ',') if nf is not None else '—'
 
     class Meta:
         verbose_name = 'Aplicação em Edital'
